@@ -353,7 +353,65 @@ svg.lucide { width: 18px; height: 18px; stroke-width: 1.8; flex-shrink: 0; }
 .dropzone.drag .dz-icon { transform: translateY(-6px) scale(1.1); }
 
 .doc-list { background: var(--bg-elev); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
-.doc-scroll { overflow-x: auto; }
+.doc-scroll { overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; }
+.doc-list .doc-row > * { min-width: 0; }
+.doc-list .col-resizer:hover { background: var(--accent-soft); }
+
+.doc-list .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.doc-tbl { width: max-content; min-width: 100%; border-collapse: collapse; }
+.doc-tbl thead th { position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--bg); font-size: 12px; color: var(--text-3); font-weight: 500; padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+.doc-tbl tbody td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 12px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 13px; max-width: 280px; }
+.doc-tbl tbody tr:hover { background: var(--bg); }
+.doc-tbl tbody tr.doc-tr.lvl-1 { box-shadow: inset 4px 0 0 rgba(var(--l1), .55); background: rgba(var(--l1), .055); }
+.doc-tbl tbody tr.doc-tr.lvl-2 { box-shadow: inset 4px 0 0 rgba(var(--l2), .55); background: rgba(var(--l2), .055); }
+.doc-tbl tbody tr.doc-tr.lvl-3 { box-shadow: inset 4px 0 0 rgba(var(--l3), .55); background: rgba(var(--l3), .055); }
+.doc-tbl tbody tr.doc-tr.lvl-4 { box-shadow: inset 4px 0 0 rgba(var(--l4), .55); background: rgba(var(--l4), .055); }
+.doc-tbl tbody tr.doc-tr.lvl-1:hover { background: rgba(var(--l1), .10); }
+.doc-tbl tbody tr.doc-tr.lvl-2:hover { background: rgba(var(--l2), .10); }
+.doc-tbl tbody tr.doc-tr.lvl-3:hover { background: rgba(var(--l3), .10); }
+.doc-tbl tbody tr.doc-tr.lvl-4:hover { background: rgba(var(--l4), .10); }
+.doc-tbl .doc-name strong { display: block; font-weight: 500; }
+.doc-tbl .doc-name span { font-size: 12px; color: var(--text-3); }
+.doc-tbl .doc-name { white-space: normal; max-width: 280px; }
+.doc-tbl .tree-mark { display: inline-block; margin-right: 4px; vertical-align: middle; opacity: .6; }
+.doc-tbl .file-badge { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; }
+.doc-tbl .col-resizer { position: absolute; right: 0; top: 0; width: 6px; height: 100%; cursor: col-resize; user-select: none; }
+.doc-tbl .col-resizer:hover { background: var(--accent-soft); }
+
+a.url-ver, button.url-ver {
+  color: var(--accent); font-weight: 600; font-size: 13px; text-decoration: none;
+  background: none; border: 0; cursor: pointer; padding: 0; font-family: inherit;
+}
+a.url-ver:hover, button.url-ver:hover { text-decoration: underline; }
+.rank-list { list-style: none; margin: 0; padding: 0 4px 4px; max-height: 280px; overflow-y: auto; }
+.rank-list li { display: grid; grid-template-columns: minmax(0, 1fr) 52px; gap: 8px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.rank-list li:last-child { border-bottom: 0; }
+.rank-list .rk-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rank-list .rk-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); font-weight: 500; }
+.rank-list .rk-count { color: var(--text-3); font-weight: 400; margin-left: 4px; }
+.rank-list .rk-bar-wrap { flex: 1; min-width: 40px; height: 8px; border-radius: 4px; background: var(--bg); overflow: hidden; }
+.rank-list .rk-bar { height: 100%; border-radius: 4px; min-width: 2px; }
+.rank-list .rk-pct { text-align: right; color: var(--text-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chart-card .ch-head .rk-total { margin-left: auto; font-size: 18px; font-weight: 700; color: var(--text); }
+
+.session-timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-2);
+  padding: 6px 10px;
+  border-radius: 980px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  min-width: 58px; text-align: center;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+.session-timer.warn { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+.session-timer.danger { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); animation: pulse 1s ease infinite; }
+@keyframes pulse { 50% { opacity: .7; } }
+
+
+
 .matrix-wrap { overflow-x: auto; background: var(--bg-elev); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); }
 .matrix-tbl { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 13px; }
 .matrix-tbl th, .matrix-tbl td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; vertical-align: middle; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
@@ -366,7 +424,7 @@ svg.lucide { width: 18px; height: 18px; stroke-width: 1.8; flex-shrink: 0; }
 .office-frame { width: 100%; height: min(78vh, 900px); border: 0; border-radius: 8px; background: #fff; }
 
 .doc-row {
-  display: grid; grid-template-columns: 40px minmax(180px, 2.1fr) 104px minmax(110px, 1.1fr) 120px 96px 100px 52px 100px minmax(96px, .9fr) 32px; gap: 10px; align-items: center; min-width: 1130px;
+  display: grid; grid-template-columns: 40px minmax(160px, 1.6fr) 100px minmax(100px, 1fr) 90px 90px 90px 110px 88px 90px 52px 88px 100px 88px 88px 90px 120px 32px; gap: 8px; align-items: center; min-width: 1680px;
   padding: 14px 18px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .2s;
   animation: viewIn .5s var(--ease) both;
 }
@@ -625,7 +683,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 @media (max-width: 900px) { .charts.charts-3 { grid-template-columns: 1fr; } }
 .chart-card { background: var(--bg-elev); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 20px 22px; animation: rise .7s var(--ease) both; min-width: 0; }
 .chart-card.span2 { grid-column: span 2; }
-.ch-head h4 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 12px; }
+.ch-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ch-head h4 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
 .ch-box { position: relative; height: 240px; }
 .span2 .ch-box { height: 260px; }
 .ch-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-3); font-size: 13px; background: var(--bg-elev); }
@@ -773,7 +832,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 .doc-row.hit { box-shadow: inset 4px 0 0 rgba(var(--lc), .55), inset 0 0 0 1.5px var(--accent); }
 .doc-row > .doc-name { padding-left: calc(var(--depth, 0) * 18px); }
 .doc-row.child > .file-badge { transform: scale(.88); }
-.doc-row { grid-template-columns: 40px minmax(200px, 2.1fr) 104px minmax(110px, 1.1fr) 120px 96px 100px 52px 100px minmax(96px, .9fr) 32px; }
+.doc-row { grid-template-columns: 40px minmax(160px, 1.6fr) 100px minmax(100px, 1fr) 90px 90px 90px 110px 88px 90px 52px 88px 100px 88px 88px 90px 120px 32px; }
 .doc-row.head { --depth: 0; }
 .doc-tile { background: linear-gradient(rgba(var(--lc), .06), rgba(var(--lc), .06)), var(--bg-elev); box-shadow: var(--shadow-sm), inset 0 3px 0 rgba(var(--lc), .6); }
 .doc-tile.child { border-left: 0; }
@@ -978,11 +1037,22 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   /* Tipos de documento por nivel (configurable desde Configuración → Documentos) */
   const CATEGORIAS = ['Estratégico', 'Operativo', 'Soporte'];
   const DEFAULT_TIPOS = () => [
-    ['PyLG', 'Estratégico'],
-    ['Guía Operativa', 'Operativo'], ['Manual Técnico', 'Operativo'], ['Plan', 'Operativo'], ['Política', 'Operativo'], ['Procedimiento', 'Operativo'],
-    ['Anexo', 'Soporte'], ['Ayuda Visual', 'Soporte'], ['Bitácora', 'Soporte'], ['Catálogo', 'Soporte'], ['Comunicado', 'Soporte'], ['Formato', 'Soporte'], ['Guía', 'Soporte'],
-    ['Hoja de Verificación', 'Soporte'], ['Instrucción de Operación', 'Soporte'], ['Instructivo de Llenado', 'Soporte'], ['Listado', 'Soporte'], ['Registro', 'Soporte'],
-  ].map(([name, cat]) => ({ name, cat }));
+    ['Manual de Políticas y Lineamientos Generales', 'Estratégico', 'PLG'],
+    ['Procedimiento', 'Operativo', 'POP'],
+    ['Políticas', 'Operativo', 'POL'],
+    ['Guía Operativa', 'Operativo', 'GOP'],
+    ['Plan', 'Operativo', 'PLN'],
+    ['Manual Técnico', 'Operativo', 'MAN'],
+    ['Anexos', 'Soporte', 'ANE'],
+    ['Formato', 'Soporte', 'FOR'],
+    ['Instructivo de Llenado', 'Soporte', 'IDY'],
+    ['Bitácoras', 'Soporte', 'BIT'],
+    ['Listados', 'Soporte', 'LIS'],
+    ['Catalogo', 'Soporte', 'CAT'],
+    ['Instrucciones de Operación', 'Soporte', 'IDO'],
+    ['Hojas de Verificación', 'Soporte', 'HOV'],
+    ['Ayuda Visual', 'Soporte', 'AVI'],
+  ].map(([name, cat, code]) => ({ name, cat, code }));
 
   const defaultSettings = () => ({
     orgName: '',
@@ -1001,6 +1071,15 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     expiredBehavior: 'bloquear', // bloquear | ver
     defaultTempHours: 72,
     minPassword: 8,
+    sessionTimeoutMinutes: 15,
+    adminActionPasswordHash: null,
+    estadoRules: [
+      { id: 'nuevo', name: 'Nuevo', color: 'ok', auto: true, cond: 'v1_lt1y', minYears: 0, maxYears: 1, minVersion: 1, maxVersion: 1 },
+      { id: 'actualizado', name: 'Actualizado', color: 'accent', auto: true, cond: 'vgt1_lt1y', minYears: 0, maxYears: 1, minVersion: 2, maxVersion: null },
+      { id: 'pendiente', name: 'Pendiente', color: 'warn', auto: true, cond: 'gt1y', minYears: 1, maxYears: null, minVersion: null, maxVersion: null },
+      { id: 'ratificado', name: 'Ratificado', color: 'ok', auto: false, cond: 'gt1y_lt2y', minYears: 1, maxYears: 2, minVersion: null, maxVersion: null },
+      { id: 'eliminado', name: 'Eliminado', color: 'danger', auto: false, cond: 'manual', minYears: null, maxYears: null, minVersion: null, maxVersion: null },
+    ],
   });
 
   /* ---------- IndexedDB para binarios ---------- */
@@ -1079,7 +1158,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const adminId = uid('u_');
       const settings = defaultSettings();
       const users = [{ id: adminId, email, name, role: 'admin', pass: await hashPassword(pass), active: true, createdAt: now, createdBy: adminId }];
-      const base = { version: 3, settings, roles: defaultRoles(), users, areas: [], folders: [], docs: [], grants: [], catalogs: { tipos: DEFAULT_TIPOS(), clasificaciones: [] },
+      const base = { version: 4, settings, roles: defaultRoles(), users, units: [], areas: [], folders: [], docs: [], grants: [], catalogs: { tipos: DEFAULT_TIPOS(), clasificaciones: [], macroprocesos: [] },
         audit: [{ id: uid('l_'), at: now, by: adminId, action: 'sistema', text: `Repositorio inicializado por ${email}` }] };
       this.db = base;
       if (withSamples) await this._samples(adminId);
@@ -1089,13 +1168,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     async _samples(ownerId) {
       const now = Date.now();
       const H = 3600e3, D = 24 * H;
+      const units = [
+        { id: 'u_sw', name: 'COMASW', code: 'SW', desc: 'Unidad de negocio principal', createdAt: now, createdBy: ownerId },
+      ];
       const areas = [
-        { id: 'a_cal', name: 'Calidad', code: 'SGC', desc: 'Sistema de gestión de calidad, procedimientos, formatos y auditorías.', color: 'blue', icon: 'badge-check' },
-        { id: 'a_rh', name: 'Recursos Humanos', code: 'RH', desc: 'Políticas de personal, reclutamiento, capacitación y nómina.', color: 'pink', icon: 'users' },
-        { id: 'a_fin', name: 'Finanzas', code: 'FIN', desc: 'Contabilidad, tesorería, presupuestos y reportes financieros.', color: 'green', icon: 'landmark' },
-        { id: 'a_ope', name: 'Operaciones', code: 'OPE', desc: 'Logística, producción, mantenimiento y seguridad industrial.', color: 'orange', icon: 'factory' },
-        { id: 'a_ti', name: 'Tecnología', code: 'TI', desc: 'Infraestructura, desarrollo, seguridad de la información y soporte.', color: 'indigo', icon: 'cpu' },
-        { id: 'a_jur', name: 'Jurídico', code: 'JUR', desc: 'Contratos, convenios, poderes y cumplimiento normativo.', color: 'graphite', icon: 'scale' },
+        { id: 'a_cal', unitId: 'u_sw', name: 'Calidad', code: 'CAL', desc: 'Sistema de gestión de calidad, procedimientos, formatos y auditorías.', color: 'blue', icon: 'badge-check' },
+        { id: 'a_rh', unitId: 'u_sw', name: 'Recursos Humanos', code: 'RH', desc: 'Políticas de personal, reclutamiento, capacitación y nómina.', color: 'pink', icon: 'users' },
+        { id: 'a_fin', unitId: 'u_sw', name: 'Finanzas', code: 'FIN', desc: 'Contabilidad, tesorería, presupuestos y reportes financieros.', color: 'green', icon: 'landmark' },
+        { id: 'a_ope', unitId: 'u_sw', name: 'Operaciones', code: 'OPE', desc: 'Logística, producción, mantenimiento y seguridad industrial.', color: 'orange', icon: 'factory' },
+        { id: 'a_ti', unitId: 'u_sw', name: 'Tecnología', code: 'TI', desc: 'Infraestructura, desarrollo, seguridad de la información y soporte.', color: 'indigo', icon: 'cpu' },
+        { id: 'a_jur', unitId: 'u_sw', name: 'Jurídico', code: 'JUR', desc: 'Contratos, convenios, poderes y cumplimiento normativo.', color: 'graphite', icon: 'scale' },
       ].map((a, i) => ({ ...a, createdAt: now - (30 - i) * D, createdBy: ownerId, order: i }));
 
       const fd = (areaId, list) => list.map(([name, code], i) => ({ id: uid('f_'), areaId, name, code, createdAt: now - 20 * D, createdBy: ownerId, order: i }));
@@ -1167,6 +1249,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           id, areaId: s.folder.areaId, folderId: s.folder.id,
           nomenclatura: s.nomenclatura, nombre: s.nombre, version: s.version, tipo: s.tipo || '', categoria: (DEFAULT_TIPOS().find(t => t.name === s.tipo) || {}).cat || '', clasificacion: s.clasificacion || '', _rector: s.rector || null,
           fechaActualizacion: new Date(date).toISOString().slice(0, 10),
+          fechaEmision: new Date(date).toISOString().slice(0, 10),
+          fechaAutorizacion: '', fechaDifusion: '',
+          macroproceso: '', estado: null, estadoManual: false,
+          url: 'local://docs/' + id,
           subidoPor: ownerId, fileName: `${s.nomenclatura} ${s.nombre}.docx`, ext: 'docx',
           mime: 'text/html', size: s.html.length, editable: true,
           createdAt: date, updatedAt: date, updatedBy: ownerId,
@@ -1177,7 +1263,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
       docs.forEach(d => { d.rectorId = d._rector ? (docs.find(x => x.nomenclatura === d._rector) || {}).id || null : null; delete d._rector; });
       const uniq = (k) => [...new Set(docs.map(d => d[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
-      Object.assign(this.db, { areas, folders, docs, catalogs: { tipos: DEFAULT_TIPOS(), clasificaciones: uniq('clasificacion') } });
+      Object.assign(this.db, { units, areas, folders, docs, catalogs: { tipos: DEFAULT_TIPOS(), clasificaciones: uniq('clasificacion'), macroprocesos: [] } });
       this.db.audit.unshift({ id: uid('l_'), at: now, by: ownerId, action: 'sistema', text: 'Se cargaron áreas y documentos de ejemplo' });
     },
     /* Borra todo (metadatos, usuarios y archivos) y vuelve a la configuración inicial */
@@ -1237,8 +1323,25 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const LV_ICON = { ver: 'eye', descargar: 'download', editar: 'pencil-line' };
 
   const cssVars = (color) => { const [a, b] = COLORS[color] || COLORS.blue; return `--c1:${a};--c2:${b}`; };
-  const fmtDate = (t) => t ? new Date(t).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-  const fmtDateTime = (t) => t ? new Date(t).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+  /** Formato uniforme de fechas en toda la app: dd/mm/aaaa */
+  const pad2 = (n) => String(n).padStart(2, '0');
+  function fmtDate(t) {
+    if (t == null || t === '') return '—';
+    // Cadena ISO yyyy-mm-dd (sin hora) → no usar UTC para evitar desfase
+    if (typeof t === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(t)) {
+      const [y, m, d] = t.split('-');
+      return `${d}/${m}/${y}`;
+    }
+    const dt = t instanceof Date ? t : new Date(t);
+    if (isNaN(dt.getTime())) return '—';
+    return `${pad2(dt.getDate())}/${pad2(dt.getMonth() + 1)}/${dt.getFullYear()}`;
+  }
+  const fmtDateTime = (t) => {
+    if (!t) return '—';
+    const dt = t instanceof Date ? t : new Date(t);
+    if (isNaN(dt.getTime())) return '—';
+    return `${fmtDate(dt)} ${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+  };
   const fmtSize = (b) => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
   const fmtLeft = (ms) => {
     const m = Math.round(ms / 60000); if (m < 60) return `${Math.max(m, 1)} min`;
@@ -1270,24 +1373,85 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (!S) return;
     S.settings = { ...defaultSettings(), ...S.settings };
     if (S.settings.appName === 'Acervo') S.settings.appName = 'FileHub';
-    // Dominio único (versiones anteriores) → lista de dominios configurables
     if (!Array.isArray(S.settings.domains)) S.settings.domains = S.settings.domain ? [String(S.settings.domain).toLowerCase()] : [];
     delete S.settings.domain;
     S.settings.versionInicial = intVersion(S.settings.versionInicial);
-    S.catalogs = S.catalogs || { tipos: [], clasificaciones: [] };
-    // Tipos ahora son {name, cat}; los catálogos antiguos (texto libre) se reemplazan por el catálogo oficial por niveles
+    if (!Array.isArray(S.settings.estadoRules) || !S.settings.estadoRules.length) S.settings.estadoRules = defaultSettings().estadoRules;
+    if (S.settings.sessionTimeoutMinutes == null) S.settings.sessionTimeoutMinutes = 15;
+    S.catalogs = S.catalogs || { tipos: [], clasificaciones: [], macroprocesos: [] };
     if (!Array.isArray(S.catalogs.tipos) || !S.catalogs.tipos.length || S.catalogs.tipos.some(t => typeof t !== 'object')) S.catalogs.tipos = DEFAULT_TIPOS();
+    // Sincronizar códigos oficiales de tipos; conservar tipos personalizados
+    const official = DEFAULT_TIPOS();
+    const byName = Object.fromEntries(official.map(t => [t.name.toLowerCase(), t]));
+    const alias = {
+      'pylg': 'Manual de Políticas y Lineamientos Generales',
+      'procedimiento': 'Procedimiento',
+      'procedimiento de operación': 'Procedimiento',
+      'procedimiento de operacion': 'Procedimiento',
+      'política': 'Políticas', 'politica': 'Políticas',
+      'anexo': 'Anexos', 'bitácora': 'Bitácoras', 'bitacora': 'Bitácoras',
+      'listado': 'Listados', 'catálogo': 'Catalogo', 'catalogo': 'Catalogo',
+      'hoja de verificación': 'Hojas de Verificación', 'hoja de verificacion': 'Hojas de Verificación',
+      'instrucción de operación': 'Instrucciones de Operación', 'instruccion de operacion': 'Instrucciones de Operación',
+      'manual técnico': 'Manual Técnico', 'manual tecnico': 'Manual Técnico',
+      'guía operativa': 'Guía Operativa', 'guia operativa': 'Guía Operativa',
+      'instructivo de llenado': 'Instructivo de Llenado', 'ayuda visual': 'Ayuda Visual',
+      'formato': 'Formato', 'plan': 'Plan',
+    };
+    S.catalogs.tipos = S.catalogs.tipos.map(t => {
+      const key = (t.name || '').toLowerCase();
+      const mapped = byName[key] || byName[(alias[key] || '').toLowerCase()];
+      if (mapped) return { name: mapped.name, cat: mapped.cat, code: mapped.code };
+      if (/procedimiento de operaci[oó]n/i.test(t.name || '')) return { name: 'Procedimiento', cat: t.cat || 'Operativo', code: t.code || 'POP' };
+      if (!t.code) t.code = (t.name || '').normalize('NFD').replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase() || 'DOC';
+      return t;
+    });
+    // Asegurar que existan todos los oficiales
+    official.forEach(o => { if (!S.catalogs.tipos.some(t => t.name === o.name)) S.catalogs.tipos.push({ ...o }); });
+    S.catalogs.tipos.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    // Renombrar tipo en docs existentes según alias
+    S.docs.forEach(d => {
+      if (!d.tipo) return;
+      const key = d.tipo.toLowerCase();
+      const mapped = byName[key] || byName[(alias[key] || '').toLowerCase()];
+      if (mapped) { d.tipo = mapped.name; d.categoria = mapped.cat; }
+      else if (/procedimiento de operaci[oó]n/i.test(d.tipo)) { d.tipo = 'Procedimiento'; d.categoria = d.categoria || 'Operativo'; }
+    });
     S.catalogs.clasificaciones = S.catalogs.clasificaciones || [];
+    S.catalogs.macroprocesos = S.catalogs.macroprocesos || [];
+    S.units = S.units || [];
+    // Migrar áreas sin unitId a una unidad por defecto
+    if (S.areas.some(a => !a.unitId)) {
+      let u = S.units[0];
+      if (!u) {
+        u = { id: 'u_default', name: S.settings.orgName || 'Unidad principal', code: 'UN', desc: '', createdAt: Date.now(), createdBy: null };
+        S.units.push(u);
+      }
+      S.areas.forEach(a => { if (!a.unitId) a.unitId = u.id; });
+    }
     for (const d of S.docs) {
-      if (d.url === undefined) d.url = '';
+      if (d.url === undefined || d.url === '') d.url = 'local://docs/' + d.id;
       d.tipo = d.tipo || ''; d.clasificacion = d.clasificacion || '';
       d.version = intVersion(d.version);
       (d.history || []).forEach(h => h.v = intVersion(h.v));
       d.categoria = catOfTipo(d.tipo) || d.categoria || '';
       if (d.rectorId === undefined) d.rectorId = null;
       if (d.clasificacion) addToCatalog('clasificaciones', d.clasificacion);
+      if (d.macroproceso === undefined) d.macroproceso = '';
+      if (d.fechaEmision === undefined) d.fechaEmision = d.fechaActualizacion || '';
+      if (d.fechaAutorizacion === undefined) d.fechaAutorizacion = '';
+      if (d.fechaDifusion === undefined) d.fechaDifusion = '';
+      if (d.estadoManual === undefined) d.estadoManual = false;
+      if (d.estado === undefined) d.estado = null;
+      if (!d.history) d.history = [];
     }
     for (const d of S.docs) { const r = d.rectorId && S.docs.find(x => x.id === d.rectorId); if (d.rectorId && (!r || !canBeRector(d.categoria, r.categoria))) d.rectorId = null; }
+    // Liberar estados automáticos que quedaron marcados como manuales por versiones previas
+    for (const d of S.docs) {
+      if (d.estadoManual && d.estado && !['eliminado', 'ratificado'].includes(d.estado)) {
+        d.estadoManual = false;
+      }
+    }
   }
   const CAT_LEVEL = { 'Estratégico': '1er nivel', 'Operativo': '2º nivel', 'Soporte': '3er nivel' };
   const CAT_COLOR = { 'Estratégico': '#bf5af2', 'Operativo': '#0a84ff', 'Soporte': '#30d158' };
@@ -1301,6 +1465,102 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const canBeRector = (childCat, rectorCat) => (RECTOR_CATS[childCat] || []).includes(rectorCat);
   const childrenOf = (id) => S.docs.filter(d => d.rectorId === id);
   const catChip = (c) => c ? `<span class="chip ${CAT_CLASS[c] || ''}">${esc(c)}</span>` : '<span class="tiny">—</span>';
+  function docAgeYears(d) {
+    const ref = d.fechaActualizacion || (d.updatedAt ? new Date(d.updatedAt).toISOString().slice(0, 10) : null);
+    if (!ref) return 0;
+    const ms = Date.now() - new Date(ref + 'T12:00:00').getTime();
+    return Math.max(0, ms / (365.25 * 24 * 3600e3));
+  }
+  function estadoThresholds() {
+    const rules = S.settings.estadoRules || [];
+    // Extraer umbrales configurables (años) de las reglas conocidas
+    const get = (id, defMin, defMax) => {
+      const r = rules.find(x => x.id === id) || {};
+      return {
+        minY: r.minYears != null ? +r.minYears : defMin,
+        maxY: r.maxYears != null ? +r.maxYears : defMax,
+        minV: r.minVersion != null ? +r.minVersion : null,
+        maxV: r.maxVersion != null ? +r.maxVersion : null,
+      };
+    };
+    return {
+      nuevo: get('nuevo', 0, 1),
+      actualizado: get('actualizado', 0, 1),
+      pendiente: get('pendiente', 1, Infinity),
+      ratificado: get('ratificado', 1, 2),
+    };
+  }
+  function computeEstado(d) {
+    const y = docAgeYears(d);
+    const v = +d.version || 1;
+    const th = estadoThresholds();
+    // Eliminado solo manual, en cualquier momento
+    if (d.estado === 'eliminado' && d.estadoManual) return 'eliminado';
+    // ≥ max de ratificado (por defecto 2 años): siempre Pendiente; no se permite Ratificado
+    if (y >= (th.ratificado.maxY || 2)) return 'pendiente';
+    // En ventana de Ratificado (por defecto 1–2 años)
+    if (y >= (th.ratificado.minY || 1) && y < (th.ratificado.maxY || 2)) {
+      if (d.estado === 'ratificado' && d.estadoManual) return 'ratificado';
+      return 'pendiente';
+    }
+    // Antigüedad < 1 año (o umbral pendiente): Nuevo (v1) o Actualizado (v>1)
+    if (v <= 1) return 'nuevo';
+    return 'actualizado';
+  }
+  /** Calcula estado a partir de version + fecha (para formularios en vivo) */
+  function computeEstadoFrom(version, fechaActualizacion, forcedEstado, estadoManual) {
+    return computeEstado({
+      version, fechaActualizacion,
+      estado: forcedEstado, estadoManual: !!estadoManual,
+    });
+  }
+  /** Resuelve el estado final respetando siempre las reglas.
+   *  - eliminado: se respeta si el usuario lo eligió
+   *  - ratificado: solo si la antigüedad está en la ventana válida; si no, cae a pendiente
+   *  - cualquier otro: se calcula automáticamente por versión + fecha
+   */
+  function resolveEstado(version, fecha, selected) {
+    const sel = selected || '';
+    if (sel === 'eliminado') return { estado: 'eliminado', estadoManual: true };
+    if (sel === 'ratificado') {
+      const ok = computeEstadoFrom(version, fecha, 'ratificado', true);
+      if (ok === 'ratificado') return { estado: 'ratificado', estadoManual: true };
+      return { estado: ok, estadoManual: false };
+    }
+    const auto = computeEstadoFrom(version, fecha, null, false);
+    return { estado: auto, estadoManual: false };
+  }
+  function estadoLabel(id) {
+    const r = (S.settings.estadoRules || []).find(x => x.id === id);
+    return r ? r.name : id;
+  }
+  function estadoChip(d) {
+    const id = computeEstado(d);
+    const r = (S.settings.estadoRules || []).find(x => x.id === id) || { color: '', name: id };
+    const cls = r.color === 'ok' ? 'ok' : r.color === 'danger' ? 'danger' : r.color === 'warn' ? 'warn' : r.color === 'accent' ? 'accent' : '';
+    return `<span class="chip ${cls}">${esc(r.name)}</span>`;
+  }
+  function tipoCode(tipoName) {
+    const t = (S.catalogs.tipos || []).find(x => x.name === tipoName);
+    if (t && t.code) return t.code;
+    return (tipoName || 'DOC').normalize('NFD').replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase() || 'DOC';
+  }
+  function suggestNomenclatura(folder, tipo) {
+    if (!tipo) return ''; // Esperar a que se elija el tipo de documento
+    const area = areaById(folder.areaId);
+    const unit = unitById(area?.unitId);
+    const uCode = (unit?.code || 'UN').toUpperCase();
+    const tCode = tipoCode(tipo);
+    if (!tCode) return '';
+    const mid = (folder.code || area?.code || 'XX').toUpperCase();
+    const prefix = `${uCode}-${tCode}-${mid}-`;
+    let n = 1;
+    const used = new Set(S.docs.map(d => (d.nomenclatura || '').toUpperCase()));
+    while (used.has(prefix + String(n).padStart(2, '0'))) n++;
+    return prefix + String(n).padStart(2, '0');
+  }
+  function localDocUrl(id) { return 'local://docs/' + id; }
+
   function addToCatalog(kind, v) {
     v = String(v || '').trim(); if (!v) return '';
     const list = S.catalogs[kind];
@@ -1310,8 +1570,30 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   migrate();
   let me = null;
-  const route = { view: 'home', areaId: null, folderId: null, tab: 'general', q: '' };
-  const ui = { docView: 'list', sort: 'recent', filter: '', matrixFilter: '' };
+  const ROUTE_KEY = 'acervo.route';
+  const loadRoute = () => {
+    try {
+      const raw = SessionStore.getItem(ROUTE_KEY);
+      if (!raw) return null;
+      const r = JSON.parse(raw);
+      if (r && typeof r.view === 'string') return r;
+    } catch (e) {}
+    return null;
+  };
+  const saveRoute = () => {
+    try {
+      SessionStore.setItem(ROUTE_KEY, JSON.stringify({
+        view: route.view, unitId: route.unitId, areaId: route.areaId,
+        folderId: route.folderId, tab: route.tab, q: route.q || '',
+      }));
+    } catch (e) {}
+  };
+  const _savedRoute = loadRoute();
+  const route = Object.assign(
+    { view: 'home', unitId: null, areaId: null, folderId: null, tab: 'general', q: '' },
+    _savedRoute || {}
+  );
+  const ui = { docView: 'list', sort: 'recent', filter: '', matrixFilter: '', colWidths: {} };
 
   function applyTheme() {
     let t = S?.settings?.theme || 'auto';
@@ -1322,6 +1604,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
   const userById = (id) => S.users.find(u => u.id === id);
   const userName = (id) => userById(id)?.name || 'Usuario eliminado';
+  const unitById = (id) => (S.units || []).find(u => u.id === id);
   const areaById = (id) => S.areas.find(a => a.id === id);
   const folderById = (id) => S.folders.find(f => f.id === id);
   const roleOf = (u = me) => S.roles.find(r => r.id === u?.role) || { caps: {}, name: 'Sin perfil' };
@@ -1332,7 +1615,59 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const isAdminUser = (u, roles = S.roles) => { const r = roles.find(x => x.id === u.role); return !!(u.active && r && r.caps.settings && r.caps.managePerms); };
   const keepsAdmin = (users = S.users, roles = S.roles) => users.some(u => isAdminUser(u, roles));
   const ADMIN_MSG = 'Debe quedar al menos un usuario activo con perfil de administración';
-  function logout(msg) { me = null; SessionStore.removeItem(SESSION); render(); if (msg) toast(msg, 'info'); }
+  function logout(msg) {
+    me = null;
+    SessionStore.removeItem(SESSION);
+    try { SessionStore.removeItem(ROUTE_KEY); } catch (e) {}
+    stopSessionWatch();
+    render();
+    if (msg) toast(msg, 'info');
+  }
+
+  /* ---- Temporizador de sesión inactiva (configurable) ---- */
+  let sessionLastActivity = Date.now();
+  let sessionWatchId = null;
+  function sessionTimeoutMs() {
+    const m = +(S?.settings?.sessionTimeoutMinutes);
+    if (!m || m <= 0) return 0; // 0 = sin cierre automático
+    return Math.max(1, m) * 60 * 1000;
+  }
+  function touchSessionActivity() {
+    sessionLastActivity = Date.now();
+  }
+  function updateSessionCountdown() {
+    const el = $('#sessionTimer');
+    if (!el || !me) return;
+    const limit = sessionTimeoutMs();
+    if (!limit) {
+      el.classList.add('hidden');
+      el.textContent = '';
+      return;
+    }
+    el.classList.remove('hidden');
+    const left = Math.max(0, limit - (Date.now() - sessionLastActivity));
+    const totalSec = Math.ceil(left / 1000);
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
+    const ss = String(totalSec % 60).padStart(2, '0');
+    el.textContent = `${mm}:${ss}`;
+    el.title = `La sesión se cierra por inactividad en ${mm}:${ss}`;
+    el.classList.toggle('warn', totalSec <= 60);
+    el.classList.toggle('danger', totalSec <= 15);
+    if (left <= 0) {
+      logout('Sesión cerrada por inactividad');
+    }
+  }
+  function startSessionWatch() {
+    if (sessionWatchId) return;
+    sessionWatchId = setInterval(updateSessionCountdown, 1000);
+    // Reiniciar contador con actividad del usuario
+    ['pointerdown', 'keydown', 'mousemove', 'touchstart', 'scroll', 'click'].forEach(ev => {
+      document.addEventListener(ev, touchSessionActivity, { passive: true, capture: true });
+    });
+  }
+  function stopSessionWatch() {
+    if (sessionWatchId) { clearInterval(sessionWatchId); sessionWatchId = null; }
+  }
   const log = (action, text) => Repo.log(me?.id, action, text);
 
   function grantStatus(g) {
@@ -1504,6 +1839,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (!me) { app.innerHTML = loginView(); bindLogin(); icons(); return; }
     let content = '';
     if (route.view === 'home') content = homeView();
+    else if (route.view === 'unit') content = unitView();
     else if (route.view === 'area') content = areaView();
     else if (route.view === 'folder') content = folderView();
     else if (route.view === 'dashboard') content = dashboardView();
@@ -1515,10 +1851,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     applyLogoFavicon();
     icons();
     bindView();
+    saveRoute();
+    touchSessionActivity();
+    updateSessionCountdown();
   }
 
   function go(view, params = {}) {
     Object.assign(route, { view }, params);
+    saveRoute();
     render();
     scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -1621,7 +1961,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const st = S.settings;
     const settingsOk = can('settings') || can('managePerms');
     const tabs = `
-        <button class="nav-link ${['home', 'area', 'folder', 'search'].includes(route.view) ? 'active' : ''}" data-act="home">Repositorio</button>
+        <button class="nav-link ${['home', 'unit', 'area', 'folder', 'search'].includes(route.view) ? 'active' : ''}" data-act="home">Repositorio</button>
         <button class="nav-link ${route.view === 'matrix' ? 'active' : ''}" data-act="matrix">Matriz Documental</button>
         <button class="nav-link ${route.view === 'dashboard' ? 'active' : ''}" data-act="dashboard">Dashboard</button>
         ${settingsOk ? `<button class="nav-link ${route.view === 'settings' ? 'active' : ''}" data-act="settings">Configuración</button>` : ''}`;
@@ -1629,6 +1969,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       <button type="button" class="brand" data-act="home">${LOGO_HTML()}<span class="brand-text"><span class="brand-title">${esc(st.appName || 'FileHub')}</span>${st.orgName ? `<span class="brand-org">${esc(st.orgName)}</span>` : ''}</span></button>
       <div class="nav-spacer"></div>
       <label class="search">${ic('search')}<span class="sr">Buscar</span><input id="q" placeholder="Buscar documentos" value="${esc(route.view === 'search' ? route.q : '')}" /></label>
+      <span class="session-timer ${!(S.settings.sessionTimeoutMinutes > 0) ? 'hidden' : ''}" id="sessionTimer" title="Tiempo restante de sesión" aria-live="polite"></span>
       ${can('managePerms') ? `<button class="icon-btn" data-act="grant" title="Asignar permisos" aria-label="Asignar permisos">${ic('user-plus')}</button>` : ''}
       <button class="icon-btn" data-act="theme" title="Cambiar tema" aria-label="Cambiar tema">${ic(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button>
       <div class="user-menu"><button class="avatar" data-act="usermenu" aria-label="Menú de usuario">${initials(me.name)}</button></div>
@@ -1639,88 +1980,228 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
   /* ---------------- Inicio ---------------- */
   function homeView() {
+    const units = S.units || [];
     const areas = visibleAreas();
     const accessible = areas.filter(a => areaAccess(a.id).level);
     const accIds = new Set(accessible.map(a => a.id));
     const docs = S.docs.filter(d => accIds.has(d.areaId));
-    const soon = S.grants.filter(g => g.userId === me.id && g.type === 'temporal' && grantStatus(g) === 'vigente');
     const hour = new Date().getHours();
     const greet = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+    const canU = can('createArea');
     return `
       <section class="hero">
         <div class="eyebrow">${greet}, ${esc(me.name.split(' ')[0])}</div>
         <h1>Todos tus archivos.<br/>En un solo lugar.</h1>
-        <p>Documentos organizados por área y departamento, con versiones, permisos y edición en línea.</p>
+        <p>Documentos organizados por unidad de negocio, área y departamento.</p>
         <div class="hero-stats">
+          <div class="stat"><strong>${units.length}</strong><span>Unidades</span></div>
           <div class="stat"><strong>${accessible.length}</strong><span>Áreas con acceso</span></div>
-          <div class="stat"><strong>${S.folders.filter(f => accIds.has(f.areaId)).length}</strong><span>Departamentos</span></div>
           <div class="stat"><strong>${docs.length}</strong><span>Documentos</span></div>
-          ${soon.length ? `<div class="stat"><strong style="color:var(--warn)">${soon.length}</strong><span>Accesos temporales</span></div>` : ''}
         </div>
       </section>
+      <div class="section-head"><h2>Unidades de negocio</h2>
+        <div class="actions">${canU ? `<button class="btn btn-secondary btn-sm" data-act="newUnit">${ic('plus')}Nueva unidad</button>` : ''}</div></div>
+      ${units.length || canU ? `<div class="grid">
+        ${units.map((u, i) => unitCard(u, i)).join('')}
+        ${canU ? `<button class="add-card" data-act="newUnit" style="animation-delay:${units.length * 60}ms"><span class="plus">${ic('plus')}</span>Crear Unidad de Negocio</button>` : ''}
+      </div>` : emptyState('building-2', 'Sin unidades de negocio', 'Solicita a un administrador que configure las unidades.')}
+`;
+  }
+
+  function unitCard(u, i) {
+    const areas = S.areas.filter(a => a.unitId === u.id);
+    const visible = areas.filter(a => areaAccess(a.id).level || (S.settings.showLockedAreas && areaAccess(a.id).status === 'expirado') || can('managePerms'));
+    const nd = S.docs.filter(d => areas.some(a => a.id === d.areaId)).length;
+    const color = u.color || 'blue';
+    const icon = u.icon || 'building-2';
+    return `<div class="area-card" style="${cssVars(color)};animation-delay:${i * 60}ms" data-act="openUnit" data-id="${u.id}" tabindex="0" role="button" aria-label="${esc(u.name)}">
+      ${can('createArea') ? `<button class="icon-btn more" data-act="unitMenu" data-id="${u.id}" aria-label="Opciones">${ic('ellipsis')}</button>` : ''}
+      <div class="glyph">${ic(icon)}</div>
+      <h3>${esc(u.name)}</h3><div class="code">${esc(u.code)}</div>
+      <p>${esc(u.desc || '')}</p>
+      <div class="meta"><span>${ic('layout-grid')}${visible.length} áreas</span><span>${ic('file-text')}${nd} docs</span></div>
+    </div>`;
+  }
+
+  function unitView() {
+    const u = unitById(route.unitId);
+    if (!u) { route.view = 'home'; return homeView(); }
+    const areas = visibleAreas().filter(a => a.unitId === u.id);
+    const canU = can('createArea');
+    return `${crumbs([{ label: u.name }])}
+      <div class="page-title" style="${cssVars(u.color || 'blue')}"><div class="glyph" style="background:linear-gradient(135deg,var(--c1),var(--c2))">${ic(u.icon || 'building-2')}</div>
+        <div><h1>${esc(u.name)}</h1></div></div>
+      <p class="page-sub">${esc(u.desc || 'Unidad de negocio')}</p>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><span class="chip">${ic('hash')}${esc(u.code)}</span></div>
       <div class="section-head"><h2>Áreas</h2>
-        <div class="actions">${can('createArea') ? `<button class="btn btn-secondary btn-sm" data-act="newArea">${ic('plus')}Nueva área</button>` : ''}</div></div>
-      ${areas.length || can('createArea') ? `<div class="grid">
+        <div class="actions">${canU ? `<button class="btn btn-secondary btn-sm" data-act="newArea" data-unit="${u.id}">${ic('plus')}Nueva área</button>` : ''}</div></div>
+      ${areas.length || canU ? `<div class="grid">
         ${areas.map((a, i) => areaCard(a, i)).join('')}
-        ${can('createArea') ? `<button class="add-card" data-act="newArea" style="animation-delay:${areas.length * 60}ms"><span class="plus">${ic('plus')}</span>Crear área</button>` : ''}
-      </div>` : emptyState('lock', 'Aún no tienes áreas asignadas', 'Solicita a un administrador que te otorgue permisos de acceso.')}
+        ${canU ? `<button class="add-card" data-act="newArea" data-unit="${u.id}" style="animation-delay:${areas.length * 60}ms"><span class="plus">${ic('plus')}</span>Crear área</button>` : ''}
+      </div>` : emptyState('layout-grid', 'Sin áreas', 'Esta unidad aún no tiene áreas.')}
 `;
   }
 
   /* ---------------- Pestaña Dashboard ---------------- */
   function matrixView() {
-    const docs = S.docs.filter(d => areaAccess(d.areaId).level).sort((a, b) => {
+    let docs = S.docs.filter(d => areaAccess(d.areaId).level);
+    // Eliminados al final
+    docs = docs.sort((a, b) => {
+      const ea = computeEstado(a) === 'eliminado' ? 1 : 0;
+      const eb = computeEstado(b) === 'eliminado' ? 1 : 0;
+      if (ea !== eb) return ea - eb;
+      const ua = unitById(areaById(a.areaId)?.unitId)?.name || '';
+      const ub = unitById(areaById(b.areaId)?.unitId)?.name || '';
       const an = areaById(a.areaId)?.name || '', bn = areaById(b.areaId)?.name || '';
       const af = folderById(a.folderId)?.name || '', bf = folderById(b.folderId)?.name || '';
-      return an.localeCompare(bn, 'es') || af.localeCompare(bf, 'es') || a.nomenclatura.localeCompare(b.nomenclatura, 'es', { numeric: true });
+      return ua.localeCompare(ub, 'es') || an.localeCompare(bn, 'es') || af.localeCompare(bf, 'es') || a.nomenclatura.localeCompare(b.nomenclatura, 'es', { numeric: true });
     });
     const urlCell = (d) => {
-      const u = (d.url || '').trim();
-      if (!u) return '<span class="tiny">—</span>';
+      const u = d.url || localDocUrl(d.id);
       const safe = esc(u);
-      return `<a class="url-link" href="${safe}" target="_blank" rel="noopener noreferrer" title="${safe}" onclick="event.stopPropagation()">${safe}</a>`;
+      if (/^https?:\/\//i.test(u)) {
+        return `<a class="url-ver" href="${safe}" target="_blank" rel="noopener noreferrer" title="${safe}" onclick="event.stopPropagation()">Ver</a>`;
+      }
+      // local:// → abrir el documento en el visor de la app
+      return `<button type="button" class="url-ver" data-act="openDoc" data-id="${d.id}" title="${safe}" onclick="event.stopPropagation()">Ver</button>`;
     };
     const rows = docs.map(d => {
-      const a = areaById(d.areaId), f = folderById(d.folderId);
-      return `<tr data-act="openDoc" data-id="${d.id}" style="cursor:pointer">
-        <td>${esc(a?.name || '—')}</td>
-        <td>${esc(f?.name || '—')}</td>
+      const a = areaById(d.areaId), f = folderById(d.folderId), u = unitById(a?.unitId);
+      const st = computeEstado(d);
+      const del = st === 'eliminado' ? ' style="background:var(--danger-soft)"' : '';
+      const rector = d.rectorId ? (docById(d.rectorId)?.nomenclatura || '—') : '—';
+      return `<tr data-act="openDoc" data-id="${d.id}" style="cursor:pointer"${del}>
+        <td>${esc(u?.name || '—')}</td>
         <td class="mono">${esc(d.nomenclatura)}</td>
         <td title="${esc(d.nombre)}">${esc(d.nombre)}</td>
+        <td>${esc(d.macroproceso || '—')}</td>
+        <td>${esc(a?.name || '—')}</td>
+        <td>${esc(f?.name || '—')}</td>
         <td>${esc(d.tipo || '—')}</td>
         <td>${esc(d.categoria || '—')}</td>
         <td>${esc(d.clasificacion || '—')}</td>
         <td>${esc(d.version)}</td>
+        <td>${fmtDate(d.fechaEmision)}</td>
         <td>${fmtDocDate(d)}</td>
-        <td>${esc(userName(d.subidoPor))}</td>
-        <td>${esc((d.ext || '').toUpperCase())}</td>
+        <td>${fmtDate(d.fechaAutorizacion)}</td>
+        <td>${fmtDate(d.fechaDifusion)}</td>
         <td>${urlCell(d)}</td>
+        <td class="mono">${esc(rector)}</td>
+        <td>${estadoChip(d)}</td>
       </tr>`;
     }).join('');
     return `<section class="hero hero-sm"><div class="eyebrow">Matriz Documental</div>
       <h1>Listado maestro de documentos.</h1>
-      <p>Vista consolidada de todos los documentos a los que tienes acceso, con área, departamento y liga de hospedaje.</p></section>
+      <p>Vista consolidada con unidad de negocio, macroproceso, fechas y estado.</p></section>
       <div class="section-head"><div><h2>${docs.length} ${docs.length === 1 ? 'documento' : 'documentos'}</h2>
-        <p class="tiny" style="margin-top:4px">Haz clic en una fila para abrir el documento. La URL es la liga externa donde está hospedado (opcional).</p></div>
-        <label class="search" style="width:240px">${ic('filter')}<input id="matrixFilter" placeholder="Filtrar matriz" value="${esc(ui.matrixFilter || '')}"/></label>
+        <p class="tiny" style="margin-top:4px">Arrastra el borde de las columnas para ajustar el ancho. Exporta a Excel cuando lo necesites.</p></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <label class="search" style="width:220px">${ic('filter')}<input id="matrixFilter" placeholder="Filtrar matriz" value="${esc(ui.matrixFilter || '')}"/></label>
+          <button class="btn btn-secondary btn-sm" id="matrixXlsx">${ic('download')}Exportar Excel</button>
+        </div>
       </div>
-      ${docs.length ? `<div class="matrix-wrap"><table class="matrix-tbl" id="matrixTbl"><thead><tr>
-        <th>Área</th><th>Departamento</th><th>Nomenclatura</th><th>Nombre</th><th>Tipo de documento</th><th>Categoría</th><th>Clasificación</th><th>Versión</th><th>Fecha de última actualización</th><th>Subido por</th><th>Ext</th><th>URL</th>
+      ${docs.length ? `<div class="matrix-wrap" style="overflow-x:auto"><table class="matrix-tbl resizable-cols" id="matrixTbl"><thead><tr>
+        <th>Unidad de negocio</th><th>Nomenclatura</th><th>Nombre</th><th>Macroproceso</th><th>Área</th><th>Departamento</th><th>Tipo de Documento</th><th>Categoría</th><th>Clasificación</th><th>Versión</th><th>Fecha de emisión</th><th>Fecha de última actualización</th><th>Fecha de autorización</th><th>Fecha de difusión</th><th>URL</th><th>Documento Rector</th><th>Estado</th>
       </tr></thead><tbody id="matrixBody">${rows}</tbody></table></div>` : emptyState('table', 'Sin documentos', 'Aún no hay documentos en las áreas a las que tienes acceso.')}`;
   }
 
   function bindMatrix() {
     const inp = $('#matrixFilter');
-    if (!inp) return;
-    const apply = () => {
-      ui.matrixFilter = inp.value;
-      const q = inp.value.trim().toLowerCase();
-      $$('#matrixBody tr').forEach(tr => {
-        tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+    if (inp) {
+      const apply = () => {
+        ui.matrixFilter = inp.value;
+        const q = inp.value.trim().toLowerCase();
+        $$('#matrixBody tr').forEach(tr => {
+          tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+      };
+      inp.addEventListener('input', apply);
+      if (ui.matrixFilter) apply();
+    }
+    $('#matrixXlsx')?.addEventListener('click', () => exportMatrixXlsx());
+    enableResizableColumns('#matrixTbl');
+  }
+
+  function exportMatrixXlsx() {
+    const docs = S.docs.filter(d => areaAccess(d.areaId).level);
+    const headers = ['Unidad de negocio','Nomenclatura','Nombre','Macroproceso','Área','Departamento','Tipo de Documento','Categoría','Clasificación','Versión','Fecha de emisión','Fecha de última actualización','Fecha de autorización','Fecha de difusión','URL','Documento Rector','Estado'];
+    const rows = docs.map(d => {
+      const a = areaById(d.areaId), f = folderById(d.folderId), u = unitById(a?.unitId);
+      const rector = d.rectorId ? (docById(d.rectorId)?.nomenclatura || '') : '';
+      return [u?.name||'', d.nomenclatura, d.nombre, d.macroproceso||'', a?.name||'', f?.name||'', d.tipo||'', d.categoria||'', d.clasificacion||'', d.version, fmtDate(d.fechaEmision), fmtDate(d.fechaActualizacion), fmtDate(d.fechaAutorizacion), fmtDate(d.fechaDifusion), d.url||localDocUrl(d.id), rector, estadoLabel(computeEstado(d))];
+    });
+    // CSV con BOM para Excel
+    const escC = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+    const csv = '\ufeff' + [headers, ...rows].map(r => r.map(escC).join(',')).join('\n');
+    saveBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `matriz-documental-${new Date().toISOString().slice(0,10)}.csv`);
+    toast('Matriz exportada');
+  }
+
+  function enableResizableColumns(sel) {
+    const table = $(sel);
+    if (!table) return;
+    const key = table.id || sel;
+    const wrap = table.closest('.table-wrap') || table.parentElement;
+    if (wrap) wrap.style.overflowX = 'auto';
+    table.style.width = 'max-content';
+    table.style.minWidth = '100%';
+    const ths = $$('thead th', table);
+    const saved = (ui.colWidths && ui.colWidths[key]) || null;
+    const applyCol = (idx, px) => {
+      const w = Math.max(48, px) + 'px';
+      const th = ths[idx];
+      if (!th) return;
+      th.style.width = w; th.style.minWidth = w; th.style.maxWidth = w;
+      $$('tbody tr', table).forEach(tr => {
+        const td = tr.children[idx];
+        if (td) {
+          td.style.width = w; td.style.minWidth = w; td.style.maxWidth = w;
+          td.style.whiteSpace = 'nowrap'; td.style.overflow = 'hidden'; td.style.textOverflow = 'ellipsis';
+        }
       });
     };
-    inp.addEventListener('input', apply);
-    if (ui.matrixFilter) apply();
+    // Anchos iniciales: restaurar los guardados o medir el layout actual
+    ths.forEach((th, idx) => {
+      th.style.position = 'relative';
+      th.style.whiteSpace = 'nowrap';
+      th.style.overflow = 'hidden';
+      th.style.textOverflow = 'ellipsis';
+      const px = (saved && saved[idx] != null) ? saved[idx] : Math.max(48, Math.round(th.getBoundingClientRect().width));
+      applyCol(idx, px);
+    });
+    ths.forEach((th, idx) => {
+      if (th.querySelector('.col-resizer')) return;
+      const grip = document.createElement('span');
+      grip.className = 'col-resizer';
+      grip.style.cssText = 'position:absolute;right:0;top:0;width:6px;height:100%;cursor:col-resize;user-select:none;z-index:2;';
+      th.appendChild(grip);
+      let startX, startW;
+      const onMove = (e) => {
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const dx = clientX - startX;
+        applyCol(idx, startW + dx);
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onUp);
+        // Persistir anchos para que no se reviertan al re-render
+        ui.colWidths = ui.colWidths || {};
+        ui.colWidths[key] = ths.map(th => parseInt(th.style.width, 10) || th.offsetWidth);
+      };
+      const onDown = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        startX = e.touches ? e.touches[0].clientX : e.clientX;
+        startW = th.offsetWidth;
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onUp);
+      };
+      grip.addEventListener('mousedown', onDown);
+      grip.addEventListener('touchstart', onDown, { passive: false });
+    });
   }
 
   function dashboardView() {
@@ -1760,7 +2241,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const folders = S.folders.filter(f => f.areaId === a.id).sort((x, y) => (x.order ?? 0) - (y.order ?? 0));
     const docs = S.docs.filter(d => d.areaId === a.id).sort((x, y) => y.updatedAt - x.updatedAt).slice(0, 5);
     const canF = canFolderIn(a.id);
-    return `${crumbs([{ label: a.name }])}
+    const u = unitById(a.unitId);
+    return `${crumbs([...(u ? [{ label: u.name, act: 'openUnit', id: u.id }] : []), { label: a.name }])}
       <div class="page-title" style="${cssVars(a.color)}"><div class="glyph" style="background:linear-gradient(135deg,var(--c1),var(--c2))">${ic(a.icon)}</div>
         <div><h1>${esc(a.name)}</h1></div></div>
       <p class="page-sub">${esc(a.desc || '')}</p>
@@ -1795,8 +2277,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (ui.filter) { const q = ui.filter.toLowerCase(); docs = docs.filter(d => (d.nomenclatura + ' ' + d.nombre + ' ' + d.fileName + ' ' + d.tipo + ' ' + d.clasificacion).toLowerCase().includes(q)); }
     const sorters = { recent: (x, y) => y.updatedAt - x.updatedAt, code: (x, y) => x.nomenclatura.localeCompare(y.nomenclatura, 'es', { numeric: true }), name: (x, y) => x.nombre.localeCompare(y.nombre, 'es') };
     docs.sort(sorters[ui.sort]);
+    docs.sort((a, b) => (computeEstado(a) === 'eliminado' ? 1 : 0) - (computeEstado(b) === 'eliminado' ? 1 : 0));
     const up = canUploadIn(a.id);
-    return `${crumbs([{ label: a.name, act: 'openArea', id: a.id }, { label: f.name }])}
+    const u = unitById(a.unitId);
+    return `${crumbs([...(u ? [{ label: u.name, act: 'openUnit', id: u.id }] : []), { label: a.name, act: 'openArea', id: a.id }, { label: f.name }])}
       <div class="page-title" style="${cssVars(a.color)}">
         <div class="folder-icon" style="width:64px;height:52px;margin:0"><div class="back"></div><div class="front" style="height:40px"></div></div>
         <div><h1>${esc(f.name)}</h1></div></div>
@@ -1822,11 +2306,30 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
 
   const badge = (ext) => `<div class="file-badge" style="background:${EXT_COLOR[ext] || '#8e8e93'}">${esc((ext || 'doc').toUpperCase().slice(0, 4))}</div>`;
-  const fmtDocDate = (d) => fmtDate(new Date(d.fechaActualizacion + 'T12:00').getTime());
-  const docHeader = () => `<div class="doc-row head"><span></span><span>Documento</span><span class="c-nom">Nomenclatura</span><span class="c-name">Nombre</span><span>Tipo de documento</span><span>Categoría</span><span>Clasificación</span><span>Versión</span><span>Fecha de última actualización</span><span class="c-user">Subido por</span><span></span></div>`;
+  const fmtDocDate = (d) => d && d.fechaActualizacion ? fmtDate(d.fechaActualizacion) : '—';
+  const docHeader = () => `<thead><tr>
+      <th style="width:44px"></th>
+      <th>Documento</th>
+      <th>Nomenclatura</th>
+      <th>Nombre</th>
+      <th>Macroproceso</th>
+      <th>Área</th>
+      <th>Departamento</th>
+      <th>Tipo de Documento</th>
+      <th>Categoría</th>
+      <th>Clasificación</th>
+      <th>Versión</th>
+      <th>Fecha de emisión</th>
+      <th>Fecha de última actualización</th>
+      <th>Fecha de autorización</th>
+      <th>Fecha de difusión</th>
+      <th>Estado</th>
+      <th>URL</th>
+      <th style="width:40px"></th>
+    </tr></thead>`;
   // rows: documentos o elementos de árbol {d, depth, ref, hit}
   const levelLegend = () => `<div class="lvl-legend">${CATEGORIAS.map(c => `<span class="lg lvl-${LEVEL[c]}"><i></i>${CAT_LEVEL[c]} · ${c}</span>`).join('')}</div>`;
-  const docTable = (rows, info = false) => `${info ? '' : levelLegend()}<div class="doc-list ${info ? 'info' : ''}"><div class="doc-scroll">${docHeader()}${rows.map(r => r.d ? docRow(r.d, info, r) : docRow(r, info)).join('')}</div></div>`;
+  const docTable = (rows, info = false) => `${info ? '' : levelLegend()}<div class="doc-list ${info ? 'info' : ''}"><div class="doc-scroll table-wrap"><table class="tbl doc-tbl" id="${info ? 'infoDocTbl' : 'folderDocTbl'}">${docHeader()}<tbody>${rows.map(r => r.d ? docRow(r.d, info, r) : docRow(r, info)).join('')}</tbody></table></div></div>`;
 
   /* Ordena la lista por jerarquía: primero 1er nivel, debajo sus documentos de 2º nivel y, debajo de cada uno,
      los de 3er nivel. Los documentos sin rector van después, en orden de nivel. Si el rector está fuera de la lista
@@ -1866,25 +2369,49 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const f = folderById(d.folderId), a = areaById(d.areaId);
     const r = d.rectorId ? docById(d.rectorId) : null;
     const nk = childrenOf(d.id).length;
+    const st = computeEstado(d);
     const sub = info ? `${esc(a?.name || '')} / ${esc(f?.name || '')}`
       : t.ref ? `Documento rector · ${esc(a?.name || '')} / ${esc(f?.name || '')}`
       : (t.orphan || (t.depth && r && r.folderId !== d.folderId)) && r ? `Rector: ${esc(r.nomenclatura)}${r.folderId !== d.folderId ? ` · ${esc(folderById(r.folderId)?.name || '')}` : ''}`
       : (!t.depth && nk && !info) ? `${nk} ${nk === 1 ? 'documento asociado' : 'documentos asociados'}`
       : esc(d.fileName);
-    const cls = ['doc-row', 'lvl-' + lvlOf(d), info ? 'info' : '', t.depth ? 'child' : '', t.ref ? 'ref' : '', t.hit ? 'hit' : ''].filter(Boolean).join(' ');
-    return `<div class="${cls}" style="--depth:${Math.min(t.depth || 0, 3)}" ${info ? '' : `data-act="openDoc" data-id="${d.id}" tabindex="0" role="button"`}>
-      ${badge(d.ext)}
-      <div class="doc-name">${t.depth ? `<i class="tree-mark">${ic('corner-down-right')}</i>` : ''}<div><strong>${esc(d.nomenclatura)} ${esc(d.nombre)}</strong><span>${sub}</span></div></div>
-      <span class="mono c-nom">${esc(d.nomenclatura)}</span>
-      <span class="cell-clip c-name">${esc(d.nombre)}</span>
-      <span class="c-tipo">${d.tipo ? `<span class="chip">${esc(d.tipo)}</span>` : '<span class="tiny">—</span>'}</span>
-      <span>${catChip(d.categoria)}</span>
-      <span>${d.clasificacion ? `<span class="chip ${clasifClass(d.clasificacion)}">${esc(d.clasificacion)}</span>` : '<span class="tiny">—</span>'}</span>
-      <span class="c-ver" data-l="Versión"><span class="chip ver">${esc(d.version)}</span></span>
-      <span class="tiny c-date">${fmtDocDate(d)}</span>
-      <span class="tiny cell-clip c-user">${esc(userName(d.subidoPor))}</span>
-      ${info ? `<span class="tiny" title="Solo informativo">${ic('eye-off')}</span>` : t.ref ? `<span class="tiny" title="Documento rector en otra carpeta">${ic('link')}</span>` : `<button class="icon-btn" data-act="docMenu" data-id="${d.id}" aria-label="Opciones">${ic('ellipsis')}</button>`}
-    </div>`;
+    const depth = t.depth || 0;
+    const del = st === 'eliminado';
+    const url = d.url || localDocUrl(d.id);
+    const pad = depth ? `padding-left:${12 + depth * 16}px` : '';
+    const rowStyle = del ? 'background:var(--danger-soft)' : '';
+    const styles = [];
+    if (!info && !t.ref) styles.push('cursor:pointer');
+    if (del) styles.push('background:var(--danger-soft)');
+    const styleAttr = styles.length ? ` style="${styles.join(';')}"` : '';
+    const act = info || t.ref ? '' : ` data-act="openDoc" data-id="${d.id}"`;
+    const menu = info
+      ? `<span class="tiny" title="Solo informativo">${ic('eye-off')}</span>`
+      : t.ref
+        ? `<span class="tiny" title="Documento rector en otra carpeta">${ic('link')}</span>`
+        : `<button class="icon-btn" data-act="docMenu" data-id="${d.id}" aria-label="Opciones">${ic('ellipsis')}</button>`;
+    return `<tr class="doc-tr lvl-${lvlOf(d)} ${t.ref ? 'ref' : ''} ${t.hit ? 'hit' : ''}"${act}${styleAttr}>
+      <td>${badge(d.ext)}</td>
+      <td class="doc-name" style="${pad}"><div>${depth ? `<i class="tree-mark">${ic('corner-down-right')}</i>` : ''}<div><strong>${esc(d.nomenclatura)} ${esc(d.nombre)}</strong><span>${sub}</span></div></div></td>
+      <td class="mono">${esc(d.nomenclatura)}</td>
+      <td title="${esc(d.nombre)}">${esc(d.nombre)}</td>
+      <td>${esc(d.macroproceso || '—')}</td>
+      <td>${esc(a?.name || '—')}</td>
+      <td>${esc(f?.name || '—')}</td>
+      <td>${d.tipo ? `<span class="chip">${esc(d.tipo)}</span>` : '—'}</td>
+      <td>${catChip(d.categoria)}</td>
+      <td>${d.clasificacion ? `<span class="chip ${clasifClass(d.clasificacion)}">${esc(d.clasificacion)}</span>` : '—'}</td>
+      <td><span class="chip ver">${esc(d.version)}</span></td>
+      <td>${fmtDate(d.fechaEmision)}</td>
+      <td>${fmtDocDate(d)}</td>
+      <td>${fmtDate(d.fechaAutorizacion)}</td>
+      <td>${fmtDate(d.fechaDifusion)}</td>
+      <td>${estadoChip(d)}</td>
+      <td>${/^https?:\/\//i.test(url)
+        ? `<a class="url-ver" href="${esc(url)}" target="_blank" rel="noopener noreferrer" title="${esc(url)}" onclick="event.stopPropagation()">Ver</a>`
+        : `<button type="button" class="url-ver" data-act="openDoc" data-id="${d.id}" title="${esc(url)}" onclick="event.stopPropagation()">Ver</button>`}</td>
+      <td>${menu}</td>
+    </tr>`;
   }
   const clasifClass = (c) => /confiden|restring|secret|reserv/i.test(c) ? 'danger' : /p[uú]blic/i.test(c) ? 'ok' : 'accent';
   function docTile(it, i) {
@@ -1905,8 +2432,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
   function dashboardShell() {
     return `<section id="dash" class="dash">
-      <div class="section-head"><div><h2>Panel de información</h2><p class="tiny" style="margin-top:4px">Calculado sobre las áreas a las que tienes acceso. Los filtros se encadenan: Área → Año → Categoría → Tipo de documento.</p></div>
+      <div class="section-head"><div><h2>Panel de información</h2><p class="tiny" style="margin-top:4px">Calculado sobre las áreas a las que tienes acceso. Filtros en cascada: Unidad → Área → Año → Categoría → Tipo.</p></div>
         <div class="dash-filters">
+          <label class="dsel"><span>Unidad de negocio</span><select class="select" id="dfUnit"></select></label>
           <label class="dsel"><span>Área</span><select class="select" id="dfArea"></select></label>
           <label class="dsel"><span>Año</span><select class="select" id="dfYear"></select></label>
           <label class="dsel"><span>Categoría</span><select class="select" id="dfCat"></select></label>
@@ -1920,22 +2448,25 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <div class="chart-card"><div class="ch-head"><h4>Por Clasificación</h4></div><div class="ch-box"><canvas id="cClas"></canvas></div></div>
       </div>
       <div class="charts" style="margin-top:16px">
-        <div class="chart-card"><div class="ch-head"><h4 id="tMes">Por Año (Actualización)</h4></div><div class="ch-box"><canvas id="cMes"></canvas></div></div>
-        <div class="chart-card"><div class="ch-head"><h4>Por Tipo de Documento</h4></div><div class="ch-box"><canvas id="cTipo"></canvas></div></div>
+        <div class="chart-card"><div class="ch-head"><h4 id="tMes">Documentos por Año</h4><span class="rk-total" id="rkYearTotal"></span></div><div class="ch-box" id="rkYear" style="height:auto;min-height:200px;padding:8px 12px 12px"></div></div>
+        <div class="chart-card"><div class="ch-head"><h4 id="tTipo">Documentos por Tipo</h4><span class="rk-total" id="rkTipoTotal"></span></div><div class="ch-box" id="rkTipo" style="height:auto;min-height:200px;padding:8px 12px 12px"></div></div>
         <div class="chart-card span2"><div class="ch-head"><h4 id="tArea">Documentos por área</h4></div><div class="ch-box"><canvas id="cArea"></canvas></div></div>
+      </div>
+      <div class="charts" style="margin-top:16px">
+        <div class="chart-card"><div class="ch-head"><h4 id="tMesBar">Por Año (Actualización)</h4></div><div class="ch-box"><canvas id="cMesBar"></canvas></div></div>
+        <div class="chart-card"><div class="ch-head"><h4 id="tTipoBar">Por Tipo de Documento</h4></div><div class="ch-box"><canvas id="cTipoBar"></canvas></div></div>
       </div>
     </section>`;
   }
 
   function bindDashboard() {
-    const order = ['area', 'year', 'cat', 'tipo'];
-    ['dfArea', 'dfYear', 'dfCat', 'dfTipo'].forEach((id, i) => $('#' + id).addEventListener('change', (e) => {
+    const order = ['unit', 'area', 'year', 'cat', 'tipo'];
+    ['dfUnit', 'dfArea', 'dfYear', 'dfCat', 'dfTipo'].forEach((id, i) => $('#' + id).addEventListener('change', (e) => {
       ui.dash[order[i]] = e.target.value;
-      // Cascada: al cambiar un nivel se reinician los inferiores
       order.slice(i + 1).forEach(k => ui.dash[k] = '');
       updateDashboard();
     }));
-    $('#dfClear').addEventListener('click', () => { ui.dash = { area: '', year: '', cat: '', tipo: '' }; updateDashboard(); });
+    $('#dfClear').addEventListener('click', () => { ui.dash = { unit: '', area: '', year: '', cat: '', tipo: '' }; updateDashboard(); });
     updateDashboard();
   }
 
@@ -1943,12 +2474,17 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (!window.Chart || !$('#dash')) return;
     const accIds = new Set(S.areas.filter(a => areaAccess(a.id).level).map(a => a.id));
     const all = S.docs.filter(d => accIds.has(d.areaId));
-    const f = ui.dash;
+    const f = ui.dash = Object.assign({ unit: '', area: '', year: '', cat: '', tipo: '' }, ui.dash || {});
+    // Nivel 0: unidad de negocio
+    const unitOf = (d) => areaById(d.areaId)?.unitId || '';
+    const unitOpts = (S.units || []).filter(u => all.some(d => unitOf(d) === u.id));
+    if (f.unit && !unitOpts.some(u => u.id === f.unit)) f.unit = '';
+    const lvl0 = all.filter(d => !f.unit || unitOf(d) === f.unit);
     // Nivel 1: área
-    const areaOpts = S.areas.filter(a => accIds.has(a.id) && all.some(d => d.areaId === a.id));
+    const areaOpts = S.areas.filter(a => accIds.has(a.id) && lvl0.some(d => d.areaId === a.id) && (!f.unit || a.unitId === f.unit));
     if (f.area && !areaOpts.some(a => a.id === f.area)) f.area = '';
-    const lvl1 = all.filter(d => !f.area || d.areaId === f.area);
-    // Nivel 2: año (solo años con documentos del área elegida)
+    const lvl1 = lvl0.filter(d => !f.area || d.areaId === f.area);
+    // Nivel 2: año
     const years = [...new Set(lvl1.map(yearOf).filter(Boolean))].sort((a, b) => b - a);
     if (f.year && !years.includes(f.year)) f.year = '';
     const lvl2 = lvl1.filter(d => !f.year || yearOf(d) === f.year);
@@ -1957,28 +2493,28 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const cats = [...CATEGORIAS, 'Sin categoría'].filter(c => lvl2.some(d => catOf(d) === c));
     if (f.cat && !cats.includes(f.cat)) f.cat = '';
     const lvl3 = lvl2.filter(d => !f.cat || catOf(d) === f.cat);
-    // Nivel 4: tipo (solo tipos presentes en área + año + categoría)
+    // Nivel 4: tipo
     const tipos = [...new Set(lvl3.map(d => d.tipo || 'Sin tipo'))].sort((a, b) => a.localeCompare(b, 'es'));
     if (f.tipo && !tipos.includes(f.tipo)) f.tipo = '';
     const data = lvl3.filter(d => !f.tipo || (d.tipo || 'Sin tipo') === f.tipo);
 
     const opt = (v, l, sel) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(l)}</option>`;
-    $('#dfArea').innerHTML = opt('', 'Todas las áreas', f.area) + areaOpts.map(a => opt(a.id, `${a.name} (${all.filter(d => d.areaId === a.id).length})`, f.area)).join('');
+    if ($('#dfUnit')) $('#dfUnit').innerHTML = opt('', 'Todas las unidades', f.unit) + unitOpts.map(u => opt(u.id, `${u.code} · ${u.name} (${all.filter(d => unitOf(d) === u.id).length})`, f.unit)).join('');
+    $('#dfArea').innerHTML = opt('', 'Todas las áreas', f.area) + areaOpts.map(a => opt(a.id, `${a.name} (${lvl0.filter(d => d.areaId === a.id).length})`, f.area)).join('');
     $('#dfYear').innerHTML = opt('', 'Todos los años', f.year) + years.map(y => opt(y, `${y} (${lvl1.filter(d => yearOf(d) === y).length})`, f.year)).join('');
     $('#dfCat').innerHTML = opt('', 'Todas las categorías', f.cat) + cats.map(c => opt(c, `${c} (${lvl2.filter(d => catOf(d) === c).length})`, f.cat)).join('');
     $('#dfTipo').innerHTML = opt('', 'Todos los tipos', f.tipo) + tipos.map(t => opt(t, `${t} (${lvl3.filter(d => (d.tipo || 'Sin tipo') === t).length})`, f.tipo)).join('');
-    $('#dfClear').classList.toggle('hidden', !f.area && !f.year && !f.cat && !f.tipo);
+    $('#dfClear').classList.toggle('hidden', !f.unit && !f.area && !f.year && !f.cat && !f.tipo);
 
-    // KPIs
-    const d30 = data.filter(d => now() - new Date(d.fechaActualizacion + 'T12:00').getTime() <= 30 * 864e5).length;
-    const multi = data.filter(d => +d.version > 1).length;
-    const avg = data.length ? (data.reduce((s, d) => s + (+d.version || 1), 0) / data.length) : 0;
-    const kpi = (icon, val, label, sub = '') => `<div class="kpi">${ic(icon)}<strong>${val}</strong><span>${label}</span>${sub ? `<em>${sub}</em>` : ''}</div>`;
+    // KPIs estilo imagen: Total / Nuevo / Actualizado / Pendiente
+    const estCount = (id) => data.filter(d => computeEstado(d) === id).length;
+    const nNuevo = estCount('nuevo'), nAct = estCount('actualizado'), nPend = estCount('pendiente'), nRat = estCount('ratificado'), nEli = estCount('eliminado');
+    const kpi = (val, label, color = '') => `<div class="kpi"${color ? ` style="--kpi:${color}"` : ''}><strong>${val}</strong><span>${label}</span></div>`;
     $('#dKpis').innerHTML = [
-      kpi('file-text', data.length, 'Documentos', f.area || f.year || f.cat || f.tipo ? `de ${all.length} en total` : ''),
-      kpi('layers', new Set(data.map(d => d.tipo || 'Sin tipo')).size, 'Tipos de documento'),
-      kpi('calendar-clock', d30, 'Actualizados en 30 días'),
-      kpi('git-branch', avg ? avg.toFixed(1) : '0', 'Versión promedio', `${multi} con más de una versión`),
+      kpi(data.length, 'Total'),
+      kpi(nNuevo, 'Nuevo', 'var(--ok)'),
+      kpi(nAct, 'Actualizado', 'var(--accent)'),
+      kpi(nPend, 'Pendiente', 'var(--warn)'),
     ].join('');
 
     // Gráficos
@@ -1995,18 +2531,43 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const empty = (id) => { const c = $('#' + id); const box = c.parentElement; box.querySelector('.ch-empty')?.remove(); if (!data.length) box.insertAdjacentHTML('beforeend', '<div class="ch-empty">Sin datos para los filtros elegidos</div>'); return !data.length; };
     const mk = (id, cfg) => { if (empty(id)) return; charts.push(new Chart($('#' + id), cfg)); };
 
-    // 1. Por año (o por mes si hay año filtrado)
-    let labels, values;
+    // Ranking helper: lista horizontal con barra y % (Documentos por Año / por Tipo)
+    const renderRank = (boxId, totalId, titleId, title, rows) => {
+      const box = $('#' + boxId); const totEl = $('#' + totalId); const tEl = $('#' + titleId);
+      if (tEl) tEl.textContent = title;
+      const total = rows.reduce((s, r) => s + r[1], 0);
+      if (totEl) totEl.textContent = total ? String(total) : '';
+      if (!box) return;
+      box.querySelector('.ch-empty')?.remove();
+      if (!data.length || !rows.length) {
+        box.innerHTML = '<div class="ch-empty">Sin datos para los filtros elegidos</div>';
+        return;
+      }
+      const max = Math.max(...rows.map(r => r[1]), 1);
+      box.innerHTML = `<ul class="rank-list">${rows.map((r, i) => {
+        const pct = total ? ((r[1] / total) * 100) : 0;
+        const barPct = (r[1] / max) * 100;
+        const color = PALETTE[i % PALETTE.length];
+        return `<li>
+          <div class="rk-left">
+            <span class="rk-label" title="${esc(r[0])}">${esc(r[0])}<span class="rk-count">${r[1]}</span></span>
+            <div class="rk-bar-wrap"><div class="rk-bar" style="width:${barPct.toFixed(1)}%;background:${color}"></div></div>
+          </div>
+          <span class="rk-pct">${pct.toFixed(1)}%</span>
+        </li>`;
+      }).join('')}</ul>`;
+    };
+
+    // 1. Documentos por Año (fecha de última actualización)
+    let yearRows;
     if (f.year) {
-      labels = MESES; values = MESES.map((_, i) => data.filter(d => d.fechaActualizacion && +d.fechaActualizacion.slice(5, 7) === i + 1).length);
-      $('#tMes').textContent = `Por mes · ${f.year}`;
+      yearRows = MESES.map((m, i) => [m, data.filter(d => d.fechaActualizacion && +d.fechaActualizacion.slice(5, 7) === i + 1).length]).filter(r => r[1]);
+      renderRank('rkYear', 'rkYearTotal', 'tMes', `Documentos por mes · ${f.year}`, yearRows);
     } else {
       const ys = [...new Set(data.map(yearOf).filter(Boolean))].sort();
-      labels = ys; values = ys.map(y => data.filter(d => yearOf(d) === y).length);
-      $('#tMes').textContent = 'Por Año (Actualización)';
+      yearRows = ys.map(y => [y, data.filter(d => yearOf(d) === y).length]);
+      renderRank('rkYear', 'rkYearTotal', 'tMes', 'Documentos por Año', yearRows);
     }
-    const yearColors = labels.map((_, i) => PALETTE[i % PALETTE.length]);
-    mk('cMes', { type: 'bar', data: { labels, datasets: [{ data: values, backgroundColor: yearColors, borderRadius: 8, maxBarThickness: 46 }] }, options: { ...base, scales: axes() } });
 
     // 2. Por área o por departamento
     let rowsA;
@@ -2040,9 +2601,70 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
     donut('cClas', countBy(data, d => d.clasificacion || 'Sin clasificación'));
 
-    // Tipo de documento (barras)
+    // Documentos por Tipo (ranking)
     const tr = countBy(data, d => d.tipo || 'Sin tipo');
-    mk('cTipo', { type: 'bar', data: { labels: tr.map(r => r[0]), datasets: [{ data: tr.map(r => r[1]), backgroundColor: tr.map((_, i) => PALETTE[i % PALETTE.length]), borderRadius: 8, maxBarThickness: 40 }] }, options: { ...base, scales: axes() } });
+    renderRank('rkTipo', 'rkTipoTotal', 'tTipo', 'Documentos por Tipo', tr);
+
+    // Gráficos de barras verticales (como la imagen de referencia)
+    const coloredBar = (canvasId, labels, values, titleEl, title) => {
+      if (titleEl) titleEl.textContent = title;
+      const colors = labels.map((_, i) => PALETTE[i % PALETTE.length]);
+      mk(canvasId, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderRadius: 6,
+            maxBarThickness: 52,
+          }],
+        },
+        options: {
+          ...base,
+          scales: axes(),
+          plugins: {
+            ...base.plugins,
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                boxWidth: 10, boxHeight: 10, usePointStyle: true, padding: 12, font: { size: 11 },
+                generateLabels: (chart) => labels.map((lab, i) => ({
+                  text: `${lab}: ${values[i]}`,
+                  fillStyle: colors[i],
+                  strokeStyle: colors[i],
+                  hidden: false,
+                  index: i,
+                  pointStyle: 'circle',
+                })),
+              },
+            },
+            tooltip: {
+              ...base.plugins.tooltip,
+              callbacks: {
+                title: (items) => items[0]?.label || '',
+                label: (ctx) => `Documentos: ${ctx.raw ?? 0}`,
+              },
+            },
+          },
+        },
+      });
+    };
+
+    let barLabels, barValues;
+    if (f.year) {
+      barLabels = MESES;
+      barValues = MESES.map((_, i) => data.filter(d => d.fechaActualizacion && +d.fechaActualizacion.slice(5, 7) === i + 1).length);
+      coloredBar('cMesBar', barLabels, barValues, $('#tMesBar'), `Por mes · ${f.year}`);
+    } else {
+      const ys = [...new Set(data.map(yearOf).filter(Boolean))].sort();
+      barLabels = ys;
+      barValues = ys.map(y => data.filter(d => yearOf(d) === y).length);
+      coloredBar('cMesBar', barLabels, barValues, $('#tMesBar'), 'Por Año (Actualización)');
+    }
+    coloredBar('cTipoBar', tr.map(r => r[0]), tr.map(r => r[1]), $('#tTipoBar'), 'Por Tipo de Documento');
+
     icons();
   }
 
@@ -2080,6 +2702,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       });
       if (route.view === 'search') { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
     }
+    if (ui.docView === 'list') enableResizableColumns('#folderDocTbl');
+    enableResizableColumns('#infoDocTbl');
     const sort = $('#sortSel'); sort && sort.addEventListener('change', () => { ui.sort = sort.value; render(); });
     const filt = $('#docFilter');
     if (filt) {
@@ -2127,7 +2751,19 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       setTimeout(() => document.addEventListener('click', (e) => { if (!m.contains(e.target)) m.remove(); }, { once: true }), 0);
     },
     grant: (el) => grantModal(null, el.dataset.area ? [el.dataset.area] : []),
-    newArea: () => areaModal(),
+    newUnit: () => unitModal(),
+    editUnit: (el) => unitModal(unitById(el.dataset.id)),
+    openUnit: (el) => { go('unit', { unitId: el.dataset.id }); },
+    unitMenu: (el) => {
+      const u = unitById(el.dataset.id);
+      openMenu(el, [
+        { icon: 'pencil', label: 'Editar unidad', run: () => unitModal(u) },
+        { icon: 'plus', label: 'Nueva área', run: () => areaModal(null, u.id) },
+        '-',
+        { icon: 'trash-2', label: 'Eliminar unidad', danger: true, run: () => deleteUnit(u) },
+      ]);
+    },
+    newArea: (el) => areaModal(null, el?.dataset?.unit || route.unitId || null),
     openArea: (el) => {
       const acc = areaAccess(el.dataset.id);
       if (!acc.level) return toast(acc.status === 'expirado' ? 'Tu acceso temporal a esta área expiró' : 'No tienes acceso a esta área', 'err');
@@ -2186,23 +2822,97 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const intInput = (attrs) => `<input class="input mono" data-int inputmode="numeric" pattern="[1-9][0-9]*" maxlength="4" autocomplete="off" ${attrs}/>`;
 
   /* Campo dinámico de catálogo: texto libre la primera vez, desplegable cuando ya hay valores */
-  const CAT_LABEL = { tipos: 'Tipo de documento', clasificaciones: 'Clasificación' };
+  const CAT_LABEL = { tipos: 'Tipo de documento', clasificaciones: 'Clasificación', macroprocesos: 'Macroproceso' };
   function catalogField(kind, name, value = '') {
-    const list = [...S.catalogs[kind]];
+    const list = [...(S.catalogs[kind] || [])];
     if (value && !list.includes(value)) list.push(value);
-    const label = CAT_LABEL[kind];
-    if (!list.length) return `<div class="field cat-field" data-kind="${kind}"><label>${label}</label>
-      <input class="input" name="${name}" value="${esc(value)}" placeholder="Escribe el primero" maxlength="50" autocomplete="off"/>
-      <div class="hint">Se guardará y aparecerá como opción del desplegable</div></div>`;
-    return `<div class="field cat-field" data-kind="${kind}"><label>${label}</label>
-      <select class="select" name="${name}"><option value="">Selecciona…</option>${list.map(v => `<option ${v === value ? 'selected' : ''}>${esc(v)}</option>`).join('')}<option value="__new__">+ Agregar nuevo…</option></select>
-      <input class="input hidden" data-new placeholder="Nuevo ${label.toLowerCase()}" maxlength="50" style="margin-top:8px" autocomplete="off"/></div>`;
+    const label = CAT_LABEL[kind] || kind;
+    const usedCount = (v) => S.docs.filter(d => (kind === 'clasificaciones' ? d.clasificacion : d.macroproceso) === v).length;
+    return `<div class="field cat-field" data-kind="${kind}" data-name="${name}">
+      <label>${label}</label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select class="select" name="${name}" style="flex:1;min-width:140px">
+          <option value="">—</option>
+          ${list.map(v => `<option value="${esc(v)}" ${v === value ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+          <option value="__new__">+ Agregar nuevo…</option>
+        </select>
+        <input class="input hidden" data-new maxlength="50" placeholder="Nuevo valor" style="flex:1;min-width:120px;height:38px"/>
+        <button type="button" class="btn btn-secondary btn-sm hidden" data-accept-new style="height:38px">${ic('check')}Aceptar</button>
+      </div>
+    </div>`;
   }
   function bindCatalogFields(root) {
-    root.querySelectorAll('.cat-field select').forEach(sel => sel.addEventListener('change', () => {
-      const inp = sel.parentElement.querySelector('[data-new]');
-      inp.classList.toggle('hidden', sel.value !== '__new__'); if (sel.value === '__new__') inp.focus();
-    }));
+    root.querySelectorAll('.cat-field').forEach(field => {
+      const sel = field.querySelector('select');
+      const inp = field.querySelector('[data-new]');
+      const btn = field.querySelector('[data-accept-new]');
+      const kind = field.dataset.kind;
+      const sync = () => {
+        const isNew = sel.value === '__new__';
+        inp.classList.toggle('hidden', !isNew);
+        btn.classList.toggle('hidden', !isNew);
+        if (isNew) inp.focus();
+      };
+      sel.addEventListener('change', sync); sync();
+      btn?.addEventListener('click', () => {
+        const v = inp.value.trim();
+        if (!v) return toast('Escribe un valor', 'err');
+        const saved = addToCatalog(kind, v);
+        // insert option and select
+        const opt = document.createElement('option');
+        opt.value = saved; opt.textContent = saved; opt.selected = true;
+        const newOpt = sel.querySelector('option[value="__new__"]');
+        sel.insertBefore(opt, newOpt);
+        sel.value = saved;
+        inp.value = '';
+        sync();
+        save();
+        toast(`${CAT_LABEL[kind] || kind} agregado`);
+      });
+      inp?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); btn.click(); } });
+      // Doble clic / long press para editar o eliminar si no está en uso
+      let pressT;
+      const tryEdit = () => {
+        const v = sel.value;
+        if (!v || v === '__new__') return;
+        const used = S.docs.filter(d => (kind === 'clasificaciones' ? d.clasificacion : d.macroproceso) === v).length;
+        if (used > 0) return toast(`“${v}” está en ${used} documento(s). Edítalo o elimínalo desde Configuración.`, 'info');
+        openModal({
+          title: `Editar ${CAT_LABEL[kind] || kind}`,
+          body: `<div class="field"><label>Valor</label><input class="input" id="catEditVal" value="${esc(v)}"/></div>`,
+          foot: `<button class="btn btn-danger left" data-del>Eliminar</button><button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Guardar</button>`,
+          onMount: (c) => {
+            c.$('[data-ok]').addEventListener('click', () => {
+              const nv = c.$('#catEditVal').value.trim();
+              if (!nv) return toast('Valor vacío', 'err');
+              S.catalogs[kind] = S.catalogs[kind].map(x => x === v ? nv : x);
+              // actualizar docs (aunque used=0, por seguridad)
+              S.docs.forEach(d => {
+                if (kind === 'clasificaciones' && d.clasificacion === v) d.clasificacion = nv;
+                if (kind === 'macroprocesos' && d.macroproceso === v) d.macroproceso = nv;
+              });
+              save(); c.close();
+              // refresh select
+              const opt = [...sel.options].find(o => o.value === v);
+              if (opt) { opt.value = nv; opt.textContent = nv; sel.value = nv; }
+              toast('Valor actualizado');
+            });
+            c.$('[data-del]').addEventListener('click', () => {
+              S.catalogs[kind] = S.catalogs[kind].filter(x => x !== v);
+              save(); c.close();
+              const opt = [...sel.options].find(o => o.value === v);
+              if (opt) opt.remove();
+              sel.value = '';
+              toast('Valor eliminado');
+            });
+          },
+        });
+      };
+      sel.addEventListener('dblclick', tryEdit);
+      sel.addEventListener('touchstart', () => { pressT = setTimeout(tryEdit, 600); });
+      sel.addEventListener('touchend', () => clearTimeout(pressT));
+      sel.addEventListener('touchmove', () => clearTimeout(pressT));
+    });
   }
   function readCatalog(root, name) {
     const el = root.querySelector(`[name="${name}"]`);
@@ -2258,18 +2968,32 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       b.querySelector('[data-rector-hint]').textContent = rectorHint(c);
       sel.classList.remove('invalid');
     };
-    sel.addEventListener('change', sync); sync();
+    sel.addEventListener('change', () => {
+      sync();
+      const form = root.closest('form') || document;
+      const nom = form.querySelector('[name=nomenclatura]');
+      // Solo rellenar nomenclatura si está vacía o marcada como sugerida (no la del archivo)
+      if (nom && !nom.readOnly && b.dataset.folder) {
+        const folder = folderById(b.dataset.folder);
+        if (folder && (nom.dataset.suggested === '1' || !nom.value.trim())) {
+          const s = suggestNomenclatura(folder, sel.value);
+          nom.value = s;
+          nom.dataset.suggested = s ? '1' : '1';
+          nom.dispatchEvent(new Event('input'));
+        }
+      }
+    }); sync();
     b.querySelector('[name=rector]').addEventListener('change', (e) => e.target.classList.remove('invalid'));
   }
   function readTipoBlock(root) {
     const sel = root.querySelector('.tipo-block [name=tipo]');
-    const tipo = sel.value, categoria = catOfTipo(tipo);
-    if (!tipo) { sel.classList.add('invalid'); return { error: 'Indica el tipo de documento' }; }
-    if (!categoria) { sel.classList.add('invalid'); return { error: 'Elige un tipo del catálogo para asignar su categoría' }; }
+    const tipo = sel ? sel.value : '';
+    const categoria = tipo ? catOfTipo(tipo) : '';
+    // Tipo y clasificación son opcionales; solo se validan si el usuario eligió tipo
     let rectorId = null;
-    if (RECTOR_CATS[categoria]) {
+    if (tipo && categoria && RECTOR_CATS[categoria]) {
       const rs = root.querySelector('.tipo-block [name=rector]');
-      rectorId = rs.value || null;
+      rectorId = rs?.value || null;
       const r = rectorId && docById(rectorId);
       if (rectorId && (!r || !canBeRector(categoria, r.categoria))) { rs.classList.add('invalid'); return { error: 'El documento rector elegido no corresponde al nivel del documento' }; }
     }
@@ -2281,15 +3005,81 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     return bad.length ? `Este documento es rector de ${bad.length} ${bad.length === 1 ? 'documento' : 'documentos'} (${bad.slice(0, 3).map(k => k.nomenclatura).join(', ')}${bad.length > 3 ? '…' : ''}) que no pueden depender de un documento ${CAT_LEVEL[newCat] ? 'de ' + CAT_LEVEL[newCat] : 'sin categoría'}. Reasígnalos primero.` : '';
   }
 
-  /* ---------------- Áreas y carpetas: CRUD ---------------- */
-  function areaModal(a = null) {
-    const isNew = !a;
-    a = a || { name: '', code: '', desc: '', color: 'blue', icon: 'briefcase' };
+
+  async function confirmDestructive(title, text) {
+    if (!await confirmDialog({ title, text, ok: 'Continuar', danger: true })) return false;
+    if (!S.settings.adminActionPasswordHash) return true; // aún no configurada: permitir (admin debe crearla)
+    return new Promise((resolve) => {
+      openModal({
+        title: 'Confirmar con contraseña',
+        body: `<div class="field"><label>Contraseña de acciones destructivas</label><input class="input" id="actPass2" type="password" autocomplete="off"/></div>`,
+        foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-danger" data-ok>Confirmar</button>`,
+        onMount: (c) => {
+          c.$('[data-ok]').addEventListener('click', async () => {
+            const ok = await Repo.verifyPassword(c.$('#actPass2').value, S.settings.adminActionPasswordHash);
+            if (!ok) return toast('Contraseña incorrecta', 'err');
+            c.close(); resolve(true);
+          });
+          c.$('[data-close]').addEventListener('click', () => resolve(false));
+        },
+      });
+    });
+  }
+
+  /* ---------------- Unidades de negocio ---------------- */
+  function unitModal(u = null) {
+    const isNew = !u;
+    u = u || { name: '', code: '', desc: '', color: 'blue', icon: 'building-2' };
     openModal({
-      title: isNew ? 'Nueva área' : 'Editar área', sub: 'Las áreas agrupan departamentos y controlan los permisos de acceso.',
+      title: isNew ? 'Nueva unidad de negocio' : 'Editar unidad de negocio',
+      sub: 'Las unidades agrupan áreas. Crea al menos una antes de agregar áreas.',
+      body: `<form id="ufu">
+        <div class="row"><div class="field"><label>Nombre</label><input class="input" name="name" value="${esc(u.name)}" placeholder="Ej. COMASW" required maxlength="60"/></div>
+        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(u.code)}" placeholder="Sin propuesta automática" required maxlength="6" style="text-transform:uppercase"/><div class="hint">Obligatorio · sin valor por defecto</div></div></div>
+        <div class="field"><label>Descripción</label><textarea class="textarea" name="desc" maxlength="160">${esc(u.desc || '')}</textarea></div>
+        <div class="field"><span class="label">Color</span><div class="swatches">${Object.entries(COLORS).map(([k, [c1, c2]]) => `<label class="swatch" style="background:linear-gradient(135deg,${c1},${c2})" title="${k}"><input type="radio" name="color" value="${k}" ${(u.color || 'blue') === k ? 'checked' : ''}/></label>`).join('')}</div></div>
+        <div class="field"><span class="label">Icono</span><div class="icon-picks">${AREA_ICONS.map(n => `<label class="icon-pick"><input type="radio" name="icon" value="${n}" ${(u.icon || 'building-2') === n ? 'checked' : ''}/>${ic(n)}</label>`).join('')}</div></div>
+      </form>`,
+      foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>${isNew ? 'Crear unidad' : 'Guardar'}</button>`,
+      onMount: (c) => {
+        const f = c.$('#ufu');
+        c.$('[data-save]').addEventListener('click', () => {
+          const name = f.name.value.trim(), code = f.code.value.trim().toUpperCase();
+          if (!name || !code) { (!name ? f.name : f.code).classList.add('invalid'); return toast('Nombre y código son obligatorios', 'err'); }
+          if ((S.units || []).some(x => x.code === code && x.id !== u.id)) { f.code.classList.add('invalid'); return toast('Ese código ya está en uso', 'err'); }
+          const data = { name, code, desc: f.desc.value.trim(), color: f.color.value || 'blue', icon: f.icon.value || 'building-2' };
+          if (isNew) {
+            S.units = S.units || [];
+            S.units.push({ id: Repo.uid('u_'), ...data, createdAt: now(), createdBy: me.id });
+            log('área', `Creó la unidad de negocio ${name}`);
+          } else { Object.assign(u, data); log('área', `Editó la unidad ${name}`); }
+          save(); c.close(); render(); toast(isNew ? 'Unidad creada' : 'Unidad actualizada');
+        });
+      },
+    });
+  }
+  async function deleteUnit(u) {
+    const na = S.areas.filter(a => a.unitId === u.id).length;
+    if (na) return toast(`Hay ${na} áreas en esta unidad; muévelas o elimínalas primero`, 'err');
+    if (!await confirmDialog({ title: `¿Eliminar unidad ${esc(u.name)}?`, text: 'Esta acción no se puede deshacer.', ok: 'Eliminar', danger: true })) return;
+    S.units = S.units.filter(x => x.id !== u.id);
+    log('área', `Eliminó la unidad ${u.name}`); save(); go('home'); toast('Unidad eliminada');
+  }
+
+  /* ---------------- Áreas y carpetas: CRUD ---------------- */
+  function areaModal(a = null, unitId = null) {
+    const isNew = !a;
+    const units = S.units || [];
+    a = a || { name: '', code: '', desc: '', color: 'blue', icon: 'briefcase', unitId: unitId || (units[0] && units[0].id) || '' };
+    openModal({
+      title: isNew ? 'Nueva área' : 'Editar área', sub: 'Las áreas pertenecen a una unidad de negocio y agrupan departamentos.',
       body: `<form id="af">
+        <div class="field"><label>Unidad de negocio</label><select class="select" name="unitId" required>
+          <option value="">Selecciona…</option>
+          ${units.map(u => `<option value="${u.id}" ${a.unitId === u.id ? 'selected' : ''}>${esc(u.code)} · ${esc(u.name)}</option>`).join('')}
+        </select></div>
         <div class="row"><div class="field"><label>Nombre del área</label><input class="input" name="name" value="${esc(a.name)}" placeholder="Ej. Compras" required maxlength="40"/></div>
-        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(a.code)}" placeholder="COM" required maxlength="6" style="text-transform:uppercase"/><div class="hint">Prefijo para nomenclaturas</div></div></div>
+        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(a.code)}" placeholder="Sin propuesta automática" required maxlength="6" style="text-transform:uppercase"/><div class="hint">Obligatorio · sin valor por defecto</div></div></div>
         <div class="field"><label>Descripción</label><textarea class="textarea" name="desc" maxlength="160" placeholder="¿Qué documentos resguarda esta área?">${esc(a.desc)}</textarea></div>
         <div class="field"><span class="label">Color</span><div class="swatches">${Object.entries(COLORS).map(([k, [c1, c2]]) => `<label class="swatch" style="background:linear-gradient(135deg,${c1},${c2})" title="${k}"><input type="radio" name="color" value="${k}" ${a.color === k ? 'checked' : ''}/></label>`).join('')}</div></div>
         <div class="field"><span class="label">Icono</span><div class="icon-picks">${AREA_ICONS.map(n => `<label class="icon-pick"><input type="radio" name="icon" value="${n}" ${a.icon === n ? 'checked' : ''}/>${ic(n)}</label>`).join('')}</div></div>
@@ -2297,13 +3087,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>${isNew ? 'Crear área' : 'Guardar'}</button>`,
       onMount: (c) => {
         const f = c.$('#af');
-        f.name.addEventListener('input', () => { if (isNew && !f.code.dataset.touched) f.code.value = f.name.value.normalize('NFD').replace(/[^A-Za-z ]/g, '').split(/\s+/).filter(Boolean).map((w, i, arr) => arr.length > 1 ? w[0] : w.slice(0, 3)).join('').toUpperCase().slice(0, 4); });
-        f.code.addEventListener('input', () => f.code.dataset.touched = 1);
         c.$('[data-save]').addEventListener('click', () => {
-          const name = f.name.value.trim(), code = f.code.value.trim().toUpperCase();
+          const name = f.name.value.trim(), code = f.code.value.trim().toUpperCase(), uid = f.unitId.value;
+          if (!uid) { f.unitId.classList.add('invalid'); return toast('Selecciona una unidad de negocio', 'err'); }
           if (!name || !code) { (!name ? f.name : f.code).classList.add('invalid'); return toast('Nombre y código son obligatorios', 'err'); }
-          if (S.areas.some(x => x.code === code && x.id !== a.id)) { f.code.classList.add('invalid'); return toast('Ese código ya está en uso', 'err'); }
-          const data = { name, code, desc: f.desc.value.trim(), color: f.color.value, icon: f.icon.value };
+          if (S.areas.some(x => x.code === code && x.unitId === uid && x.id !== a.id)) { f.code.classList.add('invalid'); return toast('Ese código ya está en uso en la unidad', 'err'); }
+          const data = { name, code, desc: f.desc.value.trim(), color: f.color.value, icon: f.icon.value, unitId: uid };
           if (isNew) { S.areas.push({ id: Repo.uid('a_'), ...data, createdAt: now(), createdBy: me.id, order: S.areas.length }); log('área', `Creó el área ${name}`); }
           else { Object.assign(a, data); log('área', `Editó el área ${name}`); }
           save(); c.close(); render(); toast(isNew ? 'Área creada' : 'Área actualizada');
@@ -2313,7 +3102,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   async function deleteArea(a) {
     const nd = S.docs.filter(d => d.areaId === a.id).length;
-    if (!await confirmDialog({ title: `¿Eliminar ${esc(a.name)}?`, text: nd ? `Se eliminarán también ${nd} documentos y todas sus carpetas. Esta acción no se puede deshacer.` : 'Se eliminarán sus carpetas y permisos asociados.', ok: 'Eliminar', danger: true })) return;
+    if (!await confirmDestructive(`¿Eliminar ${esc(a.name)}?`, nd ? `Se eliminarán también ${nd} documentos y todas sus carpetas. Esta acción no se puede deshacer.` : 'Se eliminarán sus carpetas y permisos asociados.')) return;
     for (const d of S.docs.filter(d => d.areaId === a.id)) await purgeDocFiles(d);
     S.docs = S.docs.filter(d => d.areaId !== a.id);
     S.folders = S.folders.filter(f => f.areaId !== a.id);
@@ -2327,13 +3116,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     openModal({
       title: isNew ? 'Nueva carpeta' : 'Editar carpeta', sub: `Departamento dentro de ${esc(a.name)}`,
       body: `<form id="ff"><div class="row"><div class="field"><label>Nombre del departamento</label><input class="input" name="name" value="${esc(f.name)}" placeholder="Ej. Procedimientos" maxlength="40"/></div>
-        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(f.code)}" placeholder="PR" maxlength="6" style="text-transform:uppercase"/><div class="hint">Solo referencia del departamento (p. ej. <b id="cp">${esc(f.code || 'XX')}</b>). No incluye el código del área.</div></div></div></form>`,
+        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(f.code)}" placeholder="Sin propuesta automática" maxlength="6" style="text-transform:uppercase" required/><div class="hint">Obligatorio · sin valor por defecto. Solo referencia del departamento.</div></div></div></form>`,
       foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>${isNew ? 'Crear carpeta' : 'Guardar'}</button>`,
       onMount: (c) => {
         const fm = c.$('#ff');
-        const upd = () => c.$('#cp').textContent = fm.code.value.toUpperCase() || 'XX';
-        fm.name.addEventListener('input', () => { if (isNew && !fm.code.dataset.t) { fm.code.value = fm.name.value.normalize('NFD').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase(); upd(); } });
-        fm.code.addEventListener('input', () => { fm.code.dataset.t = 1; upd(); });
         fm.addEventListener('submit', e => e.preventDefault());
         c.$('[data-save]').addEventListener('click', () => {
           const name = fm.name.value.trim(), code = fm.code.value.trim().toUpperCase();
@@ -2347,7 +3133,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   async function deleteFolder(f) {
     const nd = S.docs.filter(d => d.folderId === f.id).length;
-    if (!await confirmDialog({ title: `¿Eliminar ${esc(f.name)}?`, text: nd ? `Contiene ${nd} documentos que también se eliminarán.` : 'La carpeta está vacía.', ok: 'Eliminar', danger: true })) return;
+    if (!await confirmDestructive(`¿Eliminar ${esc(f.name)}?`, nd ? `Contiene ${nd} documentos que también se eliminarán.` : 'La carpeta está vacía.')) return;
     for (const d of S.docs.filter(d => d.folderId === f.id)) await purgeDocFiles(d);
     S.docs = S.docs.filter(d => d.folderId !== f.id);
     S.folders = S.folders.filter(x => x.id !== f.id);
@@ -2370,9 +3156,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     nomen = nomen.toUpperCase().replace(/_/g, '-');
     let suggested = false;
     if (!nomen && folder) {
-      const a = areaById(folder.areaId);
-      const n = S.docs.filter(d => d.folderId === folder.id).length + 1;
-      nomen = `${a.code}-${folder.code}-${String(n).padStart(3, '0')}`; suggested = true;
+      // Sin nomenclatura en el archivo: se generará al elegir el tipo de documento
+      nomen = '';
+      suggested = true;
     }
     return { nomenclatura: nomen, nombre, version, suggested };
   }
@@ -2417,8 +3203,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <div class="file-preview-card">${badge(ext)}<div class="doc-name"><strong>${esc(file.name)}</strong><span>${fmtSize(file.size)} · modificado ${fmtDate(fileDate)}</span></div></div>
         <form id="uf" novalidate>
         <div class="row">
-          <div class="field"><label for="uNom">Nomenclatura</label><input class="input mono" id="uNom" name="nomenclatura" value="${esc(p.nomenclatura)}" required ${Q.replaceDoc ? 'readonly' : ''}/>
-            <div class="hint">${Q.replaceDoc ? 'Se conserva la nomenclatura del documento' : p.suggested ? 'Sugerida automáticamente (no se detectó en el nombre del archivo)' : 'Extraída del nombre del archivo · editable'}</div><div class="err hidden" id="dupWarn"></div></div>
+          <div class="field"><label for="uNom">Nomenclatura</label><input class="input mono" id="uNom" name="nomenclatura" value="${esc(p.nomenclatura)}" required ${Q.replaceDoc ? 'readonly' : ''} data-suggested="${p.suggested ? '1' : '0'}"/>
+            <div class="hint">${Q.replaceDoc ? 'Se conserva la nomenclatura del documento' : p.suggested ? 'Se generará al elegir el tipo de documento · editable' : 'Extraída del nombre del archivo · editable'}</div><div class="err hidden" id="dupWarn"></div></div>
           <div class="field"><label for="uNombre">Nombre del documento</label><input class="input" id="uNombre" name="nombre" value="${esc(p.nombre)}" required/><div class="hint">Extraído del nombre del archivo · editable</div></div>
         </div>
         <div class="row-3">
@@ -2427,7 +3213,19 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <div class="field"><label>Subido por</label><input class="input" value="${esc(me.name)}" readonly title="${esc(me.email)}"/><div class="hint">${esc(me.email)}</div></div>
         </div>
         ${tipoBlock({ tipo, rectorId, selfId: Q.replaceDoc?.id, folder: Q.folder, clasificacion })}
-        <div class="field"><label for="uUrl">URL / liga de hospedaje <span class="tiny">(opcional)</span></label><input class="input" id="uUrl" name="url" type="url" value="${esc(Q.replaceDoc?.url || '')}" placeholder="https://…"/><div class="hint">Liga externa (SharePoint, OneDrive, servidor…). Se muestra en Matriz Documental.</div></div>
+        <div class="row-3">
+          ${catalogField('macroprocesos', 'macroproceso', Q.replaceDoc?.macroproceso || Q.shared?.macroproceso || '')}
+          <div class="field"><label>Fecha de emisión</label><input class="input" type="date" name="fechaEmision" value="${esc(Q.replaceDoc?.fechaEmision || fecha)}"/></div>
+          <div class="field"><label>Fecha de autorización</label><input class="input" type="date" name="fechaAutorizacion" value="${esc(Q.replaceDoc?.fechaAutorizacion || '')}"/></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Fecha de difusión</label><input class="input" type="date" name="fechaDifusion" value="${esc(Q.replaceDoc?.fechaDifusion || '')}"/></div>
+          <div class="field"><label>Estado</label><select class="select" name="estado">${(S.settings.estadoRules||[]).map(r => {
+            const auto = !Q.replaceDoc ? (r.id === 'nuevo' ? 'selected' : '') : (computeEstado(Q.replaceDoc) === r.id ? 'selected' : '');
+            return `<option value="${r.id}" ${auto}>${esc(r.name)}</option>`;
+          }).join('')}</select><div class="hint">Se calcula automáticamente según versión y antigüedad; puedes forzar uno.</div></div>
+        </div>
+        <div class="field"><label for="uUrl">URL / liga de hospedaje</label><input class="input" id="uUrl" name="url" value="${esc(Q.replaceDoc?.url || ('local://docs/pending'))}" readonly/><div class="hint">Se asigna automáticamente al publicar (local mientras no haya Supabase).</div></div>
         <div class="field"><label for="uNota">Nota de la versión <span class="tiny">(opcional)</span></label><input class="input" id="uNota" name="nota" placeholder="Ej. Actualización de responsables" maxlength="140"/></div>
         ${total > 1 && Q.i < total - 1 ? `<label class="set-row" style="border:0;padding:4px 0;cursor:pointer"><span class="txt"><strong>Aplicar versión, fecha, tipo, rector y clasificación a los ${total - Q.i - 1} archivos restantes</strong><span>La nomenclatura y el nombre se siguen extrayendo de cada archivo</span></span><span class="switch"><input type="checkbox" name="applyAll" ${Q.shared ? 'checked' : ''}/><span></span></span></label>` : ''}
         </form>`,
@@ -2438,29 +3236,98 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         const f = c.$('#uf');
         const checkDup = () => {
           const v = f.nomenclatura.value.trim().toUpperCase();
+          if (!v) { c.$('#dupWarn')?.classList.add('hidden'); return; }
           const dup = !Q.replaceDoc && S.docs.find(d => d.areaId === Q.folder.areaId && d.nomenclatura === v);
           const w = c.$('#dupWarn');
           w.classList.toggle('hidden', !dup);
           if (dup) w.textContent = `Ya existe "${dup.nombre}" con esta nomenclatura en el área.`;
         };
-        f.nomenclatura.addEventListener('input', checkDup); checkDup();
+        const syncEstadoUI = () => {
+          const ver = intVersion(f.version?.value || '1');
+          const fecha = f.fecha?.value || '';
+          const forced = f.estado?.value;
+          // Siempre respetar reglas: solo eliminado se conserva si el usuario lo eligió
+          if (f.estado) {
+            const resolved = resolveEstado(ver, fecha, forced === 'eliminado' ? 'eliminado' : (forced === 'ratificado' ? 'ratificado' : ''));
+            if (forced === 'ratificado' && resolved.estado !== 'ratificado') {
+              f.estado.value = resolved.estado;
+            } else if (forced !== 'eliminado') {
+              f.estado.value = resolved.estado;
+            }
+          }
+          if (ver <= 1 && f.fechaEmision && !f.fechaEmision.dataset.touched) {
+            f.fechaEmision.value = fecha;
+          }
+        };
+        f.nomenclatura.addEventListener('input', () => { f.nomenclatura.dataset.suggested = '0'; checkDup(); });
+        checkDup();
+        f.version?.addEventListener('input', syncEstadoUI);
+        f.version?.addEventListener('change', syncEstadoUI);
+        f.fecha?.addEventListener('change', syncEstadoUI);
+        f.fechaEmision?.addEventListener('change', () => { f.fechaEmision.dataset.touched = '1'; });
+        f.estado?.addEventListener('change', () => {
+          const v = f.estado.value;
+          if (v === 'ratificado') {
+            const calc = computeEstadoFrom(intVersion(f.version.value), f.fecha.value, 'ratificado', true);
+            if (calc !== 'ratificado') {
+              f.estado.value = calc;
+              return toast('Ratificado solo cuando la antigüedad es mayor a 1 año y menor a 2', 'err');
+            }
+          }
+        });
         bindCatalogFields(f); bindTipoBlock(f);
+        syncEstadoUI();
         c.$('[data-cancel]').addEventListener('click', () => { c.close(); if (Q.done) render(); });
         c.$('[data-skip]')?.addEventListener('click', () => { c.close(); Q.i++; setTimeout(() => uploadStep(Q), 260); });
         c.$('[data-ok]').addEventListener('click', async (ev) => {
           const req = ['nomenclatura', 'nombre', 'version', 'fecha'];
           let valid = true;
-          req.forEach(k => { const el = f[k]; const bad = !el.value.trim(); el.classList.toggle('invalid', bad); if (bad) valid = false; });
-          if (!valid) return toast('Completa los campos obligatorios', 'err');
+          req.forEach(k => { const el = f[k]; const bad = !el?.value?.trim(); if (el) el.classList.toggle('invalid', bad); if (bad) valid = false; });
+          if (!valid) return toast('Nomenclatura, nombre, versión y fecha de última actualización son obligatorios', 'err');
           if (!validInt(f.version.value)) { f.version.classList.add('invalid'); return toast('La versión debe ser un número entero desde 1', 'err'); }
           const tb = readTipoBlock(f);
           if (tb.error) return toast(tb.error, 'err');
-          if (Q.replaceDoc && childConflict(Q.replaceDoc.id, tb.categoria)) return toast(childConflict(Q.replaceDoc.id, tb.categoria), 'err');
-          const clasV = readCatalog(f, 'clasificacion');
-          if (!clasV) { f.querySelector('[data-kind=clasificaciones] .input:not(.hidden), [data-kind=clasificaciones] select').classList.add('invalid'); return toast('Indica la clasificación', 'err'); }
+          if (Q.replaceDoc && tb.categoria && childConflict(Q.replaceDoc.id, tb.categoria)) return toast(childConflict(Q.replaceDoc.id, tb.categoria), 'err');
+          const clasV = readCatalog(f, 'clasificacion'); // opcional
           const btn = ev.currentTarget; btn.disabled = true; btn.innerHTML = 'Procesando…';
-          const meta = { nomenclatura: f.nomenclatura.value.trim().toUpperCase(), nombre: f.nombre.value.trim(), version: intVersion(f.version.value), fecha: f.fecha.value, nota: f.nota.value.trim(), url: (f.url?.value || '').trim(), tipo: tb.tipo, categoria: tb.categoria, rectorId: tb.rectorId, clasificacion: addToCatalog('clasificaciones', clasV) };
-          if (f.applyAll?.checked) Q.shared = { version: meta.version, fecha: meta.fecha, tipo: meta.tipo, rectorId: meta.rectorId, clasificacion: meta.clasificacion }; else Q.shared = null;
+          const macroV = readCatalog(f, 'macroproceso');
+          const ver = intVersion(f.version.value);
+          const fecha = f.fecha.value;
+          const resolved = resolveEstado(ver, fecha, f.estado?.value);
+          if (f.estado?.value === 'ratificado' && resolved.estado !== 'ratificado') {
+            btn.disabled = false; btn.innerHTML = 'Publicar';
+            return toast('Ratificado solo cuando la antigüedad es mayor a 1 año y menor a 2', 'err');
+          }
+          // Reflejar estado resuelto en el formulario (siempre respeta reglas)
+          if (f.estado) f.estado.value = resolved.estado;
+          const meta = {
+            nomenclatura: f.nomenclatura.value.trim().toUpperCase(),
+            nombre: f.nombre.value.trim(),
+            version: ver,
+            fecha,
+            nota: f.nota.value.trim(),
+            url: (f.url?.value || '').trim(),
+            tipo: tb.tipo || '', categoria: tb.categoria || '', rectorId: tb.rectorId || null,
+            clasificacion: clasV ? addToCatalog('clasificaciones', clasV) : '',
+            macroproceso: macroV ? addToCatalog('macroprocesos', macroV) : '',
+            fechaEmision: f.fechaEmision?.value || f.fecha.value,
+            fechaAutorizacion: f.fechaAutorizacion?.value || '',
+            fechaDifusion: f.fechaDifusion?.value || '',
+            estado: resolved.estado,
+            estadoManual: resolved.estadoManual,
+          };
+          // Duplicados globales de nomenclatura (misma nomenclatura + nombre = nueva versión)
+          if (!Q.replaceDoc) {
+            const same = S.docs.find(d => d.nomenclatura.toUpperCase() === meta.nomenclatura && d.nombre.toLowerCase() === meta.nombre.toLowerCase());
+            if (same) {
+              // Tratar como nueva versión del existente
+              Q.replaceDoc = same;
+              meta.version = intVersion(nextVersion(same.version));
+            } else if (S.docs.find(d => d.nomenclatura.toUpperCase() === meta.nomenclatura)) {
+              return toast('Ya existe un documento con esa nomenclatura. Usa el mismo nombre para subir una nueva versión, o elige otra nomenclatura.', 'err');
+            }
+          }
+          if (f.applyAll?.checked) Q.shared = { version: meta.version, fecha: meta.fecha, tipo: meta.tipo, rectorId: meta.rectorId, clasificacion: meta.clasificacion, macroproceso: meta.macroproceso }; else Q.shared = null;
           try { await storeUpload(file, meta, Q.folder, Q.replaceDoc); Q.done++; }
           catch (e) { console.error(e); toast('No se pudo procesar ' + file.name, 'err'); }
           c.close(); Q.i++; setTimeout(() => uploadStep(Q), 260);
@@ -2506,17 +3373,31 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       d.history[d.history.length - 1].key = prevKey;
       await Files.put('orig:' + d.id, file);
       if (html) await Files.put('html:' + d.id, html); else await Files.del('html:' + d.id);
-      Object.assign(d, { version: meta.version, fechaActualizacion: meta.fecha, tipo: meta.tipo, categoria: meta.categoria, rectorId: meta.rectorId, clasificacion: meta.clasificacion, url: meta.url !== undefined ? meta.url : (d.url || ''), fileName: file.name, ext, mime: file.type, size: file.size, editable: !!html, updatedAt: now(), updatedBy: me.id, subidoPor: me.id });
+      Object.assign(d, {
+        version: meta.version, fechaActualizacion: meta.fecha, tipo: meta.tipo, categoria: meta.categoria, rectorId: meta.rectorId, clasificacion: meta.clasificacion,
+        macroproceso: meta.macroproceso || d.macroproceso || '',
+        fechaEmision: meta.fechaEmision || d.fechaEmision || '',
+        fechaAutorizacion: meta.fechaAutorizacion || d.fechaAutorizacion || '',
+        fechaDifusion: meta.fechaDifusion || d.fechaDifusion || '',
+        estado: meta.estado || d.estado, estadoManual: !!meta.estadoManual,
+        url: d.url || localDocUrl(d.id),
+        fileName: file.name, ext, mime: file.type, size: file.size, editable: !!html, updatedAt: now(), updatedBy: me.id, subidoPor: me.id
+      });
       d.history.push({ v: meta.version, at: now(), by: me.id, note: meta.nota || 'Nueva versión cargada', key: null });
       log('documento', `Subió la versión ${meta.version} de ${d.nomenclatura}`);
     } else {
       const id = Repo.uid('d_');
       await Files.put('orig:' + id, file);
       if (html) await Files.put('html:' + id, html);
+      const url = localDocUrl(id);
       S.docs.push({
         id, areaId: folder.areaId, folderId: folder.id,
-        nomenclatura: meta.nomenclatura, nombre: meta.nombre, version: meta.version, fechaActualizacion: meta.fecha, tipo: meta.tipo, categoria: meta.categoria, rectorId: meta.rectorId, clasificacion: meta.clasificacion,
-        url: meta.url || '',
+        nomenclatura: meta.nomenclatura, nombre: meta.nombre, version: meta.version, fechaActualizacion: meta.fecha,
+        tipo: meta.tipo, categoria: meta.categoria, rectorId: meta.rectorId, clasificacion: meta.clasificacion,
+        macroproceso: meta.macroproceso || '',
+        fechaEmision: meta.fechaEmision || meta.fecha, fechaAutorizacion: meta.fechaAutorizacion || '', fechaDifusion: meta.fechaDifusion || '',
+        estado: meta.estado || null, estadoManual: !!meta.estadoManual,
+        url,
         subidoPor: me.id, fileName: file.name, ext, mime: file.type, size: file.size, editable: !!html,
         createdAt: now(), updatedAt: now(), updatedBy: me.id,
         history: [{ v: meta.version, at: now(), by: me.id, note: meta.nota || 'Publicación inicial', key: null }],
@@ -2539,24 +3420,75 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       body: `<form id="mf"><div class="row"><div class="field"><label>Nomenclatura</label><input class="input mono" name="nomenclatura" value="${esc(d.nomenclatura)}"/></div>
         <div class="field"><label>Nombre</label><input class="input" name="nombre" value="${esc(d.nombre)}"/></div></div>
         ${tipoBlock({ tipo: d.tipo, rectorId: d.rectorId, selfId: d.id, folder: folderById(d.folderId), clasificacion: d.clasificacion })}
+        <div class="row-3">${catalogField('macroprocesos', 'macroproceso', d.macroproceso || '')}
+          <div class="field"><label>Fecha de emisión</label><input class="input" type="date" name="fechaEmision" value="${esc(d.fechaEmision || '')}"/></div>
+          <div class="field"><label>Fecha de autorización</label><input class="input" type="date" name="fechaAutorizacion" value="${esc(d.fechaAutorizacion || '')}"/></div>
+        </div>
+        <div class="row"><div class="field"><label>Fecha de difusión</label><input class="input" type="date" name="fechaDifusion" value="${esc(d.fechaDifusion || '')}"/></div>
+        <div class="field"><label>Estado</label><select class="select" name="estado">${(S.settings.estadoRules||[]).map(r => `<option value="${r.id}" ${computeEstado(d) === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></div></div>
         <div class="row"><div class="field"><label>Versión</label>${intInput(`name="version" value="${esc(d.version)}"`)}</div>
         <div class="field"><label>Fecha de última actualización</label><input class="input" type="date" name="fecha" value="${esc(d.fechaActualizacion)}"/></div></div>
-        <div class="field"><label>URL / liga de hospedaje</label><input class="input" name="url" type="url" value="${esc(d.url || '')}" placeholder="https://…"/><div class="hint">Liga externa donde está el archivo (SharePoint, OneDrive, servidor, etc.). Se muestra en la Matriz Documental.</div></div>
+        <div class="field"><label>URL / liga de hospedaje</label><input class="input" name="url" value="${esc(d.url || localDocUrl(d.id))}" readonly/><div class="hint">Asignada automáticamente (local mientras no haya Supabase).</div></div>
         <div class="field"><label>Carpeta</label><select class="select" name="folder">${S.folders.filter(f => areaAccess(f.areaId).level === 'editar').map(f => `<option value="${f.id}" ${f.id === d.folderId ? 'selected' : ''}>${esc(areaById(f.areaId).name)} / ${esc(f.name)}</option>`).join('')}</select></div></form>`,
       foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>Guardar</button>`,
       size: 'wide',
-      onMount: (c) => { bindCatalogFields(c.el); bindTipoBlock(c.el); c.$('[data-save]').addEventListener('click', () => {
+      onMount: (c) => {
+        bindCatalogFields(c.el); bindTipoBlock(c.el);
         const f = c.$('#mf');
+        const syncEstadoUI = () => {
+          const ver = intVersion(f.version?.value || '1');
+          const fecha = f.fecha?.value || '';
+          const forced = f.estado?.value;
+          if (f.estado) {
+            const resolved = resolveEstado(ver, fecha, forced === 'eliminado' ? 'eliminado' : (forced === 'ratificado' ? 'ratificado' : ''));
+            if (forced === 'ratificado' && resolved.estado !== 'ratificado') f.estado.value = resolved.estado;
+            else if (forced !== 'eliminado') f.estado.value = resolved.estado;
+          }
+          if (ver <= 1 && f.fechaEmision && !f.fechaEmision.dataset.touched) f.fechaEmision.value = fecha;
+        };
+        f.version?.addEventListener('input', syncEstadoUI);
+        f.version?.addEventListener('change', syncEstadoUI);
+        f.fecha?.addEventListener('change', syncEstadoUI);
+        f.fechaEmision?.addEventListener('change', () => { f.fechaEmision.dataset.touched = '1'; });
+        f.estado?.addEventListener('change', () => {
+          if (f.estado.value === 'ratificado') {
+            const calc = computeEstadoFrom(intVersion(f.version.value), f.fecha.value, 'ratificado', true);
+            if (calc !== 'ratificado') { f.estado.value = calc; toast('Ratificado solo cuando la antigüedad es >1 año y <2 años', 'err'); }
+          }
+        });
+        c.$('[data-save]').addEventListener('click', () => {
         if (!f.nomenclatura.value.trim() || !f.nombre.value.trim()) return toast('Nomenclatura y nombre son obligatorios', 'err');
+        if (!f.fecha?.value) return toast('La fecha de última actualización es obligatoria', 'err');
         if (!validInt(f.version.value)) return toast('La versión debe ser un número entero desde 1', 'err');
         const tb = readTipoBlock(f);
         if (tb.error) return toast(tb.error, 'err');
-        const conflict = childConflict(d.id, tb.categoria);
-        if (conflict) return toast(conflict, 'err');
+        if (tb.categoria) {
+          const conflict = childConflict(d.id, tb.categoria);
+          if (conflict) return toast(conflict, 'err');
+        }
         const clasV = readCatalog(f, 'clasificacion');
-        if (!clasV) return toast('Indica la clasificación', 'err');
         const fo = folderById(f.folder.value);
-        Object.assign(d, { tipo: tb.tipo, categoria: tb.categoria, rectorId: tb.rectorId, clasificacion: addToCatalog('clasificaciones', clasV), nomenclatura: f.nomenclatura.value.trim().toUpperCase(), nombre: f.nombre.value.trim(), version: intVersion(f.version.value), fechaActualizacion: f.fecha.value, url: (f.url?.value || '').trim(), folderId: fo.id, areaId: fo.areaId, updatedAt: now(), updatedBy: me.id });
+        const macroV = readCatalog(f, 'macroproceso');
+        const ver = intVersion(f.version.value);
+        const fecha = f.fecha.value;
+        const resolved = resolveEstado(ver, fecha, f.estado?.value);
+        if (f.estado?.value === 'ratificado' && resolved.estado !== 'ratificado') {
+          return toast('Ratificado solo cuando la antigüedad es mayor a 1 año y menor a 2', 'err');
+        }
+        if (f.estado) f.estado.value = resolved.estado;
+        Object.assign(d, {
+          tipo: tb.tipo || '', categoria: tb.categoria || '', rectorId: tb.rectorId || null,
+          clasificacion: clasV ? addToCatalog('clasificaciones', clasV) : '',
+          macroproceso: macroV ? addToCatalog('macroprocesos', macroV) : '',
+          nomenclatura: f.nomenclatura.value.trim().toUpperCase(), nombre: f.nombre.value.trim(),
+          version: ver, fechaActualizacion: fecha,
+          fechaEmision: f.fechaEmision?.value || d.fechaEmision || fecha,
+          fechaAutorizacion: f.fechaAutorizacion?.value || '',
+          fechaDifusion: f.fechaDifusion?.value || '',
+          estado: resolved.estado, estadoManual: resolved.estadoManual,
+          url: d.url || localDocUrl(d.id),
+          folderId: fo.id, areaId: fo.areaId, updatedAt: now(), updatedBy: me.id
+        });
         log('documento', `Editó los datos de ${d.nomenclatura}`); save(); c.close(); render(); toast('Datos actualizados');
       }); },
     });
@@ -2639,8 +3571,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <h5>Tu acceso</h5>
           <dl class="kv"><dt>Nivel</dt><dd>${LV_LABEL[lvl]}</dd><dt>Vigencia</dt><dd id="vig">${acc.full ? 'Permanente (perfil)' : exp ? `Hasta ${fmtDateTime(exp)}` : 'Permanente · revocable'}</dd></dl>
           <h5>Historial de versiones</h5>
-          <ul class="history">${[...d.history].reverse().map((h) => `<li><strong>Versión ${esc(h.v)}</strong> · ${fmtRel(h.at)}<br/><span class="tiny">${esc(userName(h.by))} — ${esc(h.note || '')}</span>
-            ${h.key ? `<br/><button data-hist="${esc(h.key)}">Ver esta versión</button>` : ''}</li>`).join('')}</ul>
+          <ul class="history">${[...d.history].reverse().map((h, hi) => `<li><strong>Versión ${esc(h.v)}</strong> · ${fmtRel(h.at)}<br/><span class="tiny">${esc(userName(h.by))} — ${esc(h.note || '')}</span>
+            ${h.key ? `<br/><button data-hist="${esc(h.key)}">Ver</button> <button data-hist-dl="${esc(h.key)}">Descargar</button> ${lvl === 'editar' ? `<button data-hist-restore="${esc(h.key)}" data-hv="${esc(h.v)}">Restaurar</button>` : ''}` : '<br/><span class="tiny">Versión actual</span>'}</li>`).join('')}</ul>
         </aside>
       </div>`);
     icons();
@@ -2717,6 +3649,34 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
     m.querySelectorAll('[data-hist]').forEach(b => b.addEventListener('click', () => {
       const h = d.history.find(x => x.key === b.dataset.hist); openViewer(d, h);
+    }));
+    m.querySelectorAll('[data-hist-dl]').forEach(b => b.addEventListener('click', async () => {
+      const h = d.history.find(x => x.key === b.dataset.histDl);
+      if (!h) return;
+      const pack = await Files.get(h.key);
+      if (pack?.orig) saveBlob(pack.orig, `${d.nomenclatura}_v${h.v}.${pack.ext || d.ext}`);
+      else if (pack?.html) saveBlob(new Blob([pack.html], { type: 'text/html' }), `${d.nomenclatura}_v${h.v}.html`);
+      else toast('No hay archivo de esa versión', 'err');
+    }));
+    m.querySelectorAll('[data-hist-restore]').forEach(b => b.addEventListener('click', async () => {
+      const h = d.history.find(x => x.key === b.dataset.histRestore);
+      if (!h) return;
+      if (!await confirmDialog({ title: '¿Restaurar esta versión?', text: `Se creará una nueva versión a partir de la v${h.v}. La versión actual se conservará en el historial.`, ok: 'Restaurar' })) return;
+      const pack = await Files.get(h.key);
+      if (!pack) return toast('No se encontró el contenido de esa versión', 'err');
+      const prevKey = `hist:${d.id}:${d.history.length}`;
+      const prevHtml = await Files.get('html:' + d.id);
+      const prevOrig = await Files.get('orig:' + d.id);
+      await Files.put(prevKey, { html: prevHtml || null, orig: prevOrig || null, ext: d.ext, fileName: d.fileName });
+      d.history[d.history.length - 1].key = prevKey;
+      if (pack.html) await Files.put('html:' + d.id, pack.html); else await Files.del('html:' + d.id);
+      if (pack.orig) await Files.put('orig:' + d.id, pack.orig);
+      const nv = intVersion(nextVersion(d.version));
+      Object.assign(d, { version: nv, ext: pack.ext || d.ext, editable: !!pack.html, updatedAt: now(), updatedBy: me.id, fechaActualizacion: new Date().toISOString().slice(0, 10) });
+      d.history.push({ v: nv, at: now(), by: me.id, note: `Restaurada desde v${h.v}`, key: null });
+      log('documento', `Restauró ${d.nomenclatura} a partir de v${h.v} → v${nv}`);
+      save(); toast(`Restaurada como versión ${nv}`);
+      ctx.close(); setTimeout(() => openViewer(d), 280);
     }));
     m.querySelector('[data-dl]')?.addEventListener('click', (e) => downloadMenu(e.currentTarget, d, lvl, historyEntry));
 
@@ -3068,20 +4028,53 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       </div>
       <div class="panel"><h3>Catálogos</h3><p class="muted">Opciones de los desplegables. Se llenan solos al capturar un valor nuevo; aquí puedes agregarlos o quitarlos.</p>
       <div class="field"><span class="label">Tipos de documento por categoría</span>
-        ${CATEGORIAS.map(c => `<div class="tipo-group"><div class="tg-head">${catChip(c)}<span class="tiny">${CAT_LEVEL[c]}${c === 'Soporte' ? ' · requieren documento rector' : ''}</span></div>
-          <div class="cat-chips">${S.catalogs.tipos.filter(t => t.cat === c).map(t => `<span class="chip">${esc(t.name)} <span class="tiny">(${S.docs.filter(d => d.tipo === t.name).length})</span><button class="x" data-tipo-del="${esc(t.name)}" aria-label="Quitar ${esc(t.name)}">${ic('x')}</button></span>`).join('') || '<span class="tiny">Sin tipos</span>'}</div></div>`).join('')}
+        ${CATEGORIAS.map(c => `<div class="tipo-group"><div class="tg-head">${catChip(c)}<span class="tiny">${CAT_LEVEL[c]}${c === 'Operativo' ? ' · rector opcional (1er nivel)' : c === 'Soporte' ? ' · rector opcional' : ''}</span></div>
+          <div class="cat-chips">${S.catalogs.tipos.filter(t => t.cat === c).map(t => `<span class="chip">${esc(t.name)} <span class="tiny mono">${esc(t.code||'')}</span> <span class="tiny">(${S.docs.filter(d => d.tipo === t.name).length})</span><button class="x" data-tipo-rename="${esc(t.name)}" title="Renombrar" aria-label="Renombrar">${ic('pencil')}</button><button class="x" data-tipo-del="${esc(t.name)}" aria-label="Quitar ${esc(t.name)}">${ic('x')}</button></span>`).join('') || '<span class="tiny">Sin tipos</span>'}</div></div>`).join('')}
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input class="input" id="tipoAddName" placeholder="Nuevo tipo de documento" maxlength="50" style="height:38px;flex:1;min-width:180px"/>
           <select class="select" id="tipoAddCat" style="height:38px;width:auto">${CATEGORIAS.map(c => `<option value="${c}">${CAT_LEVEL[c]} · ${c}</option>`).join('')}</select>
           <button class="btn btn-secondary btn-sm" style="height:38px" id="tipoAddBtn">${ic('plus')}Agregar</button></div></div>
-      ${['clasificaciones'].map(k => `<div class="field"><span class="label">${CAT_LABEL[k]}</span>
-        <div class="cat-chips">${S.catalogs[k].map(v => `<span class="chip">${esc(v)} <span class="tiny">(${S.docs.filter(d => d.clasificacion === v).length})</span><button class="x" data-cat-del="${k}|${esc(v)}" aria-label="Quitar ${esc(v)}">${ic('x')}</button></span>`).join('') || '<span class="tiny">Aún no hay valores</span>'}</div>
+      ${['clasificaciones','macroprocesos'].map(k => `<div class="field"><span class="label">${CAT_LABEL[k]}</span>
+        <div class="cat-chips">${(S.catalogs[k]||[]).map(v => `<span class="chip">${esc(v)} <span class="tiny">(${S.docs.filter(d => (k === 'macroprocesos' ? d.macroproceso : d.clasificacion) === v).length})</span><button class="x" data-cat-rename="${k}|${esc(v)}" title="Renombrar" aria-label="Renombrar">${ic('pencil')}</button><button class="x" data-cat-del="${k}|${esc(v)}" aria-label="Quitar ${esc(v)}">${ic('x')}</button></span>`).join('') || '<span class="tiny">Aún no hay valores</span>'}</div>
         <div style="display:flex;gap:8px;margin-top:10px"><input class="input" data-cat-add="${k}" placeholder="Agregar ${CAT_LABEL[k].toLowerCase()}" maxlength="50" style="height:38px"/><button class="btn btn-secondary btn-sm" style="height:38px" data-cat-add-btn="${k}">${ic('plus')}Agregar</button></div></div>`).join('')}
       </div>
       <div class="panel"><h3>Archivos</h3><p class="muted">Restricciones de carga.</p>
       ${srow('Tamaño máximo por archivo', 'En megabytes', `<input class="input" type="number" min="1" max="200" data-set="maxMB" value="${st.maxMB}"/>`)}
       ${srow('Extensiones permitidas', 'Separadas por coma', `<input class="input mono" data-set="allowedExt" value="${esc(st.allowedExt)}"/>`)}
+      </div>
+      <div class="panel"><h3>Estados del documento</h3>
+        <p class="muted">Define nombres, colores y umbrales. El motor usa <b>versión</b> y <b>fecha de última actualización</b> (antigüedad en años desde hoy).</p>
+        <div class="table-wrap" style="overflow-x:auto"><table class="tbl"><thead><tr>
+          <th>ID</th><th>Nombre</th><th>Color</th><th>Ver. mín</th><th>Ver. máx</th><th>Años mín</th><th>Años máx</th><th>Modo</th><th></th>
+        </tr></thead><tbody>
+        ${(st.estadoRules || []).map((r, i) => `<tr>
+          <td class="mono">${esc(r.id)}</td>
+          <td><input class="input" data-est-name="${i}" value="${esc(r.name)}" style="height:34px;min-width:100px"/></td>
+          <td><select class="select" data-est-color="${i}" style="height:34px;width:auto">
+            ${['ok','accent','warn','danger',''].map(c => `<option value="${c}" ${r.color===c?'selected':''}>${c||'neutro'}</option>`).join('')}
+          </select></td>
+          <td><input class="input" type="number" min="1" data-est-minv="${i}" value="${r.minVersion ?? ''}" placeholder="—" style="height:34px;width:64px"/></td>
+          <td><input class="input" type="number" min="1" data-est-maxv="${i}" value="${r.maxVersion ?? ''}" placeholder="—" style="height:34px;width:64px"/></td>
+          <td><input class="input" type="number" min="0" step="0.1" data-est-miny="${i}" value="${r.minYears ?? ''}" placeholder="—" style="height:34px;width:64px"/></td>
+          <td><input class="input" type="number" min="0" step="0.1" data-est-maxy="${i}" value="${r.maxYears ?? ''}" placeholder="∞" style="height:34px;width:64px"/></td>
+          <td><select class="select" data-est-cond="${i}" style="height:34px;width:auto">
+            <option value="auto" ${r.cond!=='manual' && r.cond!=='custom'?'selected':''}>Automático</option>
+            <option value="manual" ${r.cond==='manual'?'selected':''}>Solo manual</option>
+            <option value="custom" ${r.cond==='custom'?'selected':''}>Informativo</option>
+          </select></td>
+          <td><button class="icon-btn" data-est-del="${i}" aria-label="Quitar">${ic('x')}</button></td>
+        </tr>`).join('')}
+        </tbody></table></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <input class="input" id="estNewId" placeholder="id (ej. archivado)" style="height:38px;width:140px"/>
+          <input class="input" id="estNewName" placeholder="Nombre visible" style="height:38px;flex:1;min-width:140px"/>
+          <button class="btn btn-secondary btn-sm" style="height:38px" id="estAddBtn">${ic('plus')}Agregar estado</button>
+        </div>
+        <p class="tiny" style="margin-top:10px">Lógica base: v1 y &lt;años máx de Nuevo → Nuevo; v≥2 y &lt;años máx de Actualizado → Actualizado; ≥años mín de Pendiente → Pendiente; Ratificado solo manual entre sus años mín–máx; ≥años máx de Ratificado fuerza Pendiente; Eliminado siempre manual y marca la fila en rojo al final de la lista.</p>
       </div>`;
-    if (tab === 'security') return `<div class="panel"><h3>Descargas</h3><p class="muted">Qué reciben los usuarios con permiso de descarga.</p>
+    if (tab === 'security') return `<div class="panel"><h3>Sesión</h3><p class="muted">Cierre automático por inactividad. El contador se muestra en el encabezado entre el buscador y los permisos.</p>
+      ${srow('Minutos de inactividad', 'Tras este tiempo sin actividad se cierra la sesión. Usa 0 para desactivar el cierre automático.', `<input class="input" type="number" min="0" max="480" step="1" data-set="sessionTimeoutMinutes" value="${st.sessionTimeoutMinutes ?? 15}" style="width:100px"/>`)}
+      </div>
+      <div class="panel"><h3>Descargas</h3><p class="muted">Qué reciben los usuarios con permiso de descarga.</p>
       ${srow('Formato para el nivel “Descargar”', 'Los editores siempre pueden obtener el original', `<select class="select" data-set="downloadFormat"><option value="pdf" ${st.downloadFormat === 'pdf' ? 'selected' : ''}>Solo PDF</option><option value="original" ${st.downloadFormat === 'original' ? 'selected' : ''}>PDF u original</option></select>`)}
       ${srow('Marca de agua', 'Correo y fecha del usuario en vista y PDF (excepto editores)', sw('watermark', st.watermark))}
       ${srow('Bloquear impresión y copiado', 'Para usuarios con nivel “Ver”', sw('blockPrint', st.blockPrint))}
@@ -3091,6 +4084,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       ${srow('Mostrar áreas expiradas', 'Se muestran bloqueadas en el inicio', sw('showLockedAreas', st.showLockedAreas))}
       ${srow('Vigencia temporal por defecto', 'En horas, al asignar permisos', `<input class="input" type="number" min="1" data-set="defaultTempHours" value="${st.defaultTempHours}"/>`)}
       ${srow('Longitud mínima de contraseña', 'Para cuentas nuevas y cambios', `<input class="input" type="number" min="6" max="32" data-set="minPassword" value="${st.minPassword}"/>`)}
+      </div>
+      <div class="panel"><h3>Contraseña de administrador (acciones destructivas)</h3>
+        <p class="muted">Se exige al eliminar o modificar elementos críticos en Configuración y para el reseteo de fábrica. Solo el perfil Administrador puede configurarla.</p>
+        ${srow('Estado', st.adminActionPasswordHash ? 'Configurada' : 'Pendiente de crear', st.adminActionPasswordHash
+          ? `<button class="btn btn-secondary btn-sm" data-chg-action-pass>${ic('lock-keyhole')}Cambiar contraseña</button>`
+          : `<button class="btn btn-primary btn-sm" data-set-action-pass>${ic('key-round')}Crear contraseña</button>`)}
       </div>`;
     if (tab === 'users') {
       const users = [...S.users].sort((a, b) => a.email.localeCompare(b.email));
@@ -3126,7 +4125,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       ${srow('Archivos', 'Binarios y versiones en IndexedDB del navegador', `<span class="chip">${S.docs.length} documentos</span>`)}
       ${srow('Exportar configuración', 'Respaldo JSON de metadatos. Las contraseñas solo van como hash con sal, nunca en claro', `<button class="btn btn-secondary btn-sm" data-export>${ic('download')}Exportar</button>`)}
       ${srow('Importar respaldo', 'Reemplaza los metadatos actuales', `<button class="btn btn-secondary btn-sm" data-import>${ic('upload')}Importar</button><input type="file" id="impF" accept=".json" hidden/>`)}
-      ${srow('Borrar todo y reiniciar', 'Elimina datos, usuarios y contraseñas; vuelve a la configuración inicial', `<button class="btn btn-danger btn-sm" data-reset>${ic('rotate-ccw')}Reiniciar</button>`)}
+      <p class="tiny" style="margin-top:8px">La contraseña de acciones destructivas se configura en <b>Seguridad y descargas</b>.</p>
+      </div>
+      <div class="panel" style="margin-top:18px;border:1px solid var(--danger-soft)"><h3 style="color:var(--danger)">Reset</h3>
+        <p class="muted">Este botón borra toda la información de la herramienta y la deja como de fábrica (áreas, documentos, usuarios, permisos y contraseñas). No se puede deshacer después del contador.</p>
+        <button class="btn btn-danger" data-master-reset>${ic('triangle-alert')}Reseteo maestro de fábrica</button>
       </div>`;
     return '';
   }
@@ -3197,39 +4200,162 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       $('#rxOut').innerHTML = out;
     };
     $('#rxTest')?.addEventListener('input', rxTest); rxTest();
-    $$('[data-cat-del]', P).forEach(b => b.addEventListener('click', () => {
+    $$('[data-cat-del]', P).forEach(b => b.addEventListener('click', async () => {
       const [k, v] = b.dataset.catDel.split('|');
-      S.catalogs[k] = S.catalogs[k].filter(x => x !== v);
-      log('configuración', `Quitó “${v}” de ${CAT_LABEL[k]}`); save(); render(); toast('Opción eliminada del desplegable');
+      const used = S.docs.filter(d => (k === 'macroprocesos' ? d.macroproceso : d.clasificacion) === v).length;
+      if (!(await confirmDestructive(`¿Quitar “${esc(v)}”?`, used ? `Se usa en ${used} documento(s). Se vaciará ese campo en esos documentos.` : 'Se eliminará del catálogo.'))) return;
+      S.catalogs[k] = (S.catalogs[k] || []).filter(x => x !== v);
+      S.docs.forEach(d => {
+        if (k === 'macroprocesos' && d.macroproceso === v) d.macroproceso = '';
+        if (k === 'clasificaciones' && d.clasificacion === v) d.clasificacion = '';
+      });
+      log('configuración', `Quitó “${v}” de ${CAT_LABEL[k]}`); save(); render(); toast('Opción eliminada');
     }));
-    $$('[data-cat-add-btn]', P).forEach(b => b.addEventListener('click', () => {
+    $$('[data-cat-rename]', P).forEach(b => b.addEventListener('click', async () => {
+      const [k, oldV] = b.dataset.catRename.split('|');
+      const label = CAT_LABEL[k] || k;
+      openModal({
+        title: `Renombrar ${label}`,
+        body: `<div class="field"><label>Valor</label><input class="input" id="catRenVal" value="${esc(oldV)}"/></div>
+          <p class="tiny">El cambio se aplicará a todos los documentos que usan este valor.</p>`,
+        foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Guardar</button>`,
+        onMount: (c) => {
+          c.$('[data-ok]').addEventListener('click', async () => {
+            const nv = c.$('#catRenVal').value.trim();
+            if (!nv) return toast('Valor vacío', 'err');
+            if ((S.catalogs[k] || []).some(x => x.toLowerCase() === nv.toLowerCase() && x !== oldV)) return toast('Ese valor ya existe', 'err');
+            if (!(await confirmDestructive(`¿Renombrar ${label}?`, `“${oldV}” → “${nv}” en catálogo y documentos.`))) return;
+            const n = S.docs.filter(d => (k === 'macroprocesos' ? d.macroproceso : d.clasificacion) === oldV).length;
+            S.catalogs[k] = (S.catalogs[k] || []).map(x => x === oldV ? nv : x);
+            S.docs.forEach(d => {
+              if (k === 'macroprocesos' && d.macroproceso === oldV) d.macroproceso = nv;
+              if (k === 'clasificaciones' && d.clasificacion === oldV) d.clasificacion = nv;
+            });
+            log('configuración', `Renombró ${label} “${oldV}” → “${nv}” (${n} docs)`);
+            save(); c.close(); render(); toast(n ? `Actualizado en ${n} documento(s)` : 'Valor actualizado');
+          });
+        },
+      });
+    }));
+    $$('[data-cat-add-btn]', P).forEach(b => b.addEventListener('click', async () => {
       const k = b.dataset.catAddBtn, inp = $(`[data-cat-add="${k}"]`, P);
       const v = inp.value.trim(); if (!v) return;
+      if (!(await confirmDestructive('¿Agregar al catálogo?', `Se agregará “${v}” a ${CAT_LABEL[k]}.`))) return;
       addToCatalog(k, v); log('configuración', `Agregó “${v}” a ${CAT_LABEL[k]}`); save(); render(); toast('Opción agregada');
     }));
-    $('#domAddBtn', P)?.addEventListener('click', () => {
+    $('#domAddBtn', P)?.addEventListener('click', async () => {
       const inp = $('#domAdd', P); const v = inp.value.trim().toLowerCase().replace(/^@/, '');
       if (!DOMAIN_RE.test(v)) { inp.classList.add('invalid'); return toast('Dominio inválido. Ejemplo: empresa.com', 'err'); }
       if (S.settings.domains.includes(v)) return toast('Ese dominio ya está configurado', 'err');
+      if (!(await confirmDestructive('¿Agregar dominio?', `Se permitirá @${v}.`))) return;
       S.settings.domains.push(v); log('configuración', `Agregó el dominio @${v}`); save(); render(); toast(`Dominio @${v} agregado`);
     });
     $('#domAdd', P)?.addEventListener('keydown', e => { if (e.key === 'Enter') $('#domAddBtn', P).click(); });
     $$('[data-dom-del]', P).forEach(b => b.addEventListener('click', async () => {
       const d = b.dataset.domDel, n = S.users.filter(u => u.email.endsWith('@' + d)).length;
-      if (!await confirmDialog({ title: `¿Quitar @${esc(d)}?`, text: n ? `Ya no se podrán crear usuarios con este dominio. Las ${n} cuentas existentes se conservan; puedes revocarlas en Usuarios.` : 'Ya no se podrán crear usuarios con este dominio.', ok: 'Quitar', danger: true })) return;
+      if (!(await confirmDestructive(`¿Quitar @${esc(d)}?`, n ? `Ya no se podrán crear usuarios con este dominio. Las ${n} cuentas existentes se conservan.` : 'Ya no se podrán crear usuarios con este dominio.'))) return;
       S.settings.domains = S.settings.domains.filter(x => x !== d); log('configuración', `Quitó el dominio @${d}`); save(); render(); toast('Dominio quitado');
     }));
-    $$('[data-tipo-del]', P).forEach(b => b.addEventListener('click', () => {
+    $$('[data-tipo-del]', P).forEach(b => b.addEventListener('click', async () => {
       const v = b.dataset.tipoDel, n = S.docs.filter(d => d.tipo === v).length;
-      if (n) return toast(`No se puede quitar: ${n} ${n === 1 ? 'documento usa' : 'documentos usan'} este tipo`, 'err');
+      if (n) return toast(`No se puede quitar: ${n} ${n === 1 ? 'documento usa' : 'documentos usan'} este tipo. Renómbralo en su lugar.`, 'err');
+      if (!(await confirmDestructive(`¿Quitar tipo “${esc(v)}”?`, 'Se eliminará del catálogo.'))) return;
       S.catalogs.tipos = S.catalogs.tipos.filter(t => t.name !== v);
       log('configuración', `Quitó el tipo “${v}”`); save(); render(); toast('Tipo eliminado');
     }));
-    $('#tipoAddBtn', P)?.addEventListener('click', () => {
+    // Renombrar tipo (doble clic en el chip) y propagar a todos los documentos
+    $$('[data-tipo-rename]', P).forEach(b => b.addEventListener('click', async () => {
+      const oldName = b.dataset.tipoRename;
+      const t = S.catalogs.tipos.find(x => x.name === oldName);
+      if (!t) return;
+      openModal({
+        title: 'Renombrar tipo de documento',
+        body: `<div class="field"><label>Nombre</label><input class="input" id="tipoRenName" value="${esc(oldName)}"/></div>
+          <div class="field"><label>Código (nomenclatura)</label><input class="input mono" id="tipoRenCode" value="${esc(t.code || '')}" maxlength="6" style="text-transform:uppercase"/></div>
+          <div class="field"><label>Categoría</label><select class="select" id="tipoRenCat">${CATEGORIAS.map(c => `<option value="${c}" ${t.cat===c?'selected':''}>${CAT_LEVEL[c]} · ${c}</option>`).join('')}</select></div>
+          <p class="tiny">El cambio se aplicará a todos los documentos que usan este tipo.</p>`,
+        foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Guardar</button>`,
+        onMount: (c) => {
+          c.$('[data-ok]').addEventListener('click', async () => {
+            if (!(await confirmDestructive('¿Aplicar cambio de tipo?', 'Se actualizará el catálogo y todos los documentos afectados.'))) return;
+            const nn = c.$('#tipoRenName').value.trim();
+            const code = c.$('#tipoRenCode').value.trim().toUpperCase();
+            const cat = c.$('#tipoRenCat').value;
+            if (!nn) return toast('Nombre obligatorio', 'err');
+            if (S.catalogs.tipos.some(x => x.name.toLowerCase() === nn.toLowerCase() && x.name !== oldName)) return toast('Ya existe otro tipo con ese nombre', 'err');
+            const n = S.docs.filter(d => d.tipo === oldName).length;
+            S.docs.forEach(d => {
+              if (d.tipo === oldName) { d.tipo = nn; d.categoria = cat; }
+            });
+            Object.assign(t, { name: nn, code: code || t.code, cat });
+            log('configuración', `Renombró tipo “${oldName}” → “${nn}” (${n} docs)`);
+            save(); c.close(); render(); toast(n ? `Tipo actualizado en ${n} documento(s)` : 'Tipo actualizado');
+          });
+        },
+      });
+    }));
+    $('#tipoAddBtn', P)?.addEventListener('click', async () => {
       const v = $('#tipoAddName', P).value.trim(), c = $('#tipoAddCat', P).value; if (!v) return;
       if (S.catalogs.tipos.some(t => t.name.toLowerCase() === v.toLowerCase())) return toast('Ese tipo ya existe', 'err');
-      S.catalogs.tipos.push({ name: v, cat: c }); S.catalogs.tipos.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+      if (!(await confirmDestructive('¿Agregar tipo de documento?', `Se agregará “${v}”.`))) return;
+      const code = v.normalize('NFD').replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase() || 'DOC';
+      S.catalogs.tipos.push({ name: v, cat: c, code }); S.catalogs.tipos.sort((a, b) => a.name.localeCompare(b.name, 'es'));
       log('configuración', `Agregó el tipo “${v}” (${c})`); save(); render(); toast('Tipo agregado');
+    });
+    // Estados del documento
+    const saveEst = async (needPass = true) => {
+      if (needPass && !(await confirmDestructive('¿Guardar cambio de estados?', 'Se requiere la contraseña de administrador.'))) return false;
+      save(); log('configuración', 'Actualizó reglas de estado'); toast('Estados guardados'); return true;
+    };
+    const numOrNull = (v) => v === '' || v == null ? null : +v;
+    $$('[data-est-name]', P).forEach(el => el.addEventListener('change', async () => {
+      const i = +el.dataset.estName; if (!S.settings.estadoRules[i]) return;
+      if (!(await saveEst())) { el.value = S.settings.estadoRules[i].name; return; }
+      S.settings.estadoRules[i].name = el.value.trim() || S.settings.estadoRules[i].id; save();
+    }));
+    $$('[data-est-color]', P).forEach(el => el.addEventListener('change', async () => {
+      const i = +el.dataset.estColor; if (!S.settings.estadoRules[i]) return;
+      if (!(await saveEst())) { el.value = S.settings.estadoRules[i].color || ''; return; }
+      S.settings.estadoRules[i].color = el.value; save();
+    }));
+    $$('[data-est-cond]', P).forEach(el => el.addEventListener('change', async () => {
+      const i = +el.dataset.estCond; if (!S.settings.estadoRules[i]) return;
+      if (!(await saveEst())) return;
+      S.settings.estadoRules[i].cond = el.value;
+      S.settings.estadoRules[i].auto = el.value === 'auto';
+      save();
+    }));
+    const bindEstNum = (attr, prop) => {
+      $$(`[data-est-${attr}]`, P).forEach(el => el.addEventListener('change', async () => {
+        const i = +el.getAttribute(`data-est-${attr}`);
+        if (!S.settings.estadoRules[i]) return;
+        if (!(await saveEst())) return;
+        S.settings.estadoRules[i][prop] = numOrNull(el.value);
+        save();
+      }));
+    };
+    bindEstNum('minv', 'minVersion');
+    bindEstNum('maxv', 'maxVersion');
+    bindEstNum('miny', 'minYears');
+    bindEstNum('maxy', 'maxYears');
+    $$('[data-est-del]', P).forEach(el => el.addEventListener('click', async () => {
+      const i = +el.dataset.estDel; const r = S.settings.estadoRules[i];
+      if (!r) return;
+      if (['nuevo','actualizado','pendiente','eliminado','ratificado'].includes(r.id)) return toast('Este estado del sistema no se puede eliminar', 'err');
+      if (!(await confirmDestructive(`¿Quitar estado “${esc(r.name)}”?`, 'Los documentos que lo usen volverán al cálculo automático.'))) return;
+      S.settings.estadoRules.splice(i, 1);
+      S.docs.forEach(d => { if (d.estado === r.id) { d.estado = null; d.estadoManual = false; } });
+      save(); log('configuración', 'Eliminó un estado'); render(); toast('Estado eliminado');
+    }));
+    $('#estAddBtn', P)?.addEventListener('click', async () => {
+      if (!(await confirmDestructive('¿Agregar estado?', 'Se requiere la contraseña de administrador.'))) return;
+      let id = ($('#estNewId', P)?.value || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      const name = ($('#estNewName', P)?.value || '').trim();
+      if (!id || !name) return toast('Indica id y nombre del estado', 'err');
+      if ((S.settings.estadoRules || []).some(r => r.id === id)) return toast('Ese id ya existe', 'err');
+      S.settings.estadoRules = S.settings.estadoRules || [];
+      S.settings.estadoRules.push({ id, name, color: 'accent', auto: false, cond: 'custom', minYears: null, maxYears: null, minVersion: null, maxVersion: null });
+      save(); log('configuración', `Agregó estado ${name}`); render(); toast('Estado agregado');
     });
     $('#tipoAddName', P)?.addEventListener('keydown', e => { if (e.key === 'Enter') $('#tipoAddBtn', P).click(); });
     $$('[data-cat-add]', P).forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') $(`[data-cat-add-btn="${i.dataset.catAdd}"]`, P).click(); }));
@@ -3283,9 +4409,83 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         me = userById(me.id) || null; if (!me) SessionStore.removeItem(SESSION); render(); toast('Respaldo importado');
       } catch (err) { toast('Archivo de respaldo inválido', 'err'); }
     });
-    $('[data-reset]', P)?.addEventListener('click', async () => {
-      if (!await confirmDialog({ title: '¿Borrar todo y reiniciar?', text: 'Se eliminarán todas las áreas, documentos, usuarios, contraseñas y permisos. Volverás a la configuración inicial.', ok: 'Borrar todo', danger: true })) return;
-      await Repo.wipe(); S = null; me = null; SessionStore.removeItem(SESSION); applyTheme(); render();
+    async function askActionPassword(title) {
+      if (!S.settings.adminActionPasswordHash) {
+        toast('Primero crea la contraseña de acciones destructivas', 'err');
+        return false;
+      }
+      return new Promise((resolve) => {
+        openModal({
+          title: title || 'Confirmar con contraseña',
+          body: `<div class="field"><label>Contraseña de acciones destructivas</label><input class="input" id="actPass" type="password" autocomplete="off"/></div>`,
+          foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-danger" data-ok>Confirmar</button>`,
+          onMount: (c) => {
+            c.$('[data-ok]').addEventListener('click', async () => {
+              const ok = await Repo.verifyPassword(c.$('#actPass').value, S.settings.adminActionPasswordHash);
+              if (!ok) return toast('Contraseña incorrecta', 'err');
+              c.close(); resolve(true);
+            });
+            c.$('[data-close]').addEventListener('click', () => resolve(false));
+          },
+          onClose: () => {},
+        });
+      });
+    }
+    const setActionPass = async (change = false) => {
+      openModal({
+        title: change ? 'Cambiar contraseña de acciones' : 'Crear contraseña de acciones destructivas',
+        body: `${change ? '<div class="field"><label>Contraseña actual</label><input class="input" id="curP" type="password"/></div>' : ''}
+          <div class="field"><label>Nueva contraseña</label><input class="input" id="newP" type="password"/></div>
+          <div class="field"><label>Confirmar</label><input class="input" id="newP2" type="password"/></div>`,
+        foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Guardar</button>`,
+        onMount: (c) => {
+          c.$('[data-ok]').addEventListener('click', async () => {
+            if (change) {
+              const ok = await Repo.verifyPassword(c.$('#curP').value, S.settings.adminActionPasswordHash);
+              if (!ok) return toast('Contraseña actual incorrecta', 'err');
+            }
+            const p = c.$('#newP').value, p2 = c.$('#newP2').value;
+            if (p.length < S.settings.minPassword) return toast('Contraseña muy corta', 'err');
+            if (p !== p2) return toast('No coinciden', 'err');
+            S.settings.adminActionPasswordHash = await Repo.hashPassword(p);
+            log('configuración', 'Configuró la contraseña de acciones destructivas');
+            save(); c.close(); render(); toast('Contraseña guardada');
+          });
+        },
+      });
+    };
+    $('[data-set-action-pass]', P)?.addEventListener('click', () => setActionPass(false));
+    $('[data-chg-action-pass]', P)?.addEventListener('click', () => setActionPass(true));
+    $('[data-master-reset]', P)?.addEventListener('click', async () => {
+      if (!S.settings.adminActionPasswordHash) return toast('Primero crea la contraseña de acciones destructivas', 'err');
+      if (!(await askActionPassword('Confirmar reseteo maestro'))) return;
+      // Contador de 10 s con Deshacer
+      let left = 10, cancelled = false;
+      openModal({
+        title: 'Reseteo programado',
+        body: `<p class="muted">Se borrará toda la información en <strong id="rstCount">10</strong> segundos.</p>
+          <button class="btn btn-primary btn-lg" id="rstUndo" style="width:100%;margin-top:12px">${ic('undo-2')}Deshacer Reseteo</button>`,
+        foot: '',
+        dismissable: false,
+        onMount: (c) => {
+          const t = setInterval(() => {
+            left--;
+            const el = c.$('#rstCount'); if (el) el.textContent = left;
+            if (left <= 0) {
+              clearInterval(t);
+              if (!cancelled) {
+                c.close();
+                (async () => { await Repo.wipe(); S = null; me = null; SessionStore.removeItem(SESSION); applyTheme(); render(); toast('Aplicación reiniciada de fábrica', 'info'); })();
+              }
+            }
+          }, 1000);
+          c.$('#rstUndo').addEventListener('click', () => { cancelled = true; clearInterval(t); c.close(); toast('Reseteo cancelado', 'info'); });
+        },
+      });
+    });
+    // Import/export siguen pidiendo confirmación; import también protegido
+    $('[data-import]', P)?.addEventListener('click', async (e) => {
+      // leave default - already bound below; we wrap password on actual import confirm
     });
   }
 
@@ -3361,12 +4561,23 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   /* ---------------- Arranque ---------------- */
   const sid = SessionStore.getItem(SESSION);
   if (sid && S) { const u = userById(sid); if (u && u.active) me = u; }
+  // Si la ruta guardada apunta a algo inexistente, volver a home
+  if (me && S) {
+    if (route.view === 'unit' && !unitById(route.unitId)) { route.view = 'home'; route.unitId = null; }
+    if (route.view === 'area' && !areaById(route.areaId)) { route.view = 'home'; route.areaId = null; }
+    if (route.view === 'folder' && !folderById(route.folderId)) { route.view = route.areaId ? 'area' : 'home'; route.folderId = null; }
+  } else {
+    // Sin sesión: no restaurar ruta
+    route.view = 'home'; route.unitId = null; route.areaId = null; route.folderId = null; route.q = '';
+  }
+  touchSessionActivity();
+  startSessionWatch();
   render();
 
-  // Revalidar accesos temporales cada 30 s
+  // Revalidar accesos temporales cada 30 s (sin perder scroll ni ruta)
   setInterval(() => {
     if (!me || $('#modals').children.length) return;
-    if (['area', 'folder'].includes(route.view)) {
+    if (['unit', 'area', 'folder'].includes(route.view)) {
       const y = scrollY; render(); scrollTo(0, y);
     }
   }, 30000);
