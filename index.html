@@ -502,6 +502,17 @@ a.url-ver:hover, button.url-ver:hover { text-decoration: underline; }
 .input-icon .input { padding-right: 44px; }
 .input-icon button { position: absolute; right: 4px; top: 4px; }
 
+/* Ocultar el ojo nativo del navegador en campos password (evita doble icono) */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+
 .switch { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .switch span { position: absolute; inset: 0; border-radius: 980px; background: var(--line-2); transition: background .3s var(--ease); cursor: pointer; }
@@ -1952,8 +1963,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     });
   }
   function togglePass(btn, input) {
+    if (!btn || !input) return;
     input.type = input.type === 'password' ? 'text' : 'password';
-    btn.innerHTML = ic(input.type === 'password' ? 'eye' : 'eye-off'); icons();
+    btn.replaceChildren();
+    btn.innerHTML = ic(input.type === 'password' ? 'eye' : 'eye-off');
+    icons();
   }
 
   /* ---------------- Navegación ---------------- */
