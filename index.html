@@ -1801,7 +1801,22 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       document.removeEventListener('keydown', onKey);
       setTimeout(() => { root.remove(); onClose && onClose(); }, 240);
     };
-    const onKey = (e) => { if (e.key === 'Escape' && dismissable && root === $('#modals').lastElementChild) close(); };
+    const onKey = (e) => {
+      if (root !== $('#modals').lastElementChild) return;
+      if (e.key === 'Escape' && dismissable) { e.preventDefault(); close(); return; }
+      if (e.key !== 'Enter' || e.isComposing) return;
+      // No interceptar Enter en textarea (salvo Ctrl/Cmd+Enter) ni en botones que ya manejan su clic
+      const t = e.target;
+      if (t && t.tagName === 'TEXTAREA' && !(e.ctrlKey || e.metaKey)) return;
+      if (t && t.tagName === 'BUTTON' && t.matches('[data-close]')) return;
+      // Preferir data-ok; si no, el botón primario o de peligro del pie
+      const okBtn = m.querySelector('[data-ok]')
+        || m.querySelector('.modal-foot .btn-primary')
+        || m.querySelector('.modal-foot .btn-danger');
+      if (!okBtn || okBtn.disabled) return;
+      e.preventDefault();
+      okBtn.click();
+    };
     document.addEventListener('keydown', onKey);
     $('.modal-backdrop', root).addEventListener('click', () => dismissable && close());
     $$('[data-close]', root).forEach(b => b.addEventListener('click', close));
