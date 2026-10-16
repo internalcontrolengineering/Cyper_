@@ -1969,6 +1969,21 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     btn.innerHTML = ic(input.type === 'password' ? 'eye' : 'eye-off');
     icons();
   }
+  /** Envuelve un input password con botón de mostrar/ocultar */
+  function passField(id, extraAttrs = '') {
+    return `<div class="input-icon"><input class="input" id="${id}" type="password" ${extraAttrs}/><button type="button" class="icon-btn" data-toggle-pass data-for="${id}" aria-label="Mostrar contraseña">${ic('eye')}</button></div>`;
+  }
+  function bindPassToggles(root) {
+    (root ? root.querySelectorAll('[data-toggle-pass]') : $$('[data-toggle-pass]')).forEach(btn => {
+      if (btn.dataset.boundPass) return;
+      btn.dataset.boundPass = '1';
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.for;
+        const input = id ? (root ? root.querySelector('#' + id) : $('#' + id)) : btn.parentElement?.querySelector('input');
+        togglePass(btn, input);
+      });
+    });
+  }
 
   /* ---------------- Navegación ---------------- */
   function navView() {
@@ -3026,9 +3041,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     return new Promise((resolve) => {
       openModal({
         title: 'Confirmar con contraseña',
-        body: `<div class="field"><label>Contraseña de acciones destructivas</label><input class="input" id="actPass2" type="password" autocomplete="off"/></div>`,
+        body: `<div class="field"><label>Contraseña de acciones destructivas</label>${passField('actPass2', 'autocomplete="off"')}</div>`,
         foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-danger" data-ok>Confirmar</button>`,
         onMount: (c) => {
+          bindPassToggles(c.el);
           c.$('[data-ok]').addEventListener('click', async () => {
             const ok = await Repo.verifyPassword(c.$('#actPass2').value, S.settings.adminActionPasswordHash);
             if (!ok) return toast('Contraseña incorrecta', 'err');
@@ -3972,16 +3988,19 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   function changePassModal() {
     openModal({
       title: 'Cambiar contraseña', sub: esc(me.email),
-      body: `<div class="field"><label>Contraseña actual</label><input class="input" type="password" id="p0" autocomplete="current-password"/></div>
-        <div class="field"><label>Nueva contraseña</label><input class="input" type="password" id="p1" autocomplete="new-password"/><div class="hint">Mínimo ${S.settings.minPassword} caracteres</div></div>
-        <div class="field"><label>Confirmar nueva contraseña</label><input class="input" type="password" id="p2" autocomplete="new-password"/></div>`,
+      body: `<div class="field"><label>Contraseña actual</label>${passField('p0', 'autocomplete="current-password"')}</div>
+        <div class="field"><label>Nueva contraseña</label>${passField('p1', 'autocomplete="new-password"')}<div class="hint">Mínimo ${S.settings.minPassword} caracteres</div></div>
+        <div class="field"><label>Confirmar nueva contraseña</label>${passField('p2', 'autocomplete="new-password"')}</div>`,
       foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Actualizar</button>`,
-      onMount: (c) => c.$('[data-ok]').addEventListener('click', async () => {
+      onMount: (c) => {
+        bindPassToggles(c.el);
+        c.$('[data-ok]').addEventListener('click', async () => {
         if (!(await Repo.verifyPassword(c.$('#p0').value, me.pass))) return toast('La contraseña actual no coincide', 'err');
         if (c.$('#p1').value.length < S.settings.minPassword) return toast('La nueva contraseña es muy corta', 'err');
         if (c.$('#p1').value !== c.$('#p2').value) return toast('Las contraseñas no coinciden', 'err');
         me.pass = await Repo.hashPassword(c.$('#p1').value); log('usuario', 'Cambió su contraseña'); save(); c.close(); toast('Contraseña actualizada');
-      }),
+      });
+      },
     });
   }
 
@@ -4431,9 +4450,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       return new Promise((resolve) => {
         openModal({
           title: title || 'Confirmar con contraseña',
-          body: `<div class="field"><label>Contraseña de acciones destructivas</label><input class="input" id="actPass" type="password" autocomplete="off"/></div>`,
+          body: `<div class="field"><label>Contraseña de acciones destructivas</label>${passField('actPass', 'autocomplete="off"')}</div>`,
           foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-danger" data-ok>Confirmar</button>`,
           onMount: (c) => {
+            bindPassToggles(c.el);
             c.$('[data-ok]').addEventListener('click', async () => {
               const ok = await Repo.verifyPassword(c.$('#actPass').value, S.settings.adminActionPasswordHash);
               if (!ok) return toast('Contraseña incorrecta', 'err');
@@ -4448,11 +4468,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const setActionPass = async (change = false) => {
       openModal({
         title: change ? 'Cambiar contraseña de acciones' : 'Crear contraseña de acciones destructivas',
-        body: `${change ? '<div class="field"><label>Contraseña actual</label><input class="input" id="curP" type="password"/></div>' : ''}
-          <div class="field"><label>Nueva contraseña</label><input class="input" id="newP" type="password"/></div>
-          <div class="field"><label>Confirmar</label><input class="input" id="newP2" type="password"/></div>`,
+        body: `${change ? '<div class="field"><label>Contraseña actual</label>' + passField('curP') + '</div>' : ''}
+          <div class="field"><label>Nueva contraseña</label>${passField('newP')}</div>
+          <div class="field"><label>Confirmar</label>${passField('newP2')}</div>`,
         foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Guardar</button>`,
         onMount: (c) => {
+          bindPassToggles(c.el);
           c.$('[data-ok]').addEventListener('click', async () => {
             if (change) {
               const ok = await Repo.verifyPassword(c.$('#curP').value, S.settings.adminActionPasswordHash);
