@@ -806,8 +806,17 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   .nav .search { width: 140px; flex: 1 1 auto; min-width: 0; max-width: 180px; }
   .nav .search:focus-within { width: auto; max-width: none; }
   .session-timer {
-    font-size: 11px; min-width: 48px; padding: 4px 7px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 52px;
+    padding: 5px 8px;
+    flex: 0 0 auto;
+    line-height: 1;
   }
+  .session-timer.hidden { display: none !important; }
   .nav .icon-btn, .nav .avatar {
     width: 40px; height: 40px; flex: none;
   }
@@ -872,10 +881,21 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   .paper { padding: 24px 16px; }
   .viewer-stage { padding: 12px; }
   .edit-toolbar { margin: -12px -12px 12px; top: -12px; flex-wrap: wrap; }
-  .hero { padding-top: 36px; padding-bottom: 8px; }
-  .hero h1 { font-size: clamp(32px, 9vw, 44px); line-height: 1.08; }
-  .hero p { font-size: 15px; margin-top: 12px; }
-  .hero-stats { gap: 16px 24px; flex-wrap: wrap; justify-content: center; }
+  .hero { padding-top: 28px; padding-bottom: 8px; }
+  .hero .eyebrow {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 8px;
+    padding: 0 8px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .hero h1 { font-size: clamp(28px, 8.5vw, 40px); line-height: 1.12; padding: 0 4px; }
+  .hero p { font-size: 14.5px; margin-top: 10px; padding: 0 8px; line-height: 1.4; }
+  .hero-stats { gap: 14px 20px; flex-wrap: wrap; justify-content: center; margin-top: 28px; }
+  .hero-stats .stat strong { font-size: 22px; }
+  .hero-stats .stat span { font-size: 12px; }
   .page-title { flex-wrap: wrap; gap: 12px; margin-top: 24px !important; }
   .page-title h1 { font-size: clamp(26px, 8vw, 36px); }
   .page-title .glyph { width: 52px; height: 52px; border-radius: 14px; }
@@ -1045,7 +1065,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   .main { padding: 0 12px calc(100px + env(safe-area-inset-bottom, 0px)); }
   .nav-inner { padding: 0 10px; gap: 4px; position: relative; }
   .brand { max-width: 36%; }
-  .session-timer { display: none; } /* más espacio; el cierre por inactividad sigue activo */
+  .session-timer {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 46px;
+    padding: 5px 8px;
+    flex: 0 0 auto;
+  }
   .nav .search {
     display: flex; width: 40px; padding: 0 11px; overflow: hidden; flex: none; max-width: 40px;
   }
@@ -2220,7 +2249,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       me = u; SessionStore.setItem(SESSION, u.id);
       u.lastLogin = now(); log('acceso', `Inicio de sesión`); save();
       go('home');
-      toast(`Hola, ${u.name.split(' ')[0]}`);
+      {
+        const h = new Date().getHours();
+        const saludo = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+        toast(`${saludo}, ${u.name.split(' ')[0]}`);
+      }
     });
   }
   function togglePass(btn, input) {
