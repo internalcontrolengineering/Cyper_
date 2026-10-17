@@ -708,6 +708,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .progress-steps { display: flex; gap: 6px; margin: 6px 0 4px; }
 .progress-steps i { flex: 1; height: 4px; border-radius: 4px; background: var(--bg-sunk); transition: background .4s; }
 .progress-steps i.done { background: var(--ok); }
+.progress-steps i.skip { background: var(--text-3); opacity: .45; }
 .progress-steps i.now { background: var(--accent); }
 .file-preview-card { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; background: var(--bg); margin-bottom: 18px; }
 .file-preview-card .doc-name { min-width: 0; }
@@ -1331,7 +1332,27 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 .input.cat-sop { color: #1f9d45; font-weight: 600; }
 .chip.ver { min-width: 28px; justify-content: center; font-variant-numeric: tabular-nums; }
 .rector-field { padding: 14px 16px; border-radius: 14px; background: rgba(48, 209, 88, .08); border: 1px solid rgba(48, 209, 88, .25); animation: rise .35s var(--ease) both; }
-.rector-field select.invalid { border-color: var(--danger); }
+.rector-field select.invalid, .rector-field .rector-combo.invalid [data-rector-search] { border-color: var(--danger); }
+.rector-combo { position: relative; }
+.rector-combo [data-rector-search] { width: 100%; }
+.rector-list {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 60;
+  max-height: 240px; overflow-y: auto; padding: 6px;
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: var(--shadow-md);
+}
+.rector-list.hidden { display: none; }
+.rector-list button {
+  display: block; width: 100%; text-align: left; padding: 8px 10px; border-radius: 8px;
+  font-size: 13px; color: var(--text); border: 0; background: transparent; cursor: pointer;
+}
+.rector-list button:hover, .rector-list button.on { background: var(--accent-soft); }
+.rector-list button .mono { font-weight: 600; }
+.rector-list .rl-group {
+  padding: 8px 10px 4px; font-size: 11px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.rector-list .rl-empty { padding: 12px; text-align: center; color: var(--text-3); font-size: 13px; }
 .doc-tile.child { border-left: 3px solid #30d158; }
 .doc-tile.ref { opacity: .72; }
 .tile-rel { display: inline-flex; align-items: center; gap: 4px; color: var(--text-3); }
@@ -3692,7 +3713,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         ${catalogField('clasificaciones', 'clasificacion', clasificacion)}
       </div>
       <div class="field rector-field ${RECTOR_CATS[cat] ? 'lvl-' + LEVEL[cat] : 'hidden'}"><label>Documento rector <span class="tiny">(opcional)</span></label>
-        <select class="select" name="rector">${rectorOptions(rectorId, selfId, folder, cat)}</select>
+        <div class="rector-combo" data-rector-combo>
+          <input type="hidden" name="rector" value="${esc(rectorId || '')}"/>
+          <input class="input" type="search" data-rector-search placeholder="Buscar por nomenclatura o nombre…" autocomplete="off" value="${(() => { const d = rectorId && S.docs.find(x => x.id === rectorId); return d ? esc(d.nomenclatura + ' · ' + d.nombre) : ''; })()}"/>
+          <div class="rector-list hidden" data-rector-list></div>
+        </div>
         <div class="hint" data-rector-hint>${rectorHint(cat)}</div></div>
     </div>`;
   }
@@ -3718,8 +3743,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const hidden = combo.querySelector('[name=rector]');
     const search = combo.querySelector('[data-rector-search]');
     const list = combo.querySelector('[data-rector-list]');
-    const renderList = (q = '') => {
+    const renderList = (q = '', open = true) => {
       const cat = catOfTipo(b.querySelector('[name=tipo]')?.value || '');
+      // Siempre lee S.docs actual (docs publicados en esta sesión multi-subida incluidos)
       const cand = rectorCandidates(b.dataset.self || null, folderById(b.dataset.folder), cat);
       const qq = (q || '').trim().toLowerCase();
       const filtered = qq ? cand.filter(d => (`${d.nomenclatura} ${d.nombre} ${d.tipo || ''}`).toLowerCase().includes(qq)) : cand;
@@ -3738,10 +3764,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             `<button type="button" data-rid="${d.id}" class="${d.id === hidden.value ? 'on' : ''}"><strong class="mono">${esc(d.nomenclatura)}</strong> · ${esc(d.nombre)} <span class="tiny">(${esc(d.tipo)} · ${esc(CAT_LEVEL[d.categoria] || '')})</span></button>`
           ).join('')).join('');
       }
-      list.classList.remove('hidden');
+      if (open) list.classList.remove('hidden');
       icons();
     };
+    // Permite refrescar candidatos cuando cambia el tipo o tras publicar otro de la cola
+    b._refreshRector = () => {
+      const id = hidden.value;
+      if (id) {
+        const d = S.docs.find(x => x.id === id);
+        search.value = d ? `${d.nomenclatura} · ${d.nombre}` : '';
+        if (!d) hidden.value = '';
+      }
+    };
     search.addEventListener('focus', () => renderList(search.value));
+    search.addEventListener('click', () => renderList(search.value));
     search.addEventListener('input', () => {
       if (hidden.value) { hidden.value = ''; }
       renderList(search.value);
@@ -3756,6 +3792,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         search.value = d ? `${d.nomenclatura} · ${d.nombre}` : '';
       }
       list.classList.add('hidden');
+      combo.classList.remove('invalid');
       hidden.dispatchEvent(new Event('change', { bubbles: true }));
     });
     document.addEventListener('click', (e) => {
@@ -3774,10 +3811,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       rf.className = 'field rector-field ' + (RECTOR_CATS[c] ? 'lvl-' + LEVEL[c] : 'hidden');
       if (c !== lastCat) {
         // Al cambiar de nivel se limpia el rector si ya no aplica
-        const keep = rs.value;
+        const keep = rs ? rs.value : '';
         const still = keep && rectorCandidates(b.dataset.self || null, folderById(b.dataset.folder), c).some(d => d.id === keep);
         if (!still) {
-          rs.value = '';
+          if (rs) rs.value = '';
           const s = b.querySelector('[data-rector-search]');
           if (s) s.value = '';
         }
@@ -3785,6 +3822,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       }
       b.querySelector('[data-rector-hint]').textContent = rectorHint(c);
       sel.classList.remove('invalid');
+      // Lista de rectores siempre al día (incluye docs recién publicados en la cola)
+      if (RECTOR_CATS[c] && b._refreshRector) b._refreshRector();
     };
     sel.addEventListener('change', () => {
       sync();
@@ -3802,7 +3841,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     });
     bindRectorCombo(b);
     sync();
-    rs?.addEventListener('change', (e) => e.target.classList.remove('invalid'));
+    rs?.addEventListener('change', (e) => {
+      e.target.classList.remove('invalid');
+      b.querySelector('[data-rector-combo]')?.classList.remove('invalid');
+    });
   }
   function readTipoBlock(root) {
     const sel = root.querySelector('.tipo-block [name=tipo]');
@@ -3814,7 +3856,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const rs = root.querySelector('.tipo-block [name=rector]');
       rectorId = rs?.value || null;
       const r = rectorId && docById(rectorId);
-      if (rectorId && (!r || !canBeRector(categoria, r.categoria))) { rs.classList.add('invalid'); return { error: 'El documento rector elegido no corresponde al nivel del documento' }; }
+      if (rectorId && (!r || !canBeRector(categoria, r.categoria))) {
+        rs?.classList.add('invalid');
+        root.querySelector('[data-rector-combo]')?.classList.add('invalid');
+        return { error: 'El documento rector elegido no corresponde al nivel del documento' };
+      }
     }
     return { tipo, categoria, rectorId };
   }
@@ -4008,15 +4054,43 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
 
   function uploadStep(Q) {
-    if (Q.i >= Q.files.length) {
-      if (Q.done) { toast(Q.done === 1 ? 'Documento publicado' : `${Q.done} documentos publicados`); render(); }
-      return;
-    }
-    const file = Q.files[Q.i];
-    const total = Q.files.length;
-    const a = areaById(Q.folder.areaId);
     if (!Q.drafts) Q.drafts = [];
     if (!Q.doneFiles) Q.doneFiles = {};
+    if (!Q.skipped) Q.skipped = {};
+    // Pendiente = ni publicado ni descartado (se puede publicar en cualquier orden)
+    const isPending = (k) => !Q.doneFiles[k] && !Q.skipped[k];
+    const nextPending = (from) => {
+      for (let k = from; k < Q.files.length; k++) if (isPending(k)) return k;
+      return -1;
+    };
+    const prevPending = (from) => {
+      for (let k = from; k >= 0; k--) if (isPending(k)) return k;
+      return -1;
+    };
+    // Cualquier pendiente, empezando después de `after` y dando la vuelta (no fuerza orden de subida)
+    const anyPendingAfter = (after) => {
+      for (let k = after + 1; k < Q.files.length; k++) if (isPending(k)) return k;
+      for (let k = 0; k <= after; k++) if (isPending(k)) return k;
+      return -1;
+    };
+    const finishQueue = () => {
+      const pub = Q.done || 0;
+      const sk = Object.keys(Q.skipped).filter(k => Q.skipped[k]).length;
+      if (pub && sk) toast(`${pub} publicado${pub === 1 ? '' : 's'}, ${sk} omitido${sk === 1 ? '' : 's'}`);
+      else if (pub) toast(pub === 1 ? 'Documento publicado' : `${pub} documentos publicados`);
+      else if (sk) toast(sk === 1 ? 'Documento omitido' : `${sk} documentos omitidos`, 'info');
+      render();
+    };
+    if (!isPending(Q.i)) {
+      const n = anyPendingAfter(Q.i);
+      if (n < 0) { finishQueue(); return; }
+      Q.i = n;
+    }
+    if (Q.i >= Q.files.length) { finishQueue(); return; }
+    const file = Q.files[Q.i];
+    const total = Q.files.length;
+    const pendingLeft = Q.files.reduce((n, _, k) => n + (isPending(k) ? 1 : 0), 0);
+    const a = areaById(Q.folder.areaId);
     const draft = Q.drafts[Q.i] || null;
     const p = Q.replaceDoc ? { nomenclatura: Q.replaceDoc.nomenclatura, nombre: Q.replaceDoc.nombre, version: nextVersion(Q.replaceDoc.version), tipo: Q.replaceDoc.tipo, clasificacion: Q.replaceDoc.clasificacion, rectorId: Q.replaceDoc.rectorId } : parseFileName(file.name, Q.folder);
     const tipo = draft?.tipo ?? Q.shared?.tipo ?? p.tipo ?? '', clasificacion = draft?.clasificacion ?? Q.shared?.clasificacion ?? p.clasificacion ?? '', rectorId = draft?.rectorId ?? Q.shared?.rectorId ?? p.rectorId ?? null;
@@ -4031,11 +4105,17 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       title: Q.replaceDoc ? 'Nueva versión del documento' : 'Datos del documento',
       sub: total > 1 ? `Archivo ${Q.i + 1} de ${total} · ${esc(a.name)} / ${esc(Q.folder.name)}` : `${esc(a.name)} / ${esc(Q.folder.name)}`,
       body: `${total > 1 ? `<div class="upload-nav">
-          <button type="button" class="btn btn-ghost btn-sm" data-prev ${Q.i === 0 ? 'disabled' : ''}>${ic('chevron-left')}Anterior</button>
-          <div class="progress-steps" style="flex:1">${Q.files.map((_, k) => `<i class="${(Q.doneFiles && Q.doneFiles[k]) ? 'done' : k === Q.i ? 'now' : ''}" data-goto="${k}" title="${esc(Q.files[k].name)}" style="cursor:pointer"></i>`).join('')}</div>
-          <button type="button" class="btn btn-ghost btn-sm" data-next ${Q.i >= total - 1 ? 'disabled' : ''}>Siguiente${ic('chevron-right')}</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-prev ${pendingLeft <= 1 ? 'disabled' : ''}>${ic('chevron-left')}Anterior</button>
+          <div class="progress-steps" style="flex:1">${Q.files.map((_, k) => {
+            const done = !!(Q.doneFiles && Q.doneFiles[k]);
+            const sk = !!(Q.skipped && Q.skipped[k]);
+            const cls = done ? 'done' : sk ? 'skip' : (k === Q.i ? 'now' : '');
+            const tip = done ? (esc(Q.files[k].name) + ' · publicado') : sk ? (esc(Q.files[k].name) + ' · omitido') : esc(Q.files[k].name);
+            return `<i class="${cls}" ${(!done && !sk) ? `data-goto="${k}" style="cursor:pointer"` : ''} title="${tip}"></i>`;
+          }).join('')}</div>
+          <button type="button" class="btn btn-ghost btn-sm" data-next ${pendingLeft <= 1 ? 'disabled' : ''}>Siguiente${ic('chevron-right')}</button>
         </div>
-        <p class="tiny" style="text-align:center;margin:-4px 0 10px">Archivo ${Q.i + 1} de ${total} · puedes cambiar de archivo antes de publicar</p>` : ''}
+        <p class="tiny" style="text-align:center;margin:-4px 0 10px">${pendingLeft} pendiente${pendingLeft === 1 ? '' : 's'} de ${total} · puedes publicar en cualquier orden; el módulo se cierra al terminar o omitir todos</p>` : ''}
         <div class="file-preview-card">${badge(ext)}<div class="doc-name"><strong>${esc(file.name)}</strong><span>${fmtSize(file.size)} · modificado ${fmtDate(fileDate)}</span></div></div>
         <form id="uf" novalidate>
         <div class="row">
@@ -4063,11 +4143,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         </div>
         <div class="field"><label for="uUrl">URL / liga de hospedaje</label><input class="input" id="uUrl" name="url" value="${esc(Q.replaceDoc?.url || ('local://docs/pending'))}" readonly/><div class="hint">Se asigna automáticamente al publicar (local mientras no haya Supabase).</div></div>
         <div class="field"><label for="uNota">Nota de la versión <span class="tiny">(opcional)</span></label><input class="input" id="uNota" name="nota" placeholder="Ej. Actualización de responsables" maxlength="140"/></div>
-        ${total > 1 && Q.i < total - 1 ? `<label class="set-row" style="border:0;padding:4px 0;cursor:pointer"><span class="txt"><strong>Aplicar versión, fecha, tipo, rector y clasificación a los ${total - Q.i - 1} archivos restantes</strong><span>La nomenclatura y el nombre se siguen extrayendo de cada archivo</span></span><span class="switch"><input type="checkbox" name="applyAll" ${Q.shared ? 'checked' : ''}/><span></span></span></label>` : ''}
+        ${total > 1 && pendingLeft > 1 ? `<label class="set-row" style="border:0;padding:4px 0;cursor:pointer"><span class="txt"><strong>Aplicar versión, fecha, tipo, rector y clasificación a los demás pendientes</strong><span>La nomenclatura y el nombre se siguen extrayendo de cada archivo</span></span><span class="switch"><input type="checkbox" name="applyAll" ${Q.shared ? 'checked' : ''}/><span></span></span></label>` : ''}
         </form>`,
       foot: `<button class="btn btn-ghost left" data-cancel>Cancelar ${total > 1 ? 'todo' : ''}</button>
-        ${total > 1 ? `<button class="btn btn-secondary" data-skip>Omitir</button>` : ''}
-        <button class="btn btn-primary" data-ok>${ic('upload')}${Q.i < total - 1 ? 'Publicar y continuar' : 'Publicar'}</button>`,
+        ${total > 1 && pendingLeft > 1 ? `<button class="btn btn-secondary" data-skip>Omitir</button>` : ''}
+        <button class="btn btn-primary" data-ok>${ic('upload')}${pendingLeft > 1 ? 'Publicar y continuar' : 'Publicar'}</button>`,
       onMount: (c) => {
         const f = c.$('#uf');
         const checkDup = () => {
@@ -4131,16 +4211,39 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         };
         const goTo = (idx) => {
           if (idx < 0 || idx >= Q.files.length || idx === Q.i) return;
+          if (Q.doneFiles[idx]) return toast('Ese documento ya fue publicado', 'info');
+          if (Q.skipped[idx]) return toast('Ese documento fue omitido', 'info');
           saveDraft();
           c.close();
           Q.i = idx;
           setTimeout(() => uploadStep(Q), 200);
         };
-        c.$('[data-prev]')?.addEventListener('click', () => goTo(Q.i - 1));
-        c.$('[data-next]')?.addEventListener('click', () => goTo(Q.i + 1));
+        c.$('[data-prev]')?.addEventListener('click', () => {
+          const p = prevPending(Q.i - 1);
+          if (p >= 0) goTo(p);
+          else {
+            // dar la vuelta: último pendiente
+            let last = -1;
+            for (let k = Q.files.length - 1; k > Q.i; k--) if (isPending(k)) { last = k; break; }
+            if (last >= 0) goTo(last);
+          }
+        });
+        c.$('[data-next]')?.addEventListener('click', () => {
+          const n = anyPendingAfter(Q.i);
+          if (n >= 0 && n !== Q.i) goTo(n);
+        });
         c.$$('[data-goto]')?.forEach(el => el.addEventListener('click', () => goTo(+el.dataset.goto)));
         c.$('[data-cancel]').addEventListener('click', () => { c.close(); if (Q.done) render(); });
-        c.$('[data-skip]')?.addEventListener('click', () => { saveDraft(); c.close(); Q.i++; setTimeout(() => uploadStep(Q), 260); });
+        c.$('[data-skip]')?.addEventListener('click', () => {
+          // Omitir = descartar este archivo; el módulo sigue si quedan pendientes
+          Q.skipped[Q.i] = true;
+          Q.drafts[Q.i] = null;
+          c.close();
+          const n = anyPendingAfter(Q.i);
+          if (n < 0) { finishQueue(); return; }
+          Q.i = n;
+          setTimeout(() => uploadStep(Q), 260);
+        });
         c.$('[data-ok]').addEventListener('click', async (ev) => {
           const req = ['nomenclatura', 'nombre', 'version', 'fecha'];
           let valid = true;
@@ -4179,20 +4282,40 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             estadoManual: resolved.estadoManual,
           };
           // Duplicados globales de nomenclatura (misma nomenclatura + nombre = nueva versión)
-          if (!Q.replaceDoc) {
+          // IMPORTANTE: no mutar Q.replaceDoc (afectaría el resto de la cola multi-archivo)
+          let replaceForThis = Q.replaceDoc || null;
+          if (!replaceForThis) {
             const same = S.docs.find(d => d.nomenclatura.toUpperCase() === meta.nomenclatura && d.nombre.toLowerCase() === meta.nombre.toLowerCase());
             if (same) {
-              // Tratar como nueva versión del existente
-              Q.replaceDoc = same;
+              replaceForThis = same;
               meta.version = intVersion(nextVersion(same.version));
             } else if (S.docs.find(d => d.nomenclatura.toUpperCase() === meta.nomenclatura)) {
+              btn.disabled = false; btn.innerHTML = pendingLeft > 1 ? `${ic('upload')}Publicar y continuar` : `${ic('upload')}Publicar`;
+              icons();
               return toast('Ya existe un documento con esa nomenclatura. Usa el mismo nombre para subir una nueva versión, o elige otra nomenclatura.', 'err');
             }
           }
           if (f.applyAll?.checked) Q.shared = { version: meta.version, fecha: meta.fecha, tipo: meta.tipo, rectorId: meta.rectorId, clasificacion: meta.clasificacion, macroproceso: meta.macroproceso }; else Q.shared = null;
-          try { await storeUpload(file, meta, Q.folder, Q.replaceDoc); Q.done++; Q.doneFiles[Q.i] = true; Q.drafts[Q.i] = null; }
-          catch (e) { console.error(e); toast('No se pudo procesar ' + file.name, 'err'); }
-          c.close(); Q.i++; setTimeout(() => uploadStep(Q), 260);
+          try {
+            await storeUpload(file, meta, Q.folder, replaceForThis);
+            Q.done++;
+            Q.doneFiles[Q.i] = true;
+            Q.drafts[Q.i] = null;
+            toast(pendingLeft > 1 ? `Publicado · ${meta.nomenclatura} (disponible como rector)` : `Publicado · ${meta.nomenclatura}`, 'ok');
+          } catch (e) {
+            console.error(e);
+            btn.disabled = false; btn.innerHTML = pendingLeft > 1 ? `${ic('upload')}Publicar y continuar` : `${ic('upload')}Publicar`;
+            icons();
+            return toast('No se pudo procesar ' + file.name, 'err');
+          }
+          c.close();
+          // Pintar el documento en la lista de inmediato
+          render();
+          // Buscar cualquier pendiente restante (cualquier orden, no solo el siguiente en la cola)
+          const n = anyPendingAfter(Q.i);
+          if (n < 0) { finishQueue(); return; }
+          Q.i = n;
+          setTimeout(() => uploadStep(Q), 300);
         });
       },
     });
