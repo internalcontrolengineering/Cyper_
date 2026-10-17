@@ -330,6 +330,12 @@ svg.lucide { width: 18px; height: 18px; stroke-width: 1.8; flex-shrink: 0; }
 .folder-icon .back::before { content: ""; position: absolute; top: -6px; left: 0; width: 22px; height: 10px; border-radius: 5px 5px 0 0; background: var(--c2); }
 .folder-icon .front { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; border-radius: 8px; background: linear-gradient(160deg, var(--c1), var(--c2)); transform-origin: bottom; transition: transform .5s var(--spring); }
 .folder:hover .folder-icon .front { transform: perspective(200px) rotateX(-22deg); }
+.folder-icon .folder-glyph {
+  position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%); z-index: 2;
+  color: #fff; display: grid; place-items: center; pointer-events: none;
+}
+.folder-icon .folder-glyph svg.lucide { width: 16px; height: 16px; }
+
 .folder h4 { font-size: 16px; font-weight: 600; letter-spacing: -0.015em; }
 .folder .tiny { margin-top: 4px; display: block; }
 .folder .more { position: absolute; top: 12px; right: 12px; }
@@ -416,6 +422,27 @@ a.url-ver:hover, button.url-ver:hover { text-decoration: underline; }
 .matrix-tbl { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 13px; }
 .matrix-tbl th, .matrix-tbl td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; vertical-align: middle; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
 .matrix-tbl th { font-size: 11.5px; font-weight: 500; color: var(--text-3); position: sticky; top: 0; background: var(--bg-elev); z-index: 1; }
+.matrix-tbl th .th-label, .doc-tbl th .th-label { margin-right: 4px; }
+.matrix-tbl th .col-filter-btn, .doc-tbl th .col-filter-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px; color: var(--text-3); vertical-align: middle;
+}
+.matrix-tbl th .col-filter-btn:hover, .matrix-tbl th .col-filter-btn.active,
+.doc-tbl th .col-filter-btn:hover, .doc-tbl th .col-filter-btn.active { background: var(--accent-soft); color: var(--accent); }
+.matrix-tbl th .col-filter-btn svg.lucide, .doc-tbl th .col-filter-btn svg.lucide { width: 14px; height: 14px; }
+.doc-tbl thead th { overflow: visible; }
+.col-filter-pop {
+  position: fixed; width: 260px; max-height: 340px; display: flex; flex-direction: column;
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: var(--shadow-md); z-index: 200; padding: 10px; gap: 8px;
+}
+.col-filter-pop .cf-list { flex: 1; overflow-y: auto; max-height: 200px; }
+.col-filter-pop .cf-item { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.col-filter-pop .cf-item:hover { background: var(--bg-sunk); }
+.col-filter-pop .cf-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-filter-pop .cf-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.col-filter-pop .cf-foot { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+
 .matrix-tbl tr:hover td { background: var(--bg); }
 .matrix-tbl a.url-link { color: var(--accent); max-width: 220px; display: inline-block; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
 .matrix-tbl .m-open { color: var(--accent); font-weight: 500; cursor: pointer; background: none; border: 0; padding: 0; font: inherit; }
@@ -506,6 +533,115 @@ a.url-ver:hover, button.url-ver:hover { text-decoration: underline; }
 .input-icon .input { padding-right: 44px; }
 .input-icon button { position: absolute; right: 4px; top: 4px; }
 
+/* Tooltip requisitos de contraseña (hover PC / tap móvil) */
+.pass-tip {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; margin-left: 6px; vertical-align: middle;
+  color: var(--text-3); cursor: help; border-radius: 50%;
+  transition: color .2s, background .2s;
+  z-index: 5;
+}
+.pass-tip:hover, .pass-tip:focus, .pass-tip:focus-visible, .pass-tip.open {
+  color: var(--accent); background: var(--accent-soft); outline: none;
+}
+.pass-tip svg.lucide { width: 14px; height: 14px; pointer-events: none; }
+.pass-tip .pass-tip-box {
+  position: absolute; left: 50%; top: calc(100% + 10px); transform: translateX(-50%);
+  width: max-content; max-width: min(280px, 70vw); padding: 10px 12px; border-radius: 10px;
+  background: var(--bg-elev); color: var(--text); font-size: 12.5px; font-weight: 400; line-height: 1.45;
+  border: 1px solid var(--line); box-shadow: var(--shadow-lg); z-index: 250;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .18s var(--ease), visibility .18s;
+  white-space: normal; text-align: left;
+}
+.pass-tip .pass-tip-box::before {
+  content: ""; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-bottom-color: var(--line);
+}
+.pass-tip .pass-tip-box::after {
+  content: ""; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-bottom-color: var(--bg-elev); margin-bottom: -1px;
+}
+.pass-tip:hover .pass-tip-box, .pass-tip:focus .pass-tip-box, .pass-tip:focus-within .pass-tip-box, .pass-tip.open .pass-tip-box {
+  opacity: 1; visibility: visible;
+}
+.modal-body .field { overflow: visible; }
+.modal-body .field > label { position: relative; z-index: 1; }
+label .pass-tip { vertical-align: -2px; }
+
+/* Reloj de cuenta regresiva + estallido (reseteo maestro) */
+.reset-clock-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 8px 0 4px;
+}
+.reset-clock {
+  position: relative; width: 140px; height: 140px;
+}
+.reset-clock svg { width: 140px; height: 140px; transform: rotate(-90deg); }
+.reset-clock .rc-track { fill: none; stroke: var(--line); stroke-width: 8; }
+.reset-clock .rc-prog {
+  fill: none; stroke: var(--danger); stroke-width: 8; stroke-linecap: round;
+  stroke-dasharray: 377; stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear;
+}
+.reset-clock .rc-num {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 42px; font-weight: 700; letter-spacing: -0.04em; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.reset-clock.urgent .rc-prog { stroke: #ff375f; }
+.reset-clock.urgent .rc-num { color: #ff375f; animation: rcPulse .6s ease infinite alternate; }
+@keyframes rcPulse { from { transform: scale(1); } to { transform: scale(1.06); } }
+.reset-burst {
+  position: fixed; inset: 0; z-index: 300; pointer-events: none;
+  display: grid; place-items: center;
+}
+.reset-burst .rb-ring {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 3px solid var(--danger);
+  animation: rbExpand .7s cubic-bezier(.15,.85,.25,1) forwards;
+}
+.reset-burst .rb-flash {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at center, rgba(255,55,95,.35) 0%, transparent 55%);
+  animation: rbFlash .65s ease-out forwards;
+}
+.reset-burst .rb-particle {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--danger); opacity: .9;
+  animation: rbPart .75s cubic-bezier(.15,.8,.25,1) forwards;
+}
+@keyframes rbExpand {
+  0%   { transform: scale(.4); opacity: 1; border-width: 6px; }
+  100% { transform: scale(28); opacity: 0; border-width: 1px; }
+}
+@keyframes rbFlash {
+  0%   { opacity: .9; }
+  100% { opacity: 0; }
+}
+@keyframes rbPart {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--px), var(--py)) scale(0); opacity: 0; }
+}
+/* Contraseña visible completa al mostrar con el ojo */
+.login-card .input-icon input[type="text"],
+.modal .input-icon input[type="text"].mono,
+.modal .input-icon input.mono[type="text"] {
+  font-size: 13px;
+  letter-spacing: 0;
+  overflow-x: auto;
+  text-overflow: clip;
+}
+.login-card .field .input-icon { width: 100%; }
+.login-card .pass-fields { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 520px) {
+  .login-card .pass-fields { grid-template-columns: 1fr 1fr; }
+}
+.login-card .pass-fields .input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
 /* Ocultar el ojo nativo del navegador en campos password (evita doble icono) */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
@@ -567,6 +703,8 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .reveal > div { overflow: hidden; }
 .reveal.open { grid-template-rows: 1fr; opacity: 1; }
 
+.upload-nav { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; }
+.upload-nav .progress-steps { margin: 0; }
 .progress-steps { display: flex; gap: 6px; margin: 6px 0 4px; }
 .progress-steps i { flex: 1; height: 4px; border-radius: 4px; background: var(--bg-sunk); transition: background .4s; }
 .progress-steps i.done { background: var(--ok); }
@@ -735,6 +873,68 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 .login-card > p { color: var(--text-2); margin: 6px 0 26px; }
 .login-card .field { text-align: left; }
 .login-card .btn { width: 100%; margin-top: 6px; }
+/* Transición de acceso estilo HBO Max: logo y nombre se acercan a cámara */
+.login-brand {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  transform-origin: center center; will-change: transform, opacity;
+  position: relative; z-index: 3;
+}
+.login-brand .logo-big { margin-bottom: 4px; }
+.login-brand h1 {
+  margin: 0;
+  /* Texto vectorial: escala nítida al ampliar */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+.login-fade { transition: opacity .35s ease, transform .35s ease; }
+.login.zooming { pointer-events: none; overflow: visible; }
+.login.zooming .login-fade {
+  opacity: 0; transform: scale(.97);
+  transition: opacity .28s ease, transform .28s ease;
+  pointer-events: none;
+}
+.login.zooming .login-card {
+  background: transparent; border-color: transparent; box-shadow: none;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  overflow: visible;
+  transition: background .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+.login.zooming .orb { opacity: 0; transition: opacity .35s ease; }
+.login.zooming::after {
+  content: ""; position: fixed; inset: 0; z-index: 5;
+  background: var(--bg); opacity: 0;
+  animation: loginBgIn .95s cubic-bezier(.22,1,.36,1) forwards;
+}
+.login.zooming .login-brand {
+  position: fixed;
+  left: 50%; top: 50%;
+  z-index: 6;
+  margin: 0;
+  /* Centro de pantalla para el zoom tipo cámara */
+  transform: translate(-50%, -50%) scale(1);
+  animation: loginZoomIn .95s cubic-bezier(.15, .85, .25, 1) forwards;
+}
+.login.zooming .login-brand h1 {
+  font-size: clamp(32px, 6vw, 48px);
+  white-space: nowrap;
+}
+@keyframes loginZoomIn {
+  0%   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+  40%  { transform: translate(-50%, -50%) scale(2.4);  opacity: 1; }
+  70%  { transform: translate(-50%, -50%) scale(5.5);  opacity: 1; }
+  88%  { transform: translate(-50%, -50%) scale(12);   opacity: .92; }
+  100% { transform: translate(-50%, -50%) scale(22);   opacity: 0; }
+}
+@keyframes loginBgIn {
+  0%   { opacity: 0; }
+  35%  { opacity: .25; }
+  70%  { opacity: .75; }
+  100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login.zooming .login-brand { animation-duration: .01ms; }
+  .login.zooming::after { animation-duration: .01ms; }
+}
 .demo-users { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--text-3); text-align: left; }
 .demo-users button { display: flex; justify-content: space-between; width: 100%; padding: 6px 8px; border-radius: 8px; font-size: 12.5px; color: var(--text-2); }
 .demo-users button:hover { background: var(--bg-sunk); }
@@ -1043,8 +1243,22 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   .login-card .btn-lg { width: 100%; min-height: 48px; justify-content: center; }
 
   /* Toasts y menús */
-  .toasts { left: 12px; right: 12px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); align-items: stretch; }
-  .toast { max-width: none; }
+  .toasts {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+    transform: none !important;
+    width: auto;
+    align-items: stretch;
+    max-width: none;
+  }
+  .toast {
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+    text-align: center;
+  }
   .ctx .dropdown { max-width: calc(100vw - 24px); }
 
   /* Formularios de carga */
@@ -1322,7 +1536,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   /* Tipos de documento por nivel (configurable desde Configuración → Documentos) */
   const CATEGORIAS = ['Estratégico', 'Operativo', 'Soporte'];
   const DEFAULT_TIPOS = () => [
-    ['Manual de Políticas y Lineamientos Generales', 'Estratégico', 'PLG'],
+    ['Manual PyLG', 'Estratégico', 'PLG'],
     ['Procedimiento', 'Operativo', 'POP'],
     ['Políticas', 'Operativo', 'POL'],
     ['Guía Operativa', 'Operativo', 'GOP'],
@@ -1436,9 +1650,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       try { LS.store.setItem(KEY, JSON.stringify(this.db)); }
       catch (e) { console.error(e); window.toast && toast('No se pudo guardar: almacenamiento lleno', 'err'); }
     },
-    /* Primera configuración: crea al administrador definido por el usuario.
-       withSamples = true agrega áreas, carpetas y documentos de ejemplo (sin usuarios). */
-    async init({ email, name, pass }, withSamples = false) {
+    /* Primera configuración: crea al administrador definido por el usuario. */
+    async init({ email, name, pass }) {
       const now = Date.now();
       const adminId = uid('u_');
       const settings = defaultSettings();
@@ -1446,110 +1659,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const base = { version: 4, settings, roles: defaultRoles(), users, units: [], areas: [], folders: [], docs: [], grants: [], catalogs: { tipos: DEFAULT_TIPOS(), clasificaciones: [], macroprocesos: [] },
         audit: [{ id: uid('l_'), at: now, by: adminId, action: 'sistema', text: `Repositorio inicializado por ${email}` }] };
       this.db = base;
-      if (withSamples) await this._samples(adminId);
       this.save();
       return this.db;
-    },
-    async _samples(ownerId) {
-      const now = Date.now();
-      const H = 3600e3, D = 24 * H;
-      const units = [
-        { id: 'u_sw', name: 'COMASW', code: 'SW', desc: 'Unidad de negocio principal', createdAt: now, createdBy: ownerId },
-      ];
-      const areas = [
-        { id: 'a_cal', unitId: 'u_sw', name: 'Calidad', code: 'CAL', desc: 'Sistema de gestión de calidad, procedimientos, formatos y auditorías.', color: 'blue', icon: 'badge-check' },
-        { id: 'a_rh', unitId: 'u_sw', name: 'Recursos Humanos', code: 'RH', desc: 'Políticas de personal, reclutamiento, capacitación y nómina.', color: 'pink', icon: 'users' },
-        { id: 'a_fin', unitId: 'u_sw', name: 'Finanzas', code: 'FIN', desc: 'Contabilidad, tesorería, presupuestos y reportes financieros.', color: 'green', icon: 'landmark' },
-        { id: 'a_ope', unitId: 'u_sw', name: 'Operaciones', code: 'OPE', desc: 'Logística, producción, mantenimiento y seguridad industrial.', color: 'orange', icon: 'factory' },
-        { id: 'a_ti', unitId: 'u_sw', name: 'Tecnología', code: 'TI', desc: 'Infraestructura, desarrollo, seguridad de la información y soporte.', color: 'indigo', icon: 'cpu' },
-        { id: 'a_jur', unitId: 'u_sw', name: 'Jurídico', code: 'JUR', desc: 'Contratos, convenios, poderes y cumplimiento normativo.', color: 'graphite', icon: 'scale' },
-      ].map((a, i) => ({ ...a, createdAt: now - (30 - i) * D, createdBy: ownerId, order: i }));
-
-      const fd = (areaId, list) => list.map(([name, code], i) => ({ id: uid('f_'), areaId, name, code, createdAt: now - 20 * D, createdBy: ownerId, order: i }));
-      const folders = [
-        ...fd('a_cal', [['Procedimientos', 'PR'], ['Formatos', 'FO'], ['Auditorías', 'AU'], ['Indicadores', 'IN']]),
-        ...fd('a_rh', [['Reclutamiento', 'REC'], ['Capacitación', 'CAP'], ['Políticas', 'POL']]),
-        ...fd('a_fin', [['Contabilidad', 'CON'], ['Tesorería', 'TES'], ['Presupuestos', 'PRE']]),
-        ...fd('a_ope', [['Logística', 'LOG'], ['Mantenimiento', 'MAN'], ['Seguridad', 'SEG']]),
-        ...fd('a_ti', [['Infraestructura', 'INF'], ['Desarrollo', 'DES']]),
-        ...fd('a_jur', [['Contratos', 'CTR'], ['Normatividad', 'NOR']]),
-      ];
-
-
-      const prFolder = folders.find(f => f.areaId === 'a_cal' && f.code === 'PR');
-      const foFolder = folders.find(f => f.areaId === 'a_cal' && f.code === 'FO');
-      const polFolder = folders.find(f => f.areaId === 'a_rh' && f.code === 'POL');
-
-      const sampleDocs = [
-        { folder: prFolder, nomenclatura: 'SGC-PR-001', nombre: 'Control de documentos', version: '2', tipo: 'Procedimiento', rector: 'SGC-PYLG-001', clasificacion: 'Interno', age: 400, html: docTpl('SGC-PR-001', 'Control de documentos', [
-            ['1. Objetivo', 'Establecer los lineamientos para la elaboración, revisión, aprobación, distribución y control de los documentos del Sistema de Gestión de Calidad de COMASW.'],
-            ['2. Alcance', 'Aplica a todos los documentos internos y externos que forman parte del SGC en todas las áreas de la organización.'],
-            ['3. Responsabilidades', '<ul><li><b>Coordinación de Calidad:</b> administra el repositorio y la lista maestra.</li><li><b>Dueños de proceso:</b> elaboran y actualizan sus documentos.</li><li><b>Dirección:</b> aprueba documentos de nivel estratégico.</li></ul>'],
-            ['4. Desarrollo', '<table><tr><th>Paso</th><th>Actividad</th><th>Responsable</th></tr><tr><td>1</td><td>Elaborar borrador con la nomenclatura vigente</td><td>Dueño de proceso</td></tr><tr><td>2</td><td>Revisar contenido y formato</td><td>Calidad</td></tr><tr><td>3</td><td>Aprobar y publicar en Acervo</td><td>Dirección</td></tr></table>'],
-          ]) },
-        { folder: prFolder, nomenclatura: 'SGC-PR-002', nombre: 'Auditorías internas', version: '1', tipo: 'Procedimiento', rector: 'SGC-PYLG-001', clasificacion: 'Interno', age: 210, html: docTpl('SGC-PR-002', 'Auditorías internas', [
-            ['1. Objetivo', 'Definir la metodología para planificar y ejecutar auditorías internas que verifiquen la conformidad del sistema.'],
-            ['2. Frecuencia', 'Se realizará al menos una auditoría anual por proceso, conforme al programa aprobado.'],
-          ]) },
-        { folder: foFolder, nomenclatura: 'SGC-FO-014', nombre: 'Lista maestra de documentos', version: '3', tipo: 'Listado', rector: 'SGC-PR-001', clasificacion: 'Público', age: 95, html: docTpl('SGC-FO-014', 'Lista maestra de documentos', [
-            ['Registro', '<table><tr><th>Código</th><th>Documento</th><th>Versión</th><th>Área</th></tr><tr><td>SGC-PR-001</td><td>Control de documentos</td><td>2</td><td>Calidad</td></tr><tr><td>SGC-PR-002</td><td>Auditorías internas</td><td>1</td><td>Calidad</td></tr><tr><td>RH-POL-003</td><td>Política de trabajo remoto</td><td>1</td><td>RH</td></tr></table>'],
-          ]) },
-        { folder: polFolder, nomenclatura: 'RH-POL-003', nombre: 'Política de trabajo remoto', version: '1', tipo: 'Política', clasificacion: 'Público', age: 12, html: docTpl('RH-POL-003', 'Política de trabajo remoto', [
-            ['1. Propósito', 'Regular las condiciones bajo las cuales el personal de COMASW podrá desempeñar sus funciones a distancia.'],
-            ['2. Lineamientos', '<ol><li>Disponibilidad en horario laboral acordado.</li><li>Uso de VPN corporativa.</li><li>Reporte semanal de actividades.</li></ol>'],
-          ]) },
-        ...[
-          ['a_cal', 'PR', 'SGC-PYLG-001', 'Políticas y lineamientos generales del SGC', 'PyLG', 'Público', '2', 380, null],
-          ['a_cal', 'FO', 'SGC-FO-020', 'Formato de solicitud de cambio documental', 'Formato', 'Interno', '1', 60, 'SGC-PR-001'],
-          ['a_cal', 'IN', 'SGC-IN-001', 'Registro de indicadores de calidad 2026', 'Registro', 'Interno', '1', 3, 'SGC-PR-002'],
-          ['a_fin', 'CON', 'FIN-CON-001', 'Cierre contable mensual', 'Procedimiento', 'Confidencial', '2', 330, null],
-          ['a_fin', 'CON', 'FIN-CON-002', 'Hoja de verificación de cierre', 'Hoja de Verificación', 'Confidencial', '3', 150, 'FIN-CON-001'],
-          ['a_fin', 'PRE', 'FIN-PRE-002', 'Plan presupuestal 2026', 'Plan', 'Confidencial', '4', 150, null],
-          ['a_fin', 'TES', 'FIN-TES-003', 'Formato de control de caja chica', 'Formato', 'Interno', '1', 40, 'FIN-CON-001'],
-          ['a_ope', 'LOG', 'OPE-LOG-002', 'Recepción de materiales', 'Procedimiento', 'Interno', '1', 25, null],
-          ['a_ope', 'LOG', 'OPE-LOG-003', 'Bitácora de recepción', 'Bitácora', 'Interno', '2', 20, 'OPE-LOG-002'],
-          ['a_ope', 'SEG', 'OPE-SEG-001', 'Uso de equipo de protección personal', 'Ayuda Visual', 'Público', '3', 260, 'OPE-LOG-002'],
-          ['a_ope', 'MAN', 'OPE-MAN-004', 'Mantenimiento preventivo de montacargas', 'Instrucción de Operación', 'Interno', '2', 70, 'OPE-LOG-002'],
-          ['a_ti', 'INF', 'TI-INF-001', 'Respaldo de servidores', 'Procedimiento', 'Confidencial', '2', 180, null],
-          ['a_ti', 'DES', 'TI-DES-003', 'Estándares de desarrollo', 'Manual Técnico', 'Interno', '5', 8, null],
-          ['a_jur', 'NOR', 'JUR-NOR-001', 'Lineamientos generales de cumplimiento', 'PyLG', 'Público', '1', 300, null],
-          ['a_jur', 'CTR', 'JUR-CTR-010', 'Catálogo de cláusulas contractuales', 'Catálogo', 'Confidencial', '1', 290, 'JUR-NOR-001'],
-          ['a_jur', 'NOR', 'JUR-NOR-002', 'Procedimiento de revisión normativa', 'Procedimiento', 'Interno', '2', 200, 'JUR-NOR-001'],
-          ['a_jur', 'NOR', 'JUR-NOR-003', 'Hoja de verificación de cumplimiento', 'Hoja de Verificación', 'Interno', '1', 120, 'JUR-NOR-002'],
-          ['a_jur', 'NOR', 'JUR-NOR-004', 'Comunicado de actualización normativa', 'Comunicado', 'Público', '1', 30, 'JUR-NOR-001'],
-          ['a_rh', 'CAP', 'RH-CAP-002', 'Plan anual de capacitación', 'Plan', 'Interno', '2', 120, null],
-          ['a_rh', 'REC', 'RH-REC-001', 'Reclutamiento y selección', 'Procedimiento', 'Interno', '3', 55, null],
-          ['a_rh', 'REC', 'RH-REC-002', 'Formato de requisición de personal', 'Formato', 'Interno', '1', 50, 'RH-REC-001'],
-        ].map(([areaId, fcode, nomenclatura, nombre, tipo, clasificacion, version, age, rector]) => ({
-          folder: folders.find(f => f.areaId === areaId && f.code === fcode), nomenclatura, nombre, tipo, clasificacion, version, age, rector,
-          html: docTpl(nomenclatura, nombre, [['1. Objetivo', `Documento de ejemplo: ${nombre}.`], ['2. Alcance', 'Aplica a las áreas involucradas de la organización.']]),
-        })),
-      ];
-
-      const docs = [];
-      for (const [i, s] of sampleDocs.entries()) {
-        const id = uid('d_');
-        const date = now - (s.age ?? (10 - i)) * D;
-        docs.push({
-          id, areaId: s.folder.areaId, folderId: s.folder.id,
-          nomenclatura: s.nomenclatura, nombre: s.nombre, version: s.version, tipo: s.tipo || '', categoria: (DEFAULT_TIPOS().find(t => t.name === s.tipo) || {}).cat || '', clasificacion: s.clasificacion || '', _rector: s.rector || null,
-          fechaActualizacion: new Date(date).toISOString().slice(0, 10),
-          fechaEmision: new Date(date).toISOString().slice(0, 10),
-          fechaAutorizacion: '', fechaDifusion: '',
-          macroproceso: '', estado: null, estadoManual: false,
-          url: 'local://docs/' + id,
-          subidoPor: ownerId, fileName: `${s.nomenclatura} ${s.nombre}.docx`, ext: 'docx',
-          mime: 'text/html', size: s.html.length, editable: true,
-          createdAt: date, updatedAt: date, updatedBy: ownerId,
-          history: [{ v: s.version, at: date, by: ownerId, note: 'Publicación inicial', key: null }],
-        });
-        await Files.put('html:' + id, s.html);
-      }
-
-      docs.forEach(d => { d.rectorId = d._rector ? (docs.find(x => x.nomenclatura === d._rector) || {}).id || null : null; delete d._rector; });
-      const uniq = (k) => [...new Set(docs.map(d => d[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
-      Object.assign(this.db, { units, areas, folders, docs, catalogs: { tipos: DEFAULT_TIPOS(), clasificaciones: uniq('clasificacion'), macroprocesos: [] } });
-      this.db.audit.unshift({ id: uid('l_'), at: now, by: ownerId, action: 'sistema', text: 'Se cargaron áreas y documentos de ejemplo' });
     },
     /* Borra todo (metadatos, usuarios y archivos) y vuelve a la configuración inicial */
     async wipe() {
@@ -1565,12 +1676,6 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       return JSON.stringify(this.db, null, 2);
     },
   };
-
-  function docTpl(code, title, sections) {
-    return `<table><tr><td style="width:30%"><b>COMASW</b></td><td style="text-align:center"><b>${title.toUpperCase()}</b></td><td style="width:22%">Código: ${code}</td></tr></table>`
-      + `<h1>${title}</h1>`
-      + sections.map(([h, b]) => `<h2>${h}</h2>${b.startsWith('<') ? b : `<p>${b}</p>`}`).join('');
-  }
 
   window.Repo = Repo;
   window.Files = Files;
@@ -1600,8 +1705,13 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     blue: ['#0a84ff', '#5e5ce6'], indigo: ['#5e5ce6', '#bf5af2'], pink: ['#ff2d55', '#ff6482'],
     green: ['#30d158', '#00c7be'], orange: ['#ff9f0a', '#ff6b00'], teal: ['#64d2ff', '#0a84ff'],
     purple: ['#bf5af2', '#ff2d55'], red: ['#ff453a', '#ff9f0a'], graphite: ['#8e8e93', '#48484a'],
+    cyan: ['#32ade6', '#0a84ff'], mint: ['#00c7be', '#30d158'], yellow: ['#ffd60a', '#ff9f0a'],
+    rose: ['#ff375f', '#ff6482'], violet: ['#bf5af2', '#5e5ce6'], navy: ['#5856d6', '#0a84ff'],
+    olive: ['#8e8e33', '#30d158'], coral: ['#ff6b4a', '#ff9f0a'], slate: ['#636366', '#8e8e93'],
+    amber: ['#ffb340', '#ff9f0a'], emerald: ['#34c759', '#00c7be'],
   };
-  const AREA_ICONS = ['badge-check', 'users', 'landmark', 'factory', 'cpu', 'scale', 'briefcase', 'shield-check', 'truck', 'heart-pulse', 'megaphone', 'wrench', 'graduation-cap', 'building-2', 'shopping-cart', 'leaf', 'folder-kanban', 'chart-pie'];
+  const AREA_ICONS = ['badge-check', 'users', 'landmark', 'factory', 'cpu', 'scale', 'briefcase', 'shield-check', 'truck', 'heart-pulse', 'megaphone', 'wrench', 'graduation-cap', 'building-2', 'shopping-cart', 'leaf', 'folder-kanban', 'chart-pie',
+    'building', 'warehouse', 'package', 'clipboard-list', 'file-check', 'files', 'folder', 'folders', 'hard-hat', 'hammer', 'settings', 'cog', 'database', 'server', 'network', 'globe', 'map-pin', 'handshake', 'award', 'target', 'trending-up', 'bar-chart-3', 'pie-chart', 'calculator', 'wallet', 'receipt', 'banknote', 'shield', 'lock', 'key-round', 'eye', 'search', 'book-open', 'notebook-pen', 'pen-line', 'stethoscope', 'flask-conical', 'microscope', 'plane', 'ship', 'car', 'bus', 'phone', 'mail', 'message-square', 'bell', 'calendar', 'clock', 'timer', 'user-cog', 'user-check', 'contact', 'id-card'];
   const EXT_COLOR = { pdf: '#ff3b30', doc: '#0a84ff', docx: '#0a84ff', xls: '#30b158', xlsx: '#30b158', csv: '#30b158', ppt: '#ff9500', pptx: '#ff9500', png: '#bf5af2', jpg: '#bf5af2', jpeg: '#bf5af2', webp: '#bf5af2', txt: '#8e8e93', md: '#8e8e93', html: '#ff6b00' };
   const LV = { ver: 1, descargar: 2, editar: 3 };
   const LV_LABEL = { ver: 'Solo ver', descargar: 'Ver y descargar', editar: 'Edición en línea' };
@@ -1669,7 +1779,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const official = DEFAULT_TIPOS();
     const byName = Object.fromEntries(official.map(t => [t.name.toLowerCase(), t]));
     const alias = {
-      'pylg': 'Manual de Políticas y Lineamientos Generales',
+      'pylg': 'Manual PyLG',
       'procedimiento': 'Procedimiento',
       'procedimiento de operación': 'Procedimiento',
       'procedimiento de operacion': 'Procedimiento',
@@ -2170,18 +2280,47 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     return `<div class="login">
       <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
       <form class="login-card" id="loginForm" novalidate>
-        ${LOGO_BIG_HTML() ? `<div class="logo-big">${LOGO_BIG_HTML()}</div>` : ''}
-        <h1>${esc(st.appName)}</h1>
-        <p>Repositorio documental${st.orgName ? ' de ' + esc(st.orgName) : ''}</p>
-        <div class="field"><label for="lEmail">Correo corporativo</label>
-          <input class="input" id="lEmail" type="email" autocomplete="username" placeholder="nombre@${esc(st.domains[0] || 'empresa.com')}" required /></div>
-        <div class="field"><label for="lPass">Contraseña</label>
-          <div class="input-icon"><input class="input" id="lPass" type="password" autocomplete="current-password" placeholder="••••••••" required />
-          <button type="button" class="icon-btn" data-toggle-pass aria-label="Mostrar contraseña">${ic('eye')}</button></div></div>
-        <div class="err hidden" id="lErr" style="color:var(--danger);font-size:13px;margin:-4px 0 12px;text-align:left"></div>
-        <button class="btn btn-primary btn-lg" type="submit">Iniciar sesión ${ic('arrow-right')}</button>
-        <div class="demo-users" style="text-align:center">¿Olvidaste tu contraseña? Solicita a un administrador que la restablezca.</div>
+        <div class="login-brand">
+          ${LOGO_BIG_HTML() ? `<div class="logo-big">${LOGO_BIG_HTML()}</div>` : ''}
+          <h1>${esc(st.appName)}</h1>
+        </div>
+        <div class="login-fade">
+          <p>Repositorio documental${st.orgName ? ' de ' + esc(st.orgName) : ''}</p>
+          <div class="field"><label for="lEmail">Correo corporativo</label>
+            <input class="input" id="lEmail" type="email" autocomplete="username" placeholder="nombre@${esc(st.domains[0] || 'empresa.com')}" required /></div>
+          <div class="field"><label for="lPass">Contraseña</label>
+            <div class="input-icon"><input class="input" id="lPass" type="password" autocomplete="current-password" placeholder="••••••••" required />
+            <button type="button" class="icon-btn" data-toggle-pass aria-label="Mostrar contraseña">${ic('eye')}</button></div></div>
+          <div class="err hidden" id="lErr" style="color:var(--danger);font-size:13px;margin:-4px 0 12px;text-align:left"></div>
+          <button class="btn btn-primary btn-lg" type="submit">Iniciar sesión ${ic('arrow-right')}</button>
+          <div class="demo-users" style="text-align:center">¿Olvidaste tu contraseña? Solicita a un administrador que la restablezca.</div>
+        </div>
       </form></div>`;
+  }
+  function playLoginZoom() {
+    return new Promise((resolve) => {
+      const root = document.querySelector('.login');
+      if (!root || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        resolve();
+        return;
+      }
+      // Fija el punto de origen del zoom en el centro visual del brand antes de animar
+      const brand = root.querySelector('.login-brand');
+      if (brand) {
+        const r = brand.getBoundingClientRect();
+        brand.style.left = (r.left + r.width / 2) + 'px';
+        brand.style.top = (r.top + r.height / 2) + 'px';
+      }
+      root.classList.add('zooming');
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
+      if (brand) brand.addEventListener('animationend', finish, { once: true });
+      setTimeout(finish, 1000);
+    });
   }
 
   const EMAIL_RE = /^[a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/;
@@ -2195,18 +2334,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       <form class="login-card" id="setupForm" novalidate style="max-width:480px">
         <div class="logo-big">${LOGO_BIG_HTML()}</div>
         <h1>Bienvenido a ${esc(d.appName)}</h1>
-        <p>Crea la cuenta del administrador. Ninguna contraseña viene incluida en el código. La organización y los dominios de correo permitidos se configuran después en Configuración.</p>
-        <div class="field"><label for="sName">Nombre del administrador</label><input class="input" id="sName" placeholder="Ej. Juan Pérez" required autocomplete="name"/></div>
+        <p>Crea la cuenta del administrador.</p>
+        <div class="field"><label for="sName">Nombre del administrador</label><input class="input" id="sName" placeholder="Nombre(s) y Apellidos" required autocomplete="name"/></div>
         <div class="field"><label for="sUser">Correo del administrador</label><input class="input" id="sUser" type="email" placeholder="nombre@empresa.com" required autocomplete="username"/><div class="hint">Con este correo iniciarás sesión</div></div>
-        <div class="row"><div class="field"><label for="sPass">Contraseña</label><div class="input-icon"><input class="input" id="sPass" type="password" required autocomplete="new-password" placeholder="Mínimo ${d.minPassword}"/><button type="button" class="icon-btn" data-toggle-pass aria-label="Mostrar contraseña">${ic('eye')}</button></div></div>
-          <div class="field"><label for="sPass2">Confirmar</label><input class="input" id="sPass2" type="password" required autocomplete="new-password"/></div></div>
+        <div class="pass-fields"><div class="field"><label for="sPass">Contraseña ${passTipHtml()}</label><div class="input-icon"><input class="input" id="sPass" type="password" required autocomplete="new-password" placeholder="Mínimo ${d.minPassword}"/><button type="button" class="icon-btn" data-toggle-pass aria-label="Mostrar contraseña">${ic('eye')}</button></div></div>
+          <div class="field"><label for="sPass2">Confirmar</label><div class="input-icon"><input class="input" id="sPass2" type="password" required autocomplete="new-password" placeholder="Debe coincidir"/><button type="button" class="icon-btn" data-toggle-pass aria-label="Mostrar contraseña">${ic('eye')}</button></div></div></div>
         <div class="err hidden" id="sErr" style="color:var(--danger);font-size:13px;margin:-4px 0 12px;text-align:left"></div>
         <button class="btn btn-primary btn-lg" type="submit">Crear repositorio ${ic('arrow-right')}</button>
       </form></div>`;
   }
   function bindSetup() {
     const f = $('#setupForm');
-    $('[data-toggle-pass]').addEventListener('click', (e) => togglePass(e.currentTarget, $('#sPass')));
+    $$('[data-toggle-pass]').forEach(btn => {
+  btn.addEventListener('click', () => togglePass(btn, btn.closest('.input-icon').querySelector('input')));
+});
     $('#sUser').addEventListener('input', (e) => { e.target.value = e.target.value.toLowerCase().replace(/\s/g, ''); });
     f.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -2218,11 +2359,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const min = defaultSettings().minPassword;
       if (!name) return err('Escribe el nombre del administrador', $('#sName'));
       if (!EMAIL_RE.test(email)) return err('Escribe un correo válido para el administrador', $('#sUser'));
-      if (pass.length < min) return err(`La contraseña debe tener al menos ${min} caracteres`, $('#sPass'));
-      if (!/[A-Za-z]/.test(pass) || !/[0-9]/.test(pass)) return err('La contraseña debe combinar letras y números', $('#sPass'));
+      const polErr = passPolicyError(pass, min);
+      if (polErr) return err(polErr, $('#sPass'));
       if (pass !== pass2) return err('Las contraseñas no coinciden', $('#sPass2'));
       const btn = $('button[type=submit]', f); btn.disabled = true; btn.textContent = 'Creando…';
-      await Repo.init({ email, name, pass }, false);
+      await Repo.init({ email, name, pass });
       S = Repo.db; migrate(); me = S.users[0]; SessionStore.setItem(SESSION, me.id); me.lastLogin = now(); save();
       applyTheme(); go('home'); toast('Repositorio creado');
     });
@@ -2248,12 +2389,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       if (!u.active) return err('Esta cuenta está desactivada. Contacta al administrador.');
       me = u; SessionStore.setItem(SESSION, u.id);
       u.lastLogin = now(); log('acceso', `Inicio de sesión`); save();
+      const nombre = (u.name || '').trim() || 'usuario';
+      const h = new Date().getHours();
+      const saludo = h < 12 ? 'buenos días' : h < 19 ? 'buenas tardes' : 'buenas noches';
+      const btn = f.querySelector('button[type=submit]');
+      if (btn) { btn.disabled = true; btn.textContent = 'Entrando…'; }
+      await playLoginZoom();
       go('home');
-      {
-        const h = new Date().getHours();
-        const saludo = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
-        toast(`${saludo}, ${u.name.split(' ')[0]}`);
-      }
+      setTimeout(() => toast(`Hola ${nombre}, ${saludo}`), 350);
     });
   }
   function togglePass(btn, input) {
@@ -2309,11 +2452,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const accIds = new Set(accessible.map(a => a.id));
     const docs = S.docs.filter(d => accIds.has(d.areaId));
     const hour = new Date().getHours();
-    const greet = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+    const greet = hour < 12 ? 'buenos días' : hour < 19 ? 'buenas tardes' : 'buenas noches';
     const canU = can('createArea');
     return `
       <section class="hero">
-        <div class="eyebrow">${greet}, ${esc(me.name.split(' ')[0])}</div>
+        <div class="eyebrow">Hola ${esc(me.name)}, ${greet}</div>
         <h1>Todos tus archivos.<br/>En un solo lugar.</h1>
         <p>Documentos organizados por unidad de negocio, área y departamento.</p>
         <div class="hero-stats">
@@ -2322,8 +2465,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <div class="stat"><strong>${docs.length}</strong><span>Documentos</span></div>
         </div>
       </section>
-      <div class="section-head"><h2>Unidades de negocio</h2>
-        <div class="actions">${canU ? `<button class="btn btn-secondary btn-sm" data-act="newUnit">${ic('plus')}Nueva unidad</button>` : ''}</div></div>
+      <div class="section-head"><h2>Unidades de negocio</h2></div>
       ${units.length || canU ? `<div class="grid">
         ${units.map((u, i) => unitCard(u, i)).join('')}
         ${canU ? `<button class="add-card" data-act="newUnit" style="animation-delay:${units.length * 60}ms"><span class="plus">${ic('plus')}</span>Crear Unidad de Negocio</button>` : ''}
@@ -2357,7 +2499,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       <p class="page-sub">${esc(u.desc || 'Unidad de negocio')}</p>
       <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><span class="chip">${ic('hash')}${esc(u.code)}</span></div>
       <div class="section-head"><h2>Áreas</h2>
-        <div class="actions">${canU ? `<button class="btn btn-secondary btn-sm" data-act="newArea" data-unit="${u.id}">${ic('plus')}Nueva área</button>` : ''}</div></div>
+        <div class="actions"></div></div>
       ${areas.length || canU ? `<div class="grid">
         ${areas.map((a, i) => areaCard(a, i)).join('')}
         ${canU ? `<button class="add-card" data-act="newArea" data-unit="${u.id}" style="animation-delay:${areas.length * 60}ms"><span class="plus">${ic('plus')}</span>Crear área</button>` : ''}
@@ -2413,36 +2555,202 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <td>${estadoChip(d)}</td>
       </tr>`;
     }).join('');
+    const mf = ui.matrixDash = Object.assign({ unit: '', area: '', year: '', cat: '', tipo: '' }, ui.matrixDash || {});
+    const yearOfM = (d) => (d.fechaActualizacion || '').slice(0, 4);
+    const unitOfM = (d) => areaById(d.areaId)?.unitId || '';
+    let filtered = docs.slice();
+    if (mf.unit) filtered = filtered.filter(d => unitOfM(d) === mf.unit);
+    if (mf.area) filtered = filtered.filter(d => d.areaId === mf.area);
+    if (mf.year) filtered = filtered.filter(d => yearOfM(d) === mf.year);
+    if (mf.cat) filtered = filtered.filter(d => (d.categoria || 'Sin categoría') === mf.cat);
+    if (mf.tipo) filtered = filtered.filter(d => (d.tipo || 'Sin tipo') === mf.tipo);
+    const unitOpts = (S.units || []).filter(u => docs.some(d => unitOfM(d) === u.id));
+    const areaOpts = S.areas.filter(a => docs.some(d => d.areaId === a.id) && (!mf.unit || a.unitId === mf.unit));
+    const years = [...new Set(docs.filter(d => !mf.unit || unitOfM(d) === mf.unit).filter(d => !mf.area || d.areaId === mf.area).map(yearOfM).filter(Boolean))].sort((a,b)=>b-a);
+    const cats = [...CATEGORIAS, 'Sin categoría'].filter(c => docs.some(d => (d.categoria || 'Sin categoría') === c));
+    const tipos = [...new Set(docs.map(d => d.tipo || 'Sin tipo'))].sort((a,b)=>a.localeCompare(b,'es'));
+    const opt = (v, l, sel) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(l)}</option>`;
+    // Rebuild rows from filtered
+    const rowsF = filtered.map(d => {
+      const a = areaById(d.areaId), f = folderById(d.folderId), u = unitById(a?.unitId);
+      const st = computeEstado(d);
+      const del = st === 'eliminado' ? ' style="background:var(--danger-soft)"' : '';
+      const rector = d.rectorId ? (docById(d.rectorId)?.nomenclatura || '—') : '—';
+      const cells = [
+        u?.name || '—', d.nomenclatura, d.nombre, d.macroproceso || '—', a?.name || '—', f?.name || '—',
+        d.tipo || '—', d.categoria || '—', d.clasificacion || '—', d.version,
+        fmtDate(d.fechaEmision), fmtDocDate(d), fmtDate(d.fechaAutorizacion), fmtDate(d.fechaDifusion),
+        d.url || localDocUrl(d.id), rector, estadoLabel(st)
+      ];
+      return `<tr data-act="openDoc" data-id="${d.id}" style="cursor:pointer"${del} data-cells="${encodeURIComponent(JSON.stringify(cells))}">
+        <td>${esc(cells[0])}</td>
+        <td class="mono">${esc(cells[1])}</td>
+        <td title="${esc(cells[2])}">${esc(cells[2])}</td>
+        <td>${esc(cells[3])}</td>
+        <td>${esc(cells[4])}</td>
+        <td>${esc(cells[5])}</td>
+        <td>${esc(cells[6])}</td>
+        <td>${esc(cells[7])}</td>
+        <td>${esc(cells[8])}</td>
+        <td>${esc(cells[9])}</td>
+        <td>${esc(cells[10])}</td>
+        <td>${esc(cells[11])}</td>
+        <td>${esc(cells[12])}</td>
+        <td>${esc(cells[13])}</td>
+        <td>${urlCell(d)}</td>
+        <td class="mono">${esc(cells[15])}</td>
+        <td>${estadoChip(d)}</td>
+      </tr>`;
+    }).join('');
+    const colLabels = ['Unidad de negocio','Nomenclatura','Nombre','Macroproceso','Área','Departamento','Tipo de Documento','Categoría','Clasificación','Versión','Fecha de emisión','Fecha de última actualización','Fecha de autorización','Fecha de difusión','URL','Documento Rector','Estado'];
+    const ths = colLabels.map((lab, i) => `<th data-col="${i}"><span class="th-label">${lab}</span><button type="button" class="col-filter-btn" data-col-filter="${i}" title="Filtrar columna" aria-label="Filtrar ${esc(lab)}">${ic('chevrons-up-down')}</button></th>`).join('');
     return `<section class="hero hero-sm"><div class="eyebrow">Matriz Documental</div>
       <h1>Listado maestro de documentos.</h1>
-      <p>Vista consolidada con unidad de negocio, macroproceso, fechas y estado.</p></section>
-      <div class="section-head"><div><h2>${docs.length} ${docs.length === 1 ? 'documento' : 'documentos'}</h2>
-        <p class="tiny" style="margin-top:4px">Arrastra el borde de las columnas para ajustar el ancho. Exporta a Excel cuando lo necesites.</p></div>
+      <p>Matriz consolidada de documentos</p></section>
+      <div class="section-head"><div><h2><span id="matrixCount">${filtered.length}</span> ${filtered.length === 1 ? 'documento' : 'documentos'}</h2>
+        <p class="tiny" style="margin-top:4px">Filtros generales y por columna (estilo Excel). Arrastra el borde de las columnas para ajustar el ancho.</p></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <label class="search" style="width:220px">${ic('filter')}<input id="matrixFilter" placeholder="Filtrar matriz" value="${esc(ui.matrixFilter || '')}"/></label>
           <button class="btn btn-secondary btn-sm" id="matrixXlsx">${ic('download')}Exportar Excel</button>
         </div>
       </div>
-      ${docs.length ? `<div class="matrix-wrap" style="overflow-x:auto"><table class="matrix-tbl resizable-cols" id="matrixTbl"><thead><tr>
-        <th>Unidad de negocio</th><th>Nomenclatura</th><th>Nombre</th><th>Macroproceso</th><th>Área</th><th>Departamento</th><th>Tipo de Documento</th><th>Categoría</th><th>Clasificación</th><th>Versión</th><th>Fecha de emisión</th><th>Fecha de última actualización</th><th>Fecha de autorización</th><th>Fecha de difusión</th><th>URL</th><th>Documento Rector</th><th>Estado</th>
-      </tr></thead><tbody id="matrixBody">${rows}</tbody></table></div>` : emptyState('table', 'Sin documentos', 'Aún no hay documentos en las áreas a las que tienes acceso.')}`;
+      <div class="dash-filters" style="margin-bottom:16px">
+        <label class="dsel"><span>Unidad de negocio</span><select class="select" id="mfUnit">${opt('', 'Todas las unidades', mf.unit) + unitOpts.map(u => opt(u.id, u.name, mf.unit)).join('')}</select></label>
+        <label class="dsel"><span>Área</span><select class="select" id="mfArea">${opt('', 'Todas las áreas', mf.area) + areaOpts.map(a => opt(a.id, a.name, mf.area)).join('')}</select></label>
+        <label class="dsel"><span>Año</span><select class="select" id="mfYear">${opt('', 'Todos los años', mf.year) + years.map(y => opt(y, y, mf.year)).join('')}</select></label>
+        <label class="dsel"><span>Categoría</span><select class="select" id="mfCat">${opt('', 'Todas las categorías', mf.cat) + cats.map(c => opt(c, c, mf.cat)).join('')}</select></label>
+        <label class="dsel"><span>Tipo de documento</span><select class="select" id="mfTipo">${opt('', 'Todos los tipos', mf.tipo) + tipos.map(t => opt(t, t, mf.tipo)).join('')}</select></label>
+        <button class="btn btn-ghost btn-sm" id="mfClear">${ic('rotate-ccw')}Limpiar</button>
+      </div>
+      ${docs.length ? `<div class="matrix-wrap" style="overflow-x:auto"><table class="matrix-tbl resizable-cols" id="matrixTbl"><thead><tr>${ths}</tr></thead><tbody id="matrixBody">${rowsF}</tbody></table></div>` : emptyState('table', 'Sin documentos', 'Aún no hay documentos en las áreas a las que tienes acceso.')}`;
   }
 
   function bindMatrix() {
-    const inp = $('#matrixFilter');
-    if (inp) {
-      const apply = () => {
-        ui.matrixFilter = inp.value;
-        const q = inp.value.trim().toLowerCase();
-        $$('#matrixBody tr').forEach(tr => {
-          tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? '' : 'none';
-        });
-      };
-      inp.addEventListener('input', apply);
-      if (ui.matrixFilter) apply();
-    }
+    const refresh = () => { $('#view').innerHTML = matrixView(); icons(); bindMatrix(); bindViewActs(); };
+    // Fallback if bindViewActs not separate
+    const rebindClick = () => {
+      $$('#view [data-act]').forEach(el => {
+        if (el.dataset.matrixBound) return;
+        el.dataset.matrixBound = '1';
+      });
+    };
+    ['mfUnit','mfArea','mfYear','mfCat','mfTipo'].forEach(id => {
+      const el = $('#' + id);
+      if (!el) return;
+      el.addEventListener('change', () => {
+        ui.matrixDash = ui.matrixDash || {};
+        const map = { mfUnit: 'unit', mfArea: 'area', mfYear: 'year', mfCat: 'cat', mfTipo: 'tipo' };
+        ui.matrixDash[map[id]] = el.value;
+        // Cascada: limpiar dependientes
+        if (id === 'mfUnit') { ui.matrixDash.area = ''; ui.matrixDash.year = ''; }
+        if (id === 'mfArea') ui.matrixDash.year = '';
+        $('#view').innerHTML = matrixView(); icons(); bindMatrix();
+        // re-attach global acts
+        if (typeof bindView === 'function') { /* acts via delegation below */ }
+        bindMatrixActs();
+      });
+    });
+    $('#mfClear')?.addEventListener('click', () => {
+      ui.matrixDash = { unit: '', area: '', year: '', cat: '', tipo: '' };
+      ui.matrixColFilters = {};
+      $('#view').innerHTML = matrixView(); icons(); bindMatrix(); bindMatrixActs();
+    });
     $('#matrixXlsx')?.addEventListener('click', () => exportMatrixXlsx());
     enableResizableColumns('#matrixTbl');
+    // Excel-like column filters
+    if (!ui.matrixColFilters) ui.matrixColFilters = {};
+    const applyColFilters = () => {
+      const filters = ui.matrixColFilters || {};
+      let n = 0;
+      $$('#matrixBody tr').forEach(tr => {
+        let cells;
+        try { cells = JSON.parse(decodeURIComponent(tr.getAttribute('data-cells') || '%5B%5D')); } catch { cells = []; }
+        let ok = true;
+        Object.keys(filters).forEach(ci => {
+          const set = filters[ci];
+          if (!set || !set.size) return;
+          const val = String(cells[+ci] ?? '');
+          if (!set.has(val)) ok = false;
+        });
+        tr.style.display = ok ? '' : 'none';
+        if (ok) n++;
+      });
+      const c = $('#matrixCount'); if (c) c.textContent = n;
+    };
+    $$('[data-col-filter]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const col = +btn.dataset.colFilter;
+        // Close other popovers
+        $$('.col-filter-pop').forEach(p => p.remove());
+        const values = new Set();
+        $$('#matrixBody tr').forEach(tr => {
+          try {
+            const cells = JSON.parse(decodeURIComponent(tr.getAttribute('data-cells') || '%5B%5D'));
+            values.add(String(cells[col] ?? ''));
+          } catch {}
+        });
+        const sorted = [...values].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+        const selected = ui.matrixColFilters[col] || new Set(sorted);
+        const pop = document.createElement('div');
+        pop.className = 'col-filter-pop';
+        pop.innerHTML = `
+          <div class="cf-search"><input class="input" type="search" placeholder="Buscar…" id="cfSearch"/></div>
+          <div class="cf-actions">
+            <button type="button" class="btn-ghost btn btn-sm" data-cf-all>Seleccionar todo</button>
+            <button type="button" class="btn-ghost btn btn-sm" data-cf-none>Deseleccionar todo</button>
+          </div>
+          <div class="cf-list" id="cfList">${sorted.map(v => {
+            const checked = selected.has(v) ? 'checked' : '';
+            return `<label class="cf-item"><input type="checkbox" value="${esc(v)}" ${checked}/><span title="${esc(v)}">${esc(v || '(vacío)')}</span></label>`;
+          }).join('')}</div>
+          <div class="cf-foot">
+            <button type="button" class="btn btn-secondary btn-sm" data-cf-clear>Limpiar</button>
+            <button type="button" class="btn btn-primary btn-sm" data-cf-ok>Aceptar</button>
+          </div>`;
+        document.body.appendChild(pop);
+        const rect = btn.getBoundingClientRect();
+        pop.style.top = Math.min(rect.bottom + 4, window.innerHeight - 320) + 'px';
+        pop.style.left = Math.min(rect.left, window.innerWidth - 280) + 'px';
+        icons();
+        const list = pop.querySelector('#cfList');
+        pop.querySelector('#cfSearch').addEventListener('input', (ev) => {
+          const q = ev.target.value.trim().toLowerCase();
+          list.querySelectorAll('.cf-item').forEach(lab => {
+            lab.style.display = !q || lab.textContent.toLowerCase().includes(q) ? '' : 'none';
+          });
+        });
+        pop.querySelector('[data-cf-all]').addEventListener('click', () => list.querySelectorAll('input[type=checkbox]').forEach(c => { if (c.closest('.cf-item').style.display !== 'none') c.checked = true; }));
+        pop.querySelector('[data-cf-none]').addEventListener('click', () => list.querySelectorAll('input[type=checkbox]').forEach(c => { if (c.closest('.cf-item').style.display !== 'none') c.checked = false; }));
+        pop.querySelector('[data-cf-clear]').addEventListener('click', () => {
+          delete ui.matrixColFilters[col];
+          pop.remove();
+          applyColFilters();
+          btn.classList.remove('active');
+        });
+        pop.querySelector('[data-cf-ok]').addEventListener('click', () => {
+          const set = new Set();
+          list.querySelectorAll('input[type=checkbox]:checked').forEach(c => set.add(c.value));
+          if (set.size === sorted.length) delete ui.matrixColFilters[col];
+          else ui.matrixColFilters[col] = set;
+          btn.classList.toggle('active', !!ui.matrixColFilters[col]);
+          pop.remove();
+          applyColFilters();
+        });
+        const close = (ev) => {
+          if (!pop.contains(ev.target) && ev.target !== btn) { pop.remove(); document.removeEventListener('mousedown', close); }
+        };
+        setTimeout(() => document.addEventListener('mousedown', close), 0);
+      });
+      if (ui.matrixColFilters[btn.dataset.colFilter]) btn.classList.add('active');
+    });
+    applyColFilters();
+    bindMatrixActs();
+  }
+  function bindMatrixActs() {
+    // data-act handlers are bound globally in bindView; ensure clicks on matrix rows still work after re-render
+    $$('#matrixBody [data-act], #view [data-act]').forEach(el => {
+      // no-op: bindView uses delegation on #app typically
+    });
   }
 
   function exportMatrixXlsx() {
@@ -2571,15 +2879,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       <p class="page-sub">${esc(a.desc || '')}</p>
       <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">${accessChip(acc)}<span class="chip">${ic('hash')}${esc(a.code)}</span></div>
       <div class="section-head"><h2>Departamentos</h2>
-        <div class="actions">${canF ? `<button class="btn btn-secondary btn-sm" data-act="newFolder">${ic('folder-plus')}Nueva carpeta</button>` : ''}
-        ${can('managePerms') ? `<button class="btn btn-ghost btn-sm" data-act="grant" data-area="${a.id}">${ic('user-plus')}Compartir área</button>` : ''}</div></div>
-      ${folders.length || canF ? `<div class="folders" style="${cssVars(a.color)}">
+        <div class="actions">${can('managePerms') ? `<button class="btn btn-ghost btn-sm" data-act="grant" data-area="${a.id}">${ic('user-plus')}Compartir área</button>` : ''}</div></div>
+      ${folders.length || canF ? `<div class="folders">
         ${folders.map((f, i) => {
           const n = S.docs.filter(d => d.folderId === f.id).length;
-          return `<div class="folder" data-act="openFolder" data-id="${f.id}" style="animation-delay:${i * 50}ms" tabindex="0" role="button">
+          const col = f.color || a.color || 'blue';
+          return `<div class="folder" data-act="openFolder" data-id="${f.id}" style="${cssVars(col)};animation-delay:${i * 50}ms" tabindex="0" role="button">
             ${canF ? `<button class="icon-btn more" data-act="folderMenu" data-id="${f.id}" aria-label="Opciones">${ic('ellipsis')}</button>` : ''}
-            <div class="folder-icon"><div class="back"></div><div class="front"></div></div>
-            <h4>${esc(f.name)}</h4><span class="tiny">${esc(f.code)} · ${n} ${n === 1 ? 'documento' : 'documentos'}</span></div>`;
+            <div class="folder-icon"><div class="back"></div><div class="front"></div>${f.icon ? `<span class="folder-glyph">${ic(f.icon)}</span>` : ''}</div>
+            <h4>${esc(f.name)}</h4><span class="tiny">${esc(f.code)} · ${n} ${n === 1 ? 'documento' : 'documentos'}</span>
+            ${f.desc ? `<span class="tiny" style="display:block;margin-top:4px;color:var(--text-2)">${esc(f.desc)}</span>` : ''}</div>`;
         }).join('')}
         ${canF ? `<button class="add-card add-folder" data-act="newFolder"><span class="plus">${ic('plus')}</span>Crear carpeta</button>` : ''}
       </div>` : emptyState('folder', 'Sin departamentos', 'Esta área aún no tiene carpetas.')}
@@ -2605,7 +2914,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const u = unitById(a.unitId);
     return `${crumbs([...(u ? [{ label: u.name, act: 'openUnit', id: u.id }] : []), { label: a.name, act: 'openArea', id: a.id }, { label: f.name }])}
       <div class="page-title" style="${cssVars(a.color)}">
-        <div class="folder-icon" style="width:64px;height:52px;margin:0"><div class="back"></div><div class="front" style="height:40px"></div></div>
+        <div class="folder-icon" style="${cssVars(f.color || a.color || 'blue')};width:64px;height:52px;margin:0"><div class="back"></div><div class="front" style="height:40px"></div>${f.icon ? `<span class="folder-glyph">${ic(f.icon)}</span>` : ''}</div>
         <div><h1>${esc(f.name)}</h1></div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${accessChip(acc)}<span class="chip">${ic('hash')}${esc(f.code)}</span></div>
       <div class="toolbar-row">
@@ -2630,25 +2939,29 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
   const badge = (ext) => `<div class="file-badge" style="background:${EXT_COLOR[ext] || '#8e8e93'}">${esc((ext || 'doc').toUpperCase().slice(0, 4))}</div>`;
   const fmtDocDate = (d) => d && d.fechaActualizacion ? fmtDate(d.fechaActualizacion) : '—';
+  const FOLDER_COL_LABELS = ['', 'Documento', 'Nomenclatura', 'Nombre', 'Macroproceso', 'Área', 'Departamento', 'Tipo de Documento', 'Categoría', 'Clasificación', 'Versión', 'Fecha de emisión', 'Fecha de última actualización', 'Fecha de autorización', 'Fecha de difusión', 'Estado', 'URL', ''];
+  const folderColTh = (lab, i, filterable = true) => filterable && lab
+    ? `<th data-col="${i}"><span class="th-label">${lab}</span><button type="button" class="col-filter-btn" data-folder-col-filter="${i}" title="Filtrar columna" aria-label="Filtrar ${lab}">${ic('chevrons-up-down')}</button></th>`
+    : `<th${lab ? '' : ' style="width:44px"'}>${lab || ''}</th>`;
   const docHeader = () => `<thead><tr>
-      <th style="width:44px"></th>
-      <th>Documento</th>
-      <th>Nomenclatura</th>
-      <th>Nombre</th>
-      <th>Macroproceso</th>
-      <th>Área</th>
-      <th>Departamento</th>
-      <th>Tipo de Documento</th>
-      <th>Categoría</th>
-      <th>Clasificación</th>
-      <th>Versión</th>
-      <th>Fecha de emisión</th>
-      <th>Fecha de última actualización</th>
-      <th>Fecha de autorización</th>
-      <th>Fecha de difusión</th>
-      <th>Estado</th>
-      <th>URL</th>
-      <th style="width:40px"></th>
+      ${folderColTh('', 0, false)}
+      ${folderColTh('Documento', 1)}
+      ${folderColTh('Nomenclatura', 2)}
+      ${folderColTh('Nombre', 3)}
+      ${folderColTh('Macroproceso', 4)}
+      ${folderColTh('Área', 5)}
+      ${folderColTh('Departamento', 6)}
+      ${folderColTh('Tipo de Documento', 7)}
+      ${folderColTh('Categoría', 8)}
+      ${folderColTh('Clasificación', 9)}
+      ${folderColTh('Versión', 10)}
+      ${folderColTh('Fecha de emisión', 11)}
+      ${folderColTh('Fecha de última actualización', 12)}
+      ${folderColTh('Fecha de autorización', 13)}
+      ${folderColTh('Fecha de difusión', 14)}
+      ${folderColTh('Estado', 15)}
+      ${folderColTh('URL', 16)}
+      ${folderColTh('', 17, false)}
     </tr></thead>`;
   // rows: documentos o elementos de árbol {d, depth, ref, hit}
   const levelLegend = () => `<div class="lvl-legend">${CATEGORIAS.map(c => `<span class="lg lvl-${LEVEL[c]}"><i></i>${CAT_LEVEL[c]} · ${c}</span>`).join('')}</div>`;
@@ -2713,7 +3026,27 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       : t.ref
         ? `<span class="tiny" title="Documento rector en otra carpeta">${ic('link')}</span>`
         : `<button class="icon-btn" data-act="docMenu" data-id="${d.id}" aria-label="Opciones">${ic('ellipsis')}</button>`;
-    return `<tr class="doc-tr lvl-${lvlOf(d)} ${t.ref ? 'ref' : ''} ${t.hit ? 'hit' : ''}"${act}${styleAttr}>
+    const cells = [
+      (d.ext || 'doc').toUpperCase(),
+      `${d.nomenclatura} ${d.nombre}`,
+      d.nomenclatura || '',
+      d.nombre || '',
+      d.macroproceso || '—',
+      a?.name || '—',
+      f?.name || '—',
+      d.tipo || '—',
+      d.categoria || '—',
+      d.clasificacion || '—',
+      String(d.version ?? ''),
+      fmtDate(d.fechaEmision),
+      fmtDocDate(d),
+      fmtDate(d.fechaAutorizacion),
+      fmtDate(d.fechaDifusion),
+      estadoLabel(st),
+      url || '',
+      ''
+    ];
+    return `<tr class="doc-tr lvl-${lvlOf(d)} ${t.ref ? 'ref' : ''} ${t.hit ? 'hit' : ''}"${act}${styleAttr} data-cells="${encodeURIComponent(JSON.stringify(cells))}">
       <td>${badge(d.ext)}</td>
       <td class="doc-name" style="${pad}"><div>${depth ? `<i class="tree-mark">${ic('corner-down-right')}</i>` : ''}<div><strong>${esc(d.nomenclatura)} ${esc(d.nombre)}</strong><span>${sub}</span></div></div></td>
       <td class="mono">${esc(d.nomenclatura)}</td>
@@ -2903,20 +3236,26 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const donut = (id, rows, colors) => mk(id, { type: 'doughnut', data: { labels: rows.map(r => r[0]), datasets: [{ data: rows.map(r => r[1]), backgroundColor: colors || rows.map((_, i) => PALETTE[i % PALETTE.length]), borderColor: bg, borderWidth: 3, hoverOffset: 8 }] },
       options: { ...base, cutout: '64%', plugins: { ...base.plugins, legend: { display: true, position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, padding: 12 } } } } });
 
-    // Estado: Nuevo (v1 reciente), Actualizado (con versiones/cambios), Pendiente (sin actualizar > 12 meses)
-    const docEstado = (d) => {
-      const ver = parseInt(String(d.version || '1'), 10) || 1;
-      const updated = d.updatedAt || d.createdAt || 0;
-      const created = d.createdAt || updated;
-      const hist = (d.history || []).length;
-      if (ver <= 1 && hist <= 1 && (updated - created) < 90 * 864e5) return 'Nuevo';
-      if (updated && (Date.now() - updated) > 365 * 864e5) return 'Pendiente';
-      return 'Actualizado';
-    };
-    const estOrder = ['Nuevo', 'Actualizado', 'Pendiente'];
-    const estColors = { Nuevo: '#0a84ff', Actualizado: '#30d158', Pendiente: '#ff9f0a' };
-    const estRows = estOrder.map(k => [k, data.filter(d => docEstado(d) === k).length]);
-    donut('cEst', estRows, estOrder.map(k => estColors[k]));
+    // Estado según computeEstado (mismas reglas que el resto de la app)
+    const estIdOrder = ['nuevo', 'actualizado', 'pendiente', 'ratificado', 'eliminado'];
+    const estColorMap = { nuevo: '#0a84ff', actualizado: '#30d158', pendiente: '#ff9f0a', ratificado: '#5e5ce6', eliminado: '#ff453a' };
+    const estCounts = {};
+    data.forEach(d => { const id = computeEstado(d); estCounts[id] = (estCounts[id] || 0) + 1; });
+    const estRows = estIdOrder.filter(id => estCounts[id]).map(id => [estadoLabel(id), estCounts[id]]);
+    Object.keys(estCounts).forEach(id => {
+      if (!estIdOrder.includes(id) && estCounts[id]) estRows.push([estadoLabel(id), estCounts[id]]);
+    });
+    const estColorsArr = estRows.map(([lab]) => {
+      const rule = (S.settings.estadoRules || []).find(r => r.name === lab || r.id === lab);
+      const id = rule?.id || String(lab).toLowerCase();
+      if (estColorMap[id]) return estColorMap[id];
+      if (rule?.color === 'ok') return '#30d158';
+      if (rule?.color === 'warn') return '#ff9f0a';
+      if (rule?.color === 'danger') return '#ff453a';
+      if (rule?.color === 'accent') return '#0a84ff';
+      return '#8e8e93';
+    });
+    donut('cEst', estRows.length ? estRows : [['Sin datos', 0]], estColorsArr);
 
     const cr = [...CATEGORIAS, 'Sin categoría'].map(c => [c, data.filter(d => catOf(d) === c).length]).filter(r => r[1]);
     const catColors = cr.map(r => CAT_COLOR[r[0]] || '#8e8e93');
@@ -3013,6 +3352,100 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
 
   /* ---------------- Eventos de vistas ---------------- */
+
+  function bindFolderColFilters(tableSel = '#folderDocTbl') {
+    const tbl = $(tableSel);
+    if (!tbl) return;
+    const key = tableSel === '#infoDocTbl' ? 'searchColFilters' : 'folderColFilters';
+    if (!ui[key]) ui[key] = {};
+    const tbody = tbl.querySelector('tbody');
+    if (!tbody) return;
+    const applyColFilters = () => {
+      const filters = ui[key] || {};
+      tbody.querySelectorAll('tr').forEach(tr => {
+        let cells;
+        try { cells = JSON.parse(decodeURIComponent(tr.getAttribute('data-cells') || '%5B%5D')); } catch { cells = []; }
+        let ok = true;
+        Object.keys(filters).forEach(ci => {
+          const set = filters[ci];
+          if (!set || !set.size) return;
+          const val = String(cells[+ci] ?? '');
+          if (!set.has(val)) ok = false;
+        });
+        tr.style.display = ok ? '' : 'none';
+      });
+    };
+    tbl.querySelectorAll('[data-folder-col-filter]').forEach(btn => {
+      if (btn.dataset.boundColFilter) return;
+      btn.dataset.boundColFilter = '1';
+      if (ui[key][btn.dataset.folderColFilter]) btn.classList.add('active');
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const col = +btn.dataset.folderColFilter;
+        $$('.col-filter-pop').forEach(p => p.remove());
+        const values = new Set();
+        tbody.querySelectorAll('tr').forEach(tr => {
+          try {
+            const cells = JSON.parse(decodeURIComponent(tr.getAttribute('data-cells') || '%5B%5D'));
+            values.add(String(cells[col] ?? ''));
+          } catch {}
+        });
+        const sorted = [...values].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+        const selected = ui[key][col] || new Set(sorted);
+        const pop = document.createElement('div');
+        pop.className = 'col-filter-pop';
+        pop.innerHTML = `
+          <div class="cf-search"><input class="input" type="search" placeholder="Buscar…" id="cfSearch"/></div>
+          <div class="cf-actions">
+            <button type="button" class="btn-ghost btn btn-sm" data-cf-all>Seleccionar todo</button>
+            <button type="button" class="btn-ghost btn btn-sm" data-cf-none>Deseleccionar todo</button>
+          </div>
+          <div class="cf-list" id="cfList">${sorted.map(v => {
+            const checked = selected.has(v) ? 'checked' : '';
+            return `<label class="cf-item"><input type="checkbox" value="${esc(v)}" ${checked}/><span title="${esc(v)}">${esc(v || '(vacío)')}</span></label>`;
+          }).join('')}</div>
+          <div class="cf-foot">
+            <button type="button" class="btn btn-secondary btn-sm" data-cf-clear>Limpiar</button>
+            <button type="button" class="btn btn-primary btn-sm" data-cf-ok>Aceptar</button>
+          </div>`;
+        document.body.appendChild(pop);
+        const rect = btn.getBoundingClientRect();
+        pop.style.top = Math.min(rect.bottom + 4, window.innerHeight - 320) + 'px';
+        pop.style.left = Math.min(rect.left, window.innerWidth - 280) + 'px';
+        icons();
+        const list = pop.querySelector('#cfList');
+        pop.querySelector('#cfSearch').addEventListener('input', (ev) => {
+          const q = ev.target.value.trim().toLowerCase();
+          list.querySelectorAll('.cf-item').forEach(lab => {
+            lab.style.display = !q || lab.textContent.toLowerCase().includes(q) ? '' : 'none';
+          });
+        });
+        pop.querySelector('[data-cf-all]').addEventListener('click', () => list.querySelectorAll('input[type=checkbox]').forEach(c => { if (c.closest('.cf-item').style.display !== 'none') c.checked = true; }));
+        pop.querySelector('[data-cf-none]').addEventListener('click', () => list.querySelectorAll('input[type=checkbox]').forEach(c => { if (c.closest('.cf-item').style.display !== 'none') c.checked = false; }));
+        pop.querySelector('[data-cf-clear]').addEventListener('click', () => {
+          delete ui[key][col];
+          pop.remove();
+          applyColFilters();
+          btn.classList.remove('active');
+        });
+        pop.querySelector('[data-cf-ok]').addEventListener('click', () => {
+          const set = new Set();
+          list.querySelectorAll('input[type=checkbox]:checked').forEach(c => set.add(c.value));
+          if (set.size === sorted.length) delete ui[key][col];
+          else ui[key][col] = set;
+          btn.classList.toggle('active', !!ui[key][col]);
+          pop.remove();
+          applyColFilters();
+        });
+        const close = (ev) => {
+          if (!pop.contains(ev.target) && ev.target !== btn) { pop.remove(); document.removeEventListener('mousedown', close); }
+        };
+        setTimeout(() => document.addEventListener('mousedown', close), 0);
+      });
+    });
+    applyColFilters();
+  }
+
   function bindView() {
     const q = $('#q');
     if (q) {
@@ -3025,8 +3458,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       });
       if (route.view === 'search') { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
     }
-    if (ui.docView === 'list') enableResizableColumns('#folderDocTbl');
+    if (ui.docView === 'list') { enableResizableColumns('#folderDocTbl'); bindFolderColFilters(); }
     enableResizableColumns('#infoDocTbl');
+    if ($('#infoDocTbl')) bindFolderColFilters('#infoDocTbl');
     const sort = $('#sortSel'); sort && sort.addEventListener('change', () => { ui.sort = sort.value; render(); });
     const filt = $('#docFilter');
     if (filt) {
@@ -3082,6 +3516,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       openMenu(el, [
         { icon: 'pencil', label: 'Editar unidad', run: () => unitModal(u) },
         { icon: 'plus', label: 'Nueva área', run: () => areaModal(null, u.id) },
+        { icon: 'building-2', label: 'Nueva unidad de negocio', run: () => unitModal() },
         '-',
         { icon: 'trash-2', label: 'Eliminar unidad', danger: true, run: () => deleteUnit(u) },
       ]);
@@ -3096,6 +3531,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const a = areaById(el.dataset.id);
       openMenu(el, [
         { icon: 'pencil', label: 'Editar área', run: () => areaModal(a) },
+        { icon: 'folder-plus', label: 'Nueva carpeta', run: () => folderModal(null, a.id) },
         ...(can('managePerms') ? [{ icon: 'user-plus', label: 'Compartir área', run: () => grantModal(null, [a.id]) }] : []),
         '-',
         { icon: 'trash-2', label: 'Eliminar área', danger: true, run: () => deleteArea(a) },
@@ -3272,6 +3708,60 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       .forEach(d => { const k = key(d); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(d); });
     return '<option value="">Sin documento rector</option>' + [...groups].map(([k, ds]) => `<optgroup label="${esc(k.slice(2))}">${ds.map(d => `<option value="${d.id}" ${d.id === rectorId ? 'selected' : ''}>${esc(d.nomenclatura)} · ${esc(d.nombre)} (${esc(d.tipo)} · ${CAT_LEVEL[d.categoria]})</option>`).join('')}</optgroup>`).join('');
   }
+  function rectorCandidates(selfId, folder, cat) {
+    const allowed = RECTOR_CATS[cat] || [];
+    return S.docs.filter(d => d.id !== selfId && allowed.includes(d.categoria) && areaAccess(d.areaId).level)
+      .sort((a, b) => a.nomenclatura.localeCompare(b.nomenclatura, 'es', { numeric: true }));
+  }
+  function bindRectorCombo(b) {
+    const combo = b.querySelector('[data-rector-combo]'); if (!combo) return;
+    const hidden = combo.querySelector('[name=rector]');
+    const search = combo.querySelector('[data-rector-search]');
+    const list = combo.querySelector('[data-rector-list]');
+    const renderList = (q = '') => {
+      const cat = catOfTipo(b.querySelector('[name=tipo]')?.value || '');
+      const cand = rectorCandidates(b.dataset.self || null, folderById(b.dataset.folder), cat);
+      const qq = (q || '').trim().toLowerCase();
+      const filtered = qq ? cand.filter(d => (`${d.nomenclatura} ${d.nombre} ${d.tipo || ''}`).toLowerCase().includes(qq)) : cand;
+      if (!filtered.length) {
+        list.innerHTML = `<div class="rl-empty">${cand.length ? 'Sin coincidencias' : 'No hay documentos de 1er/2º nivel disponibles'}</div>`;
+      } else {
+        const groups = new Map();
+        const folder = folderById(b.dataset.folder);
+        filtered.forEach(d => {
+          const k = folder && d.folderId === folder.id ? 'Esta carpeta' : `${areaById(d.areaId)?.name || ''} / ${folderById(d.folderId)?.name || ''}`;
+          if (!groups.has(k)) groups.set(k, []);
+          groups.get(k).push(d);
+        });
+        list.innerHTML = `<button type="button" data-rid="">Sin documento rector</button>` +
+          [...groups].map(([k, ds]) => `<div class="rl-group">${esc(k)}</div>` + ds.map(d =>
+            `<button type="button" data-rid="${d.id}" class="${d.id === hidden.value ? 'on' : ''}"><strong class="mono">${esc(d.nomenclatura)}</strong> · ${esc(d.nombre)} <span class="tiny">(${esc(d.tipo)} · ${esc(CAT_LEVEL[d.categoria] || '')})</span></button>`
+          ).join('')).join('');
+      }
+      list.classList.remove('hidden');
+      icons();
+    };
+    search.addEventListener('focus', () => renderList(search.value));
+    search.addEventListener('input', () => {
+      if (hidden.value) { hidden.value = ''; }
+      renderList(search.value);
+    });
+    list.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-rid]'); if (!btn) return;
+      const id = btn.dataset.rid || '';
+      hidden.value = id;
+      if (!id) search.value = '';
+      else {
+        const d = S.docs.find(x => x.id === id);
+        search.value = d ? `${d.nomenclatura} · ${d.nombre}` : '';
+      }
+      list.classList.add('hidden');
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    document.addEventListener('click', (e) => {
+      if (!combo.contains(e.target)) list.classList.add('hidden');
+    });
+  }
   function bindTipoBlock(root) {
     const b = root.querySelector('.tipo-block'); if (!b) return;
     const sel = b.querySelector('[name=tipo]'), catI = b.querySelector('[name=categoria]'), hint = b.querySelector('[data-cat-hint]'), rf = b.querySelector('.rector-field');
@@ -3283,9 +3773,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       catI.className = 'input ' + (CAT_CLASS[c] || '');
       rf.className = 'field rector-field ' + (RECTOR_CATS[c] ? 'lvl-' + LEVEL[c] : 'hidden');
       if (c !== lastCat) {
-        // Las opciones de rector dependen del nivel; se conserva la elección si sigue siendo válida
+        // Al cambiar de nivel se limpia el rector si ya no aplica
         const keep = rs.value;
-        rs.innerHTML = rectorOptions(keep, b.dataset.self || null, folderById(b.dataset.folder), c);
+        const still = keep && rectorCandidates(b.dataset.self || null, folderById(b.dataset.folder), c).some(d => d.id === keep);
+        if (!still) {
+          rs.value = '';
+          const s = b.querySelector('[data-rector-search]');
+          if (s) s.value = '';
+        }
         lastCat = c;
       }
       b.querySelector('[data-rector-hint]').textContent = rectorHint(c);
@@ -3295,7 +3790,6 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       sync();
       const form = root.closest('form') || document;
       const nom = form.querySelector('[name=nomenclatura]');
-      // Solo rellenar nomenclatura si está vacía o marcada como sugerida (no la del archivo)
       if (nom && !nom.readOnly && b.dataset.folder) {
         const folder = folderById(b.dataset.folder);
         if (folder && (nom.dataset.suggested === '1' || !nom.value.trim())) {
@@ -3305,8 +3799,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           nom.dispatchEvent(new Event('input'));
         }
       }
-    }); sync();
-    b.querySelector('[name=rector]').addEventListener('change', (e) => e.target.classList.remove('invalid'));
+    });
+    bindRectorCombo(b);
+    sync();
+    rs?.addEventListener('change', (e) => e.target.classList.remove('invalid'));
   }
   function readTipoBlock(root) {
     const sel = root.querySelector('.tipo-block [name=tipo]');
@@ -3358,8 +3854,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       title: isNew ? 'Nueva unidad de negocio' : 'Editar unidad de negocio',
       sub: 'Las unidades agrupan áreas. Crea al menos una antes de agregar áreas.',
       body: `<form id="ufu">
-        <div class="row"><div class="field"><label>Nombre</label><input class="input" name="name" value="${esc(u.name)}" placeholder="Ej. COMASW" required maxlength="60"/></div>
-        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(u.code)}" placeholder="Sin propuesta automática" required maxlength="6" style="text-transform:uppercase"/><div class="hint">Obligatorio · sin valor por defecto</div></div></div>
+        <div class="row"><div class="field"><label>Nombre</label><input class="input" name="name" value="${esc(u.name)}" placeholder="Unidad de Negocio" required maxlength="60"/></div>
+        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(u.code)}" placeholder="Código de la U.N." required maxlength="6" style="text-transform:uppercase"/><div class="hint">Obligatorio · sin valor por defecto</div></div></div>
         <div class="field"><label>Descripción</label><textarea class="textarea" name="desc" maxlength="160">${esc(u.desc || '')}</textarea></div>
         <div class="field"><span class="label">Color</span><div class="swatches">${Object.entries(COLORS).map(([k, [c1, c2]]) => `<label class="swatch" style="background:linear-gradient(135deg,${c1},${c2})" title="${k}"><input type="radio" name="color" value="${k}" ${(u.color || 'blue') === k ? 'checked' : ''}/></label>`).join('')}</div></div>
         <div class="field"><span class="label">Icono</span><div class="icon-picks">${AREA_ICONS.map(n => `<label class="icon-pick"><input type="radio" name="icon" value="${n}" ${(u.icon || 'building-2') === n ? 'checked' : ''}/>${ic(n)}</label>`).join('')}</div></div>
@@ -3402,8 +3898,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <option value="">Selecciona…</option>
           ${units.map(u => `<option value="${u.id}" ${a.unitId === u.id ? 'selected' : ''}>${esc(u.code)} · ${esc(u.name)}</option>`).join('')}
         </select></div>
-        <div class="row"><div class="field"><label>Nombre del área</label><input class="input" name="name" value="${esc(a.name)}" placeholder="Ej. Compras" required maxlength="40"/></div>
-        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(a.code)}" placeholder="Sin propuesta automática" required maxlength="6" style="text-transform:uppercase"/><div class="hint">Obligatorio · sin valor por defecto</div></div></div>
+        <div class="row"><div class="field"><label>Nombre del área</label><input class="input" name="name" value="${esc(a.name)}" placeholder="Área" required maxlength="40"/></div>
+        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(a.code)}" placeholder="Código de Área" required maxlength="6" style="text-transform:uppercase"/><div class="hint">Obligatorio · sin valor por defecto</div></div></div>
         <div class="field"><label>Descripción</label><textarea class="textarea" name="desc" maxlength="160" placeholder="¿Qué documentos resguarda esta área?">${esc(a.desc)}</textarea></div>
         <div class="field"><span class="label">Color</span><div class="swatches">${Object.entries(COLORS).map(([k, [c1, c2]]) => `<label class="swatch" style="background:linear-gradient(135deg,${c1},${c2})" title="${k}"><input type="radio" name="color" value="${k}" ${a.color === k ? 'checked' : ''}/></label>`).join('')}</div></div>
         <div class="field"><span class="label">Icono</span><div class="icon-picks">${AREA_ICONS.map(n => `<label class="icon-pick"><input type="radio" name="icon" value="${n}" ${a.icon === n ? 'checked' : ''}/>${ic(n)}</label>`).join('')}</div></div>
@@ -3436,11 +3932,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   function folderModal(f, areaId) {
     const isNew = !f; const a = areaById(areaId);
-    f = f || { name: '', code: '' };
+    f = f || { name: '', code: '', desc: '', color: a?.color || 'blue', icon: 'folder' };
     openModal({
       title: isNew ? 'Nueva carpeta' : 'Editar carpeta', sub: `Departamento dentro de ${esc(a.name)}`,
-      body: `<form id="ff"><div class="row"><div class="field"><label>Nombre del departamento</label><input class="input" name="name" value="${esc(f.name)}" placeholder="Ej. Procedimientos" maxlength="40"/></div>
-        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(f.code)}" placeholder="Sin propuesta automática" maxlength="6" style="text-transform:uppercase" required/><div class="hint">Obligatorio · sin valor por defecto. Solo referencia del departamento.</div></div></div></form>`,
+      body: `<form id="ff">
+        <div class="row"><div class="field"><label>Nombre del departamento</label><input class="input" name="name" value="${esc(f.name)}" placeholder="Departamento" maxlength="40"/></div>
+        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(f.code)}" placeholder="Código de Departamento" maxlength="6" style="text-transform:uppercase" required/><div class="hint">Obligatorio · sin valor por defecto. Solo referencia del departamento.</div></div></div>
+        <div class="field"><label>Descripción</label><textarea class="textarea" name="desc" maxlength="160">${esc(f.desc || '')}</textarea></div>
+        <div class="field"><span class="label">Color</span><div class="swatches">${Object.entries(COLORS).map(([k, [c1, c2]]) => `<label class="swatch" style="background:linear-gradient(135deg,${c1},${c2})" title="${k}"><input type="radio" name="color" value="${k}" ${(f.color || a?.color || 'blue') === k ? 'checked' : ''}/></label>`).join('')}</div></div>
+        <div class="field"><span class="label">Icono</span><div class="icon-picks">${AREA_ICONS.map(n => `<label class="icon-pick"><input type="radio" name="icon" value="${n}" ${(f.icon || 'folder') === n ? 'checked' : ''}/>${ic(n)}</label>`).join('')}</div></div>
+      </form>`,
       foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>${isNew ? 'Crear carpeta' : 'Guardar'}</button>`,
       onMount: (c) => {
         const fm = c.$('#ff');
@@ -3448,8 +3949,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         c.$('[data-save]').addEventListener('click', () => {
           const name = fm.name.value.trim(), code = fm.code.value.trim().toUpperCase();
           if (!name || !code) return toast('Nombre y código son obligatorios', 'err');
-          if (isNew) { S.folders.push({ id: Repo.uid('f_'), areaId, name, code, createdAt: now(), createdBy: me.id, order: S.folders.filter(x => x.areaId === areaId).length }); log('carpeta', `Creó la carpeta ${name} en ${a.name}`); }
-          else { Object.assign(f, { name, code }); log('carpeta', `Editó la carpeta ${name}`); }
+          const data = { name, code, desc: fm.desc.value.trim(), color: fm.color.value || 'blue', icon: fm.icon.value || 'folder' };
+          if (isNew) { S.folders.push({ id: Repo.uid('f_'), areaId, ...data, createdAt: now(), createdBy: me.id, order: S.folders.filter(x => x.areaId === areaId).length }); log('carpeta', `Creó la carpeta ${name} en ${a.name}`); }
+          else { Object.assign(f, data); log('carpeta', `Editó la carpeta ${name}`); }
           save(); c.close(); render(); toast(isNew ? 'Carpeta creada' : 'Carpeta actualizada');
         });
       },
@@ -3513,23 +4015,33 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const file = Q.files[Q.i];
     const total = Q.files.length;
     const a = areaById(Q.folder.areaId);
+    if (!Q.drafts) Q.drafts = [];
+    if (!Q.doneFiles) Q.doneFiles = {};
+    const draft = Q.drafts[Q.i] || null;
     const p = Q.replaceDoc ? { nomenclatura: Q.replaceDoc.nomenclatura, nombre: Q.replaceDoc.nombre, version: nextVersion(Q.replaceDoc.version), tipo: Q.replaceDoc.tipo, clasificacion: Q.replaceDoc.clasificacion, rectorId: Q.replaceDoc.rectorId } : parseFileName(file.name, Q.folder);
-    const tipo = Q.shared?.tipo ?? p.tipo ?? '', clasificacion = Q.shared?.clasificacion ?? p.clasificacion ?? '', rectorId = Q.shared?.rectorId ?? p.rectorId ?? null;
+    const tipo = draft?.tipo ?? Q.shared?.tipo ?? p.tipo ?? '', clasificacion = draft?.clasificacion ?? Q.shared?.clasificacion ?? p.clasificacion ?? '', rectorId = draft?.rectorId ?? Q.shared?.rectorId ?? p.rectorId ?? null;
     const fileDate = new Date(file.lastModified || now());
-    const version = intVersion(Q.shared?.version || p.version || S.settings.versionInicial);
-    const fecha = Q.shared?.fecha || toLocalInput(fileDate).slice(0, 10);
+    const version = intVersion(draft?.version || Q.shared?.version || p.version || S.settings.versionInicial);
+    const fecha = draft?.fecha || Q.shared?.fecha || toLocalInput(fileDate).slice(0, 10);
+    const nomenclatura = draft?.nomenclatura ?? p.nomenclatura;
+    const nombreDoc = draft?.nombre ?? p.nombre;
     const ext = extOf(file.name);
     openModal({
       size: 'wide', dismissable: false,
       title: Q.replaceDoc ? 'Nueva versión del documento' : 'Datos del documento',
       sub: total > 1 ? `Archivo ${Q.i + 1} de ${total} · ${esc(a.name)} / ${esc(Q.folder.name)}` : `${esc(a.name)} / ${esc(Q.folder.name)}`,
-      body: `${total > 1 ? `<div class="progress-steps">${Q.files.map((_, k) => `<i class="${k < Q.i ? 'done' : k === Q.i ? 'now' : ''}"></i>`).join('')}</div>` : ''}
+      body: `${total > 1 ? `<div class="upload-nav">
+          <button type="button" class="btn btn-ghost btn-sm" data-prev ${Q.i === 0 ? 'disabled' : ''}>${ic('chevron-left')}Anterior</button>
+          <div class="progress-steps" style="flex:1">${Q.files.map((_, k) => `<i class="${(Q.doneFiles && Q.doneFiles[k]) ? 'done' : k === Q.i ? 'now' : ''}" data-goto="${k}" title="${esc(Q.files[k].name)}" style="cursor:pointer"></i>`).join('')}</div>
+          <button type="button" class="btn btn-ghost btn-sm" data-next ${Q.i >= total - 1 ? 'disabled' : ''}>Siguiente${ic('chevron-right')}</button>
+        </div>
+        <p class="tiny" style="text-align:center;margin:-4px 0 10px">Archivo ${Q.i + 1} de ${total} · puedes cambiar de archivo antes de publicar</p>` : ''}
         <div class="file-preview-card">${badge(ext)}<div class="doc-name"><strong>${esc(file.name)}</strong><span>${fmtSize(file.size)} · modificado ${fmtDate(fileDate)}</span></div></div>
         <form id="uf" novalidate>
         <div class="row">
-          <div class="field"><label for="uNom">Nomenclatura</label><input class="input mono" id="uNom" name="nomenclatura" value="${esc(p.nomenclatura)}" required ${Q.replaceDoc ? 'readonly' : ''} data-suggested="${p.suggested ? '1' : '0'}"/>
-            <div class="hint">${Q.replaceDoc ? 'Se conserva la nomenclatura del documento' : p.suggested ? 'Se generará al elegir el tipo de documento · editable' : 'Extraída del nombre del archivo · editable'}</div><div class="err hidden" id="dupWarn"></div></div>
-          <div class="field"><label for="uNombre">Nombre del documento</label><input class="input" id="uNombre" name="nombre" value="${esc(p.nombre)}" required/><div class="hint">Extraído del nombre del archivo · editable</div></div>
+          <div class="field"><label for="uNom">Nomenclatura</label><input class="input mono" id="uNom" name="nomenclatura" value="${esc(nomenclatura)}" required ${Q.replaceDoc ? 'readonly' : ''} data-suggested="${draft || !p.suggested ? '0' : '1'}"/>
+            <div class="hint">${Q.replaceDoc ? 'Se conserva la nomenclatura del documento' : p.suggested && !draft ? 'Se generará al elegir el tipo de documento · editable' : 'Extraída del nombre del archivo · editable'}</div><div class="err hidden" id="dupWarn"></div></div>
+          <div class="field"><label for="uNombre">Nombre del documento</label><input class="input" id="uNombre" name="nombre" value="${esc(nombreDoc)}" required/><div class="hint">Extraído del nombre del archivo · editable</div></div>
         </div>
         <div class="row-3">
           <div class="field"><label for="uVer">Versión</label>${intInput(`id="uVer" name="version" value="${esc(version)}" required`)}<div class="hint">Número entero desde 1</div></div>
@@ -3539,7 +4051,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         ${tipoBlock({ tipo, rectorId, selfId: Q.replaceDoc?.id, folder: Q.folder, clasificacion })}
         <div class="row-3">
           ${catalogField('macroprocesos', 'macroproceso', Q.replaceDoc?.macroproceso || Q.shared?.macroproceso || '')}
-          <div class="field"><label>Fecha de emisión</label><input class="input" type="date" name="fechaEmision" value="${esc(Q.replaceDoc?.fechaEmision || fecha)}"/></div>
+          <div class="field"><label>Fecha de emisión</label><input class="input" type="date" name="fechaEmision" value="${esc(draft?.fechaEmision || Q.replaceDoc?.fechaEmision || fecha)}"/></div>
           <div class="field"><label>Fecha de autorización</label><input class="input" type="date" name="fechaAutorizacion" value="${esc(Q.replaceDoc?.fechaAutorizacion || '')}"/></div>
         </div>
         <div class="row">
@@ -3601,8 +4113,34 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         });
         bindCatalogFields(f); bindTipoBlock(f);
         syncEstadoUI();
+        const saveDraft = () => {
+          Q.drafts[Q.i] = {
+            nomenclatura: f.nomenclatura?.value || '',
+            nombre: f.nombre?.value || '',
+            version: f.version?.value || '',
+            fecha: f.fecha?.value || '',
+            tipo: f.tipo?.value || '',
+            rectorId: f.rector?.value || '',
+            clasificacion: readCatalog(f, 'clasificacion') || '',
+            macroproceso: readCatalog(f, 'macroproceso') || '',
+            fechaEmision: f.fechaEmision?.value || '',
+            fechaAutorizacion: f.fechaAutorizacion?.value || '',
+            fechaDifusion: f.fechaDifusion?.value || '',
+            estado: f.estado?.value || '',
+          };
+        };
+        const goTo = (idx) => {
+          if (idx < 0 || idx >= Q.files.length || idx === Q.i) return;
+          saveDraft();
+          c.close();
+          Q.i = idx;
+          setTimeout(() => uploadStep(Q), 200);
+        };
+        c.$('[data-prev]')?.addEventListener('click', () => goTo(Q.i - 1));
+        c.$('[data-next]')?.addEventListener('click', () => goTo(Q.i + 1));
+        c.$$('[data-goto]')?.forEach(el => el.addEventListener('click', () => goTo(+el.dataset.goto)));
         c.$('[data-cancel]').addEventListener('click', () => { c.close(); if (Q.done) render(); });
-        c.$('[data-skip]')?.addEventListener('click', () => { c.close(); Q.i++; setTimeout(() => uploadStep(Q), 260); });
+        c.$('[data-skip]')?.addEventListener('click', () => { saveDraft(); c.close(); Q.i++; setTimeout(() => uploadStep(Q), 260); });
         c.$('[data-ok]').addEventListener('click', async (ev) => {
           const req = ['nomenclatura', 'nombre', 'version', 'fecha'];
           let valid = true;
@@ -3652,7 +4190,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             }
           }
           if (f.applyAll?.checked) Q.shared = { version: meta.version, fecha: meta.fecha, tipo: meta.tipo, rectorId: meta.rectorId, clasificacion: meta.clasificacion, macroproceso: meta.macroproceso }; else Q.shared = null;
-          try { await storeUpload(file, meta, Q.folder, Q.replaceDoc); Q.done++; }
+          try { await storeUpload(file, meta, Q.folder, Q.replaceDoc); Q.done++; Q.doneFiles[Q.i] = true; Q.drafts[Q.i] = null; }
           catch (e) { console.error(e); toast('No se pudo procesar ' + file.name, 'err'); }
           c.close(); Q.i++; setTimeout(() => uploadStep(Q), 260);
         });
@@ -4131,9 +4669,43 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
 
   /* ---------------- Permisos ---------------- */
+  const PASS_POLICY_HINT = 'Mínimo 8 caracteres, con al menos una mayúscula, una minúscula, un número y un carácter especial.';
+  function passPolicyError(pass, minLen = 8) {
+    if (!pass || pass.length < minLen) return `La contraseña debe tener al menos ${minLen} caracteres`;
+    if (!/[a-z]/.test(pass)) return 'La contraseña debe incluir al menos una letra minúscula';
+    if (!/[A-Z]/.test(pass)) return 'La contraseña debe incluir al menos una letra mayúscula';
+    if (!/[0-9]/.test(pass)) return 'La contraseña debe incluir al menos un número';
+    if (!/[^A-Za-z0-9]/.test(pass)) return 'La contraseña debe incluir al menos un carácter especial';
+    return null;
+  }
+  function passTipHtml() {
+    return `<span class="pass-tip" tabindex="0" role="button" aria-label="Requisitos de contraseña" data-pass-tip>${ic('info')}
+      <span class="pass-tip-box" role="tooltip">${esc(PASS_POLICY_HINT)}</span></span>`;
+  }
+  if (!window.__passTipBound) {
+    window.__passTipBound = true;
+    document.addEventListener('click', (e) => {
+      const tip = e.target.closest('[data-pass-tip]');
+      document.querySelectorAll('.pass-tip.open').forEach(el => { if (el !== tip) el.classList.remove('open'); });
+      if (tip) { e.preventDefault(); tip.classList.toggle('open'); }
+    }, true);
+  }
   function genPassword() {
-    const c = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
-    return Array.from(crypto.getRandomValues(new Uint32Array(12))).map(x => c[x % c.length]).join('');
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lower = 'abcdefghijkmnpqrstuvwxyz';
+    const nums = '23456789';
+    const special = '!@#$%&*?';
+    const all = upper + lower + nums + special;
+    const rnd = (n) => crypto.getRandomValues(new Uint32Array(n));
+    const pick = (s, r) => s[r % s.length];
+    const r = rnd(12);
+    const chars = [pick(upper, r[0]), pick(lower, r[1]), pick(nums, r[2]), pick(special, r[3])];
+    for (let i = 4; i < 12; i++) chars.push(pick(all, r[i]));
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = rnd(1)[0] % (i + 1);
+      [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+    return chars.join('');
   }
 
   function grantModal(user = null, preAreas = []) {
@@ -4156,7 +4728,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <div class="field"><label for="gName">Nombre completo</label><input class="input" id="gName" name="name" value="${esc(user?.name || '')}" placeholder="Ej. Ana López"/></div>
         </div>
         <div class="row">
-          <div class="field"><label for="gPass">Contraseña</label>
+          <div class="field"><label for="gPass">Contraseña ${passTipHtml()}</label>
             <div class="input-icon"><input class="input mono" id="gPass" name="pass" type="password" placeholder="${user ? 'Dejar vacío para conservar' : 'Mínimo ' + st.minPassword + ' caracteres'}" autocomplete="new-password"/>
             <button type="button" class="icon-btn" data-eye aria-label="Mostrar">${ic('eye')}</button></div>
             <div class="chips-quick"><button type="button" data-gen>${ic('sparkles')} Generar segura</button></div></div>
@@ -4235,8 +4807,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           let u = user || S.users.find(x => x.email === email);
           if (user && email !== user.email && S.users.some(x => x.email === email)) { f.email.classList.add('invalid'); return toast('Ya existe otra cuenta con ese correo', 'err'); }
           const pass = f.pass.value;
-          if (!u && pass.length < st.minPassword) { f.pass.classList.add('invalid'); return toast(`La contraseña debe tener al menos ${st.minPassword} caracteres`, 'err'); }
-          if (u && pass && pass.length < st.minPassword) { f.pass.classList.add('invalid'); return toast(`La contraseña debe tener al menos ${st.minPassword} caracteres`, 'err'); }
+          if (!u) { const e = passPolicyError(pass, st.minPassword); if (e) { f.pass.classList.add('invalid'); return toast(e, 'err'); } }
+          if (u && pass) { const e = passPolicyError(pass, st.minPassword); if (e) { f.pass.classList.add('invalid'); return toast(e, 'err'); } }
           const areas = c.$$('[name=areas]:checked').map(x => x.value);
           const role = S.roles.find(x => x.id === f.role.value);
           if (!areas.length && !role.caps.allAreas && !curGrants.length && !u) return toast('Selecciona al menos un área', 'err');
@@ -4283,14 +4855,15 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     openModal({
       title: 'Cambiar contraseña', sub: esc(me.email),
       body: `<div class="field"><label>Contraseña actual</label>${passField('p0', 'autocomplete="current-password"')}</div>
-        <div class="field"><label>Nueva contraseña</label>${passField('p1', 'autocomplete="new-password"')}<div class="hint">Mínimo ${S.settings.minPassword} caracteres</div></div>
+        <div class="field"><label>Nueva contraseña ${passTipHtml()}</label>${passField('p1', 'autocomplete="new-password"')}</div>
         <div class="field"><label>Confirmar nueva contraseña</label>${passField('p2', 'autocomplete="new-password"')}</div>`,
       foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Actualizar</button>`,
       onMount: (c) => {
         bindPassToggles(c.el);
         c.$('[data-ok]').addEventListener('click', async () => {
         if (!(await Repo.verifyPassword(c.$('#p0').value, me.pass))) return toast('La contraseña actual no coincide', 'err');
-        if (c.$('#p1').value.length < S.settings.minPassword) return toast('La nueva contraseña es muy corta', 'err');
+        const polErr = passPolicyError(c.$('#p1').value, S.settings.minPassword);
+        if (polErr) return toast(polErr, 'err');
         if (c.$('#p1').value !== c.$('#p2').value) return toast('Las contraseñas no coinciden', 'err');
         me.pass = await Repo.hashPassword(c.$('#p1').value); log('usuario', 'Cambió su contraseña'); save(); c.close(); toast('Contraseña actualizada');
       });
@@ -4348,7 +4921,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <button class="btn btn-secondary btn-sm" style="height:38px" id="domAddBtn">${ic('plus')}Agregar dominio</button></div></div>`;
     if (tab === 'docs') return `<div class="panel"><h3>Nomenclatura</h3><p class="muted">Cómo se extrae automáticamente del nombre del archivo.</p>
       <div class="field"><label>Expresión regular (el primer grupo es la nomenclatura)</label><input class="input mono" data-set="nomenRegex" value="${esc(st.nomenRegex)}"/></div>
-      <div class="field"><label>Probar con un nombre de archivo</label><input class="input" id="rxTest" value="SGC-PR-005 Compras y proveedores v2.docx"/><div class="hint" id="rxOut"></div></div></div>
+      <div class="field"><label>Probar con un nombre de archivo</label><input class="input" id="rxTest" value="CM-PLG-CONTCI-01 Manual de Control Interno"/><div class="hint" id="rxOut"></div></div></div>
       <div class="panel"><h3>Versiones</h3><p class="muted">Control de versiones al subir y editar.</p>
       ${srow('Versión inicial', 'Número entero desde 1, cuando el archivo no indica versión', intInput(`data-set="versionInicial" value="${esc(st.versionInicial)}"`))}
       ${srow('Incrementar versión al editar', 'Sugiere la siguiente versión entera (1 → 2 → 3) al guardar cambios en línea', sw('autoVersion', st.autoVersion))}
@@ -4410,7 +4983,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       ${srow('Al expirar el acceso', 'Qué ocurre con el área y sus documentos', `<select class="select" data-set="expiredBehavior"><option value="bloquear" ${st.expiredBehavior === 'bloquear' ? 'selected' : ''}>Bloquear por completo</option><option value="ver" ${st.expiredBehavior === 'ver' ? 'selected' : ''}>Degradar a solo ver</option></select>`)}
       ${srow('Mostrar áreas expiradas', 'Se muestran bloqueadas en el inicio', sw('showLockedAreas', st.showLockedAreas))}
       ${srow('Vigencia temporal por defecto', 'En horas, al asignar permisos', `<input class="input" type="number" min="1" data-set="defaultTempHours" value="${st.defaultTempHours}"/>`)}
-      ${srow('Longitud mínima de contraseña', 'Para cuentas nuevas y cambios', `<input class="input" type="number" min="6" max="32" data-set="minPassword" value="${st.minPassword}"/>`)}
+      ${srow('Longitud mínima de contraseña', 'Mínimo 8. Debe incluir mayúscula, minúscula, número y carácter especial', `<input class="input" type="number" min="8" max="32" data-set="minPassword" value="${Math.max(8, st.minPassword || 8)}"/>`)}
       </div>
       <div class="panel"><h3>Contraseña de administrador (acciones destructivas)</h3>
         <p class="muted">Se exige al eliminar o modificar elementos críticos en Configuración y para el reseteo de fábrica. Solo el perfil Administrador puede configurarla.</p>
@@ -4443,8 +5016,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       ${Repo.CAPS.map(cp => `<tr><td>${cp.label}</td>${S.roles.map(r => `<td><label class="switch"><input type="checkbox" data-cap="${r.id}|${cp.key}" ${r.caps[cp.key] ? 'checked' : ''}/><span></span></label></td>`).join('')}</tr>`).join('')}
       <tr><td class="tiny">Usuarios</td>${S.roles.map(r => `<td class="tiny">${S.users.filter(u => u.role === r.id).length}</td>`).join('')}</tr>
       </tbody></table></div><p class="tiny" style="margin-top:14px">Todos los perfiles son editables, incluido Administrador. Para evitar quedarte fuera, siempre debe existir al menos un usuario activo con “Asignar permisos” y “Acceder a configuración”.</p></div>`;
-    if (tab === 'audit') return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h3>Bitácora</h3><p class="muted">Últimos ${S.audit.length} movimientos.</p></div>
-      <select class="select" id="auditF" style="width:200px;height:38px"><option value="">Todas las acciones</option>${[...new Set(S.audit.map(a => a.action))].map(a => `<option>${esc(a)}</option>`).join('')}</select></div>
+    if (tab === 'audit') return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h3>Bitácora</h3><p class="muted">Últimos ${S.audit.length} movimientos.</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="select" id="auditF" style="width:200px;height:38px"><option value="">Todas las acciones</option>${[...new Set(S.audit.map(a => a.action))].map(a => `<option>${esc(a)}</option>`).join('')}</select>
+        <button class="btn btn-secondary btn-sm" id="auditDelAll" ${S.audit.length ? '' : 'disabled'}>${ic('trash-2')}Eliminar todos</button>
+        <button class="btn btn-danger btn-sm" id="auditReset" ${S.audit.length ? '' : 'disabled'}>${ic('rotate-ccw')}Resetear bitácora</button>
+      </div></div>
       <div id="auditList">${auditList('')}</div></div>`;
     if (tab === 'data') return `<div class="panel"><h3>Almacenamiento</h3><p class="muted">Hoy los datos viven en este navegador. La capa de datos está aislada para conectarse a Supabase sin cambiar la interfaz.</p>
       ${!window.STORAGE_PERSISTENT ? `<div class="hint" style="font-size:13px;padding:12px 14px;background:var(--warn-soft);color:var(--warn);border-radius:12px;margin-bottom:8px">Este navegador bloquea localStorage en esta vista; los datos viven en memoria y se reinician al recargar. Abre la app directamente para que persistan.</div>` : ''}
@@ -4463,7 +5040,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const AUDIT_IC = { acceso: 'log-in', área: 'layout-grid', carpeta: 'folder', documento: 'file-text', edición: 'pencil-line', descarga: 'download', consulta: 'eye', permiso: 'key-round', usuario: 'user', sistema: 'cpu', configuración: 'settings' };
   function auditList(f) {
     const rows = S.audit.filter(a => !f || a.action === f).slice(0, 150);
-    return rows.length ? rows.map(a => `<div class="audit-row"><span class="ai">${ic(AUDIT_IC[a.action] || 'dot')}</span><div style="flex:1"><div>${esc(a.text)}</div><span class="tiny">${esc(userName(a.by))} · ${fmtDateTime(a.at)}</span></div><span class="chip">${esc(a.action)}</span></div>`).join('') : '<p class="muted">Sin movimientos.</p>';
+    return rows.length ? rows.map(a => `<div class="audit-row" data-audit-id="${a.id}"><span class="ai">${ic(AUDIT_IC[a.action] || 'dot')}</span><div style="flex:1"><div>${esc(a.text)}</div><span class="tiny">${esc(userName(a.by))} · ${fmtDateTime(a.at)}</span></div><span class="chip">${esc(a.action)}</span><button type="button" class="icon-btn" data-audit-del="${a.id}" title="Eliminar este registro" aria-label="Eliminar">${ic('trash-2')}</button></div>`).join('') : '<p class="muted">Sin movimientos.</p>';
   }
 
   function bindSettings() {
@@ -4473,6 +5050,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     $$('[data-set]', P).forEach(el => el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', () => {
       const k = el.dataset.set;
       let v = el.type === 'checkbox' ? el.checked : el.type === 'number' ? Math.max(+el.min || 0, +el.value || 0) : el.value;
+      if (k === 'minPassword') { v = Math.max(8, Math.min(32, +v || 8)); el.value = v; }
       if (k === 'versionInicial') { if (!validInt(v)) return; v = intVersion(v); }
       if (k === 'logoSize') { v = Math.max(16, Math.min(128, +v || 28)); const lab = $('#logoSizeVal', P); if (lab) lab.textContent = v + ' px'; }
       if (k === 'titleSize') { v = Math.max(12, Math.min(48, +v || 17)); const lab = $('#titleSizeVal', P); if (lab) lab.textContent = v + ' px'; }
@@ -4723,7 +5301,38 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     }));
     $('[data-new-role]', P)?.addEventListener('click', () => roleModal());
     $$('[data-edit-role]', P).forEach(b => b.addEventListener('click', () => roleModal(S.roles.find(r => r.id === b.dataset.editRole))));
-    $('#auditF')?.addEventListener('change', (e) => { $('#auditList').innerHTML = auditList(e.target.value); icons(); });
+    const refreshAudit = () => {
+      const f = $('#auditF')?.value || '';
+      if ($('#auditList')) { $('#auditList').innerHTML = auditList(f); icons(); }
+      const n = S.audit.length;
+      if ($('#auditDelAll')) $('#auditDelAll').disabled = !n;
+      if ($('#auditReset')) $('#auditReset').disabled = !n;
+    };
+    $('#auditF')?.addEventListener('change', () => refreshAudit());
+    const delOne = async (id) => {
+      if (!(await askActionPassword('Eliminar registro de bitácora'))) return;
+      S.audit = S.audit.filter(a => a.id !== id);
+      save(); refreshAudit(); toast('Registro eliminado');
+    };
+    $('#auditList')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-audit-del]');
+      if (btn) delOne(btn.dataset.auditDel);
+    });
+    $('#auditDelAll')?.addEventListener('click', async () => {
+      if (!S.audit.length) return;
+      if (!(await askActionPassword('Eliminar todos los registros de la bitácora'))) return;
+      if (!await confirmDialog({ title: '¿Eliminar toda la bitácora?', text: `Se eliminarán ${S.audit.length} registros. Esta acción no se puede deshacer.`, ok: 'Eliminar todos', danger: true })) return;
+      S.audit = [];
+      save(); log('sistema', 'Se eliminó toda la bitácora'); save();
+      render(); toast('Bitácora vaciada');
+    });
+    $('#auditReset')?.addEventListener('click', async () => {
+      if (!(await askActionPassword('Resetear bitácora'))) return;
+      if (!await confirmDialog({ title: '¿Resetear bitácora?', text: 'Se borrarán todos los movimientos y se dejará un registro del reseteo.', ok: 'Resetear', danger: true })) return;
+      S.audit = [];
+      save(); log('sistema', 'Bitácora reseteada'); save();
+      render(); toast('Bitácora reseteada');
+    });
     $('[data-export]', P)?.addEventListener('click', () => saveBlob(new Blob([Repo.export()], { type: 'application/json' }), `filehub-respaldo-${new Date().toISOString().slice(0, 10)}.json`));
     $('[data-import]', P)?.addEventListener('click', () => $('#impF').click());
     $('#impF')?.addEventListener('change', async (e) => {
@@ -4763,7 +5372,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       openModal({
         title: change ? 'Cambiar contraseña de acciones' : 'Crear contraseña de acciones destructivas',
         body: `${change ? '<div class="field"><label>Contraseña actual</label>' + passField('curP') + '</div>' : ''}
-          <div class="field"><label>Nueva contraseña</label>${passField('newP')}</div>
+          <div class="field"><label>Nueva contraseña ${passTipHtml()}</label>${passField('newP')}</div>
           <div class="field"><label>Confirmar</label>${passField('newP2')}</div>`,
         foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Guardar</button>`,
         onMount: (c) => {
@@ -4774,7 +5383,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
               if (!ok) return toast('Contraseña actual incorrecta', 'err');
             }
             const p = c.$('#newP').value, p2 = c.$('#newP2').value;
-            if (p.length < S.settings.minPassword) return toast('Contraseña muy corta', 'err');
+            const polErr = passPolicyError(p, S.settings.minPassword);
+            if (polErr) return toast(polErr, 'err');
             if (p !== p2) return toast('No coinciden', 'err');
             S.settings.adminActionPasswordHash = await Repo.hashPassword(p);
             log('configuración', 'Configuró la contraseña de acciones destructivas');
@@ -4788,27 +5398,75 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     $('[data-master-reset]', P)?.addEventListener('click', async () => {
       if (!S.settings.adminActionPasswordHash) return toast('Primero crea la contraseña de acciones destructivas', 'err');
       if (!(await askActionPassword('Confirmar reseteo maestro'))) return;
-      // Contador de 10 s con Deshacer
-      let left = 10, cancelled = false;
+      // Contador de 10 s con reloj animado y estallido
+      const TOTAL = 10;
+      let left = TOTAL, cancelled = false;
+      const R = 60, C = 2 * Math.PI * R;
       openModal({
         title: 'Reseteo programado',
-        body: `<p class="muted">Se borrará toda la información en <strong id="rstCount">10</strong> segundos.</p>
-          <button class="btn btn-primary btn-lg" id="rstUndo" style="width:100%;margin-top:12px">${ic('undo-2')}Deshacer Reseteo</button>`,
+        body: `<div class="reset-clock-wrap">
+            <div class="reset-clock" id="rstClock">
+              <svg viewBox="0 0 140 140" aria-hidden="true">
+                <circle class="rc-track" cx="70" cy="70" r="${R}"></circle>
+                <circle class="rc-prog" id="rstProg" cx="70" cy="70" r="${R}"
+                  style="stroke-dasharray:${C};stroke-dashoffset:0"></circle>
+              </svg>
+              <div class="rc-num" id="rstCount">${TOTAL}</div>
+            </div>
+            <p class="muted" style="text-align:center;margin:0">Se borrará toda la información cuando el tiempo se agote.</p>
+            <button class="btn btn-primary btn-lg" id="rstUndo" style="width:100%">${ic('undo-2')}Deshacer Reseteo</button>
+          </div>`,
         foot: '',
         dismissable: false,
         onMount: (c) => {
-          const t = setInterval(() => {
+          const prog = c.$('#rstProg');
+          const num = c.$('#rstCount');
+          const clock = c.$('#rstClock');
+          const setLeft = (n) => {
+            if (num) num.textContent = n;
+            if (prog) prog.style.strokeDashoffset = String(C * (1 - n / TOTAL));
+            if (clock) clock.classList.toggle('urgent', n <= 3 && n > 0);
+          };
+          setLeft(TOTAL);
+          const playBurst = () => new Promise((resolve) => {
+            const layer = document.createElement('div');
+            layer.className = 'reset-burst';
+            layer.innerHTML = '<div class="rb-flash"></div><div class="rb-ring"></div>';
+            const colors = ['#ff375f', '#ff9f0a', '#bf5af2', '#0a84ff', '#30d158', '#ffd60a'];
+            for (let i = 0; i < 18; i++) {
+              const p = document.createElement('div');
+              p.className = 'rb-particle';
+              const ang = (i / 18) * Math.PI * 2 + Math.random() * 0.3;
+              const dist = 80 + Math.random() * 140;
+              p.style.setProperty('--px', Math.cos(ang) * dist + 'px');
+              p.style.setProperty('--py', Math.sin(ang) * dist + 'px');
+              p.style.background = colors[i % colors.length];
+              p.style.width = p.style.height = (5 + Math.random() * 7) + 'px';
+              p.style.animationDelay = (Math.random() * 0.08) + 's';
+              layer.appendChild(p);
+            }
+            document.body.appendChild(layer);
+            setTimeout(() => { layer.remove(); resolve(); }, 800);
+          });
+          const t = setInterval(async () => {
             left--;
-            const el = c.$('#rstCount'); if (el) el.textContent = left;
+            setLeft(left);
             if (left <= 0) {
               clearInterval(t);
               if (!cancelled) {
                 c.close();
-                (async () => { await Repo.wipe(); S = null; me = null; SessionStore.removeItem(SESSION); applyTheme(); render(); toast('Aplicación reiniciada de fábrica', 'info'); })();
+                await playBurst();
+                await Repo.wipe();
+                S = null; me = null; SessionStore.removeItem(SESSION);
+                applyTheme(); render();
+                toast('Aplicación reiniciada de fábrica', 'info');
               }
             }
           }, 1000);
-          c.$('#rstUndo').addEventListener('click', () => { cancelled = true; clearInterval(t); c.close(); toast('Reseteo cancelado', 'info'); });
+          c.$('#rstUndo').addEventListener('click', () => {
+            cancelled = true; clearInterval(t); c.close();
+            toast('Reseteo cancelado', 'info');
+          });
         },
       });
     });
@@ -4851,12 +5509,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   function resetPass(u) {
     openModal({
       title: 'Restablecer contraseña', sub: esc(u.email),
-      body: `<div class="field"><label>Nueva contraseña</label><div class="input-icon"><input class="input mono" id="np" type="text" value="${genPassword()}" autocomplete="off"/><button type="button" class="icon-btn" data-copy aria-label="Copiar">${ic('copy')}</button></div><div class="hint">Compártela de forma segura con el usuario.</div></div>`,
+      body: `<div class="field"><label>Nueva contraseña ${passTipHtml()}</label><div class="input-icon"><input class="input mono" id="np" type="text" value="${genPassword()}" autocomplete="off"/><button type="button" class="icon-btn" data-copy aria-label="Copiar">${ic('copy')}</button></div><div class="hint">Compártela de forma segura con el usuario.</div></div>`,
       foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Guardar</button>`,
       onMount: (c) => {
         c.$('[data-copy]').addEventListener('click', () => { navigator.clipboard?.writeText(c.$('#np').value); toast('Copiada al portapapeles'); });
         c.$('[data-ok]').addEventListener('click', async () => {
-          const v = c.$('#np').value; if (v.length < S.settings.minPassword) return toast('Contraseña muy corta', 'err');
+          const v = c.$('#np').value; const polErr = passPolicyError(v, S.settings.minPassword); if (polErr) return toast(polErr, 'err');
           u.pass = await Repo.hashPassword(v); log('usuario', `Restableció la contraseña de ${u.email}`); save(); c.close(); toast('Contraseña restablecida');
         });
       },
