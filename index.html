@@ -804,6 +804,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 .matrix td:first-child, .matrix th:first-child { text-align: left; }
 .matrix .switch { display: inline-block; }
 .audit-row { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 13.5px; align-items: flex-start; }
+.audit-row { gap: 10px; }
+.audit-row .audit-check { width: 16px; height: 16px; accent-color: var(--accent); }
 .audit-row:first-child { border-top: 0; }
 .audit-row .ai { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-sunk); color: var(--text-2); flex-shrink: 0; }
 .audit-row .ai svg.lucide { width: 14px; height: 14px; }
@@ -1000,10 +1002,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   .main { padding: 0 16px calc(96px + env(safe-area-inset-bottom, 0px)); }
   .nav-inner { padding: 0 12px; gap: 6px; min-height: var(--nav-h, 56px); }
-  .brand { min-width: 0; max-width: 42%; }
-  .brand .brand-title { font-size: 15px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .brand .brand-org, .brand small { display: none; }
-  .brand .logo-img { width: 28px !important; height: 28px !important; }
+  .brand { min-width: 0; max-width: 52%; }
+  .brand .brand-title {
+    font-size: var(--title-size, 15px) !important;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  }
+  .brand .brand-org, .brand small {
+    display: block;
+    font-size: var(--org-size, 11px) !important;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  }
+  .brand .logo-img {
+    width: var(--logo-size, 28px) !important;
+    height: var(--logo-size, 28px) !important;
+  }
   .nav .search { width: 140px; flex: 1 1 auto; min-width: 0; max-width: 180px; }
   .nav .search:focus-within { width: auto; max-width: none; }
   .session-timer {
@@ -1078,7 +1090,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   .row, .row-3 { grid-template-columns: 1fr; gap: 12px; }
   .option-cards { grid-template-columns: 1fr; }
   .set-row { flex-direction: column; align-items: stretch; gap: 10px; }
-  .set-row .ctl { width: 100%; justify-content: flex-start; }
+  .set-row .ctl { width: 100%; justify-content: flex-start; max-width: 100%; }
+  .set-row .ctl input[type="range"] { width: 100%; min-width: 0; flex: 1; }
+  .set-row .ctl .input, .set-row .ctl .select { width: 100%; max-width: 100%; }
   .paper { padding: 24px 16px; }
   .viewer-stage { padding: 12px; }
   .edit-toolbar { margin: -12px -12px 12px; top: -12px; flex-wrap: wrap; }
@@ -1279,7 +1293,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 @media (max-width: 480px) {
   .main { padding: 0 12px calc(100px + env(safe-area-inset-bottom, 0px)); }
   .nav-inner { padding: 0 10px; gap: 4px; position: relative; }
-  .brand { max-width: 36%; }
+  .brand { max-width: 48%; min-width: 0; }
+  .brand .brand-text { min-width: 0; }
+  .brand .logo-img {
+    width: var(--logo-size, 28px) !important;
+    height: var(--logo-size, 28px) !important;
+  }
   .session-timer {
     display: inline-flex !important;
     align-items: center;
@@ -1541,17 +1560,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     { key: 'managePerms', label: 'Asignar permisos' },
     { key: 'settings', label: 'Acceder a configuración' },
     { key: 'allAreas', label: 'Acceso total a todas las áreas' },
+    { key: 'docVer', label: 'Ver (solo consulta, sin copiar ni imprimir)' },
+    { key: 'docDescargar', label: 'Descargar (ver y descargar en PDF)' },
+    { key: 'docEditar', label: 'Editar (ver, descargar y modificar en línea)' },
   ];
 
   const defaultRoles = () => ([
     { id: 'admin', name: 'Administrador', desc: 'Control total de la plataforma',
-      caps: { createArea: true, createFolder: true, upload: true, deleteDocs: true, managePerms: true, settings: true, allAreas: true } },
-    { id: 'gestor', name: 'Gestor de área', desc: 'Crea carpetas y sube documentos en sus áreas',
-      caps: { createArea: false, createFolder: true, upload: true, deleteDocs: true, managePerms: false, settings: false, allAreas: false } },
+      caps: { createArea: true, createFolder: true, upload: true, deleteDocs: true, managePerms: true, settings: true, allAreas: true, docVer: true, docDescargar: true, docEditar: true } },
+    { id: 'gestor', name: 'Responsable de Área', desc: 'Crea carpetas y gestiona documentos en sus áreas',
+      caps: { createArea: false, createFolder: true, upload: true, deleteDocs: true, managePerms: false, settings: false, allAreas: false, docVer: true, docDescargar: true, docEditar: true } },
     { id: 'colaborador', name: 'Colaborador', desc: 'Sube documentos en las áreas asignadas',
-      caps: { createArea: false, createFolder: false, upload: true, deleteDocs: false, managePerms: false, settings: false, allAreas: false } },
-    { id: 'consulta', name: 'Consulta', desc: 'Solo consulta según sus permisos',
-      caps: { createArea: false, createFolder: false, upload: false, deleteDocs: false, managePerms: false, settings: false, allAreas: false } },
+      caps: { createArea: false, createFolder: false, upload: true, deleteDocs: false, managePerms: false, settings: false, allAreas: false, docVer: false, docDescargar: true, docEditar: true } },
+    { id: 'consulta', name: 'Consultor', desc: 'Solo consulta según sus permisos',
+      caps: { createArea: false, createFolder: false, upload: false, deleteDocs: false, managePerms: false, settings: false, allAreas: false, docVer: true, docDescargar: false, docEditar: false } },
   ]);
 
   /* Tipos de documento por nivel (configurable desde Configuración → Documentos) */
@@ -1737,6 +1759,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const LV = { ver: 1, descargar: 2, editar: 3 };
   const LV_LABEL = { ver: 'Solo ver', descargar: 'Ver y descargar', editar: 'Edición en línea' };
   const LV_ICON = { ver: 'eye', descargar: 'download', editar: 'pencil-line' };
+  /** Nivel efectivo por defecto del perfil (caps docVer / docDescargar / docEditar) */
+  function roleDefaultLevel(role) {
+    const c = role?.caps || {};
+    if (c.docEditar) return 'editar';
+    if (c.docDescargar) return 'descargar';
+    if (c.docVer) return 'ver';
+    return 'ver';
+  }
+  function highestLevel(list) {
+    if (list.includes('editar')) return 'editar';
+    if (list.includes('descargar')) return 'descargar';
+    if (list.includes('ver')) return 'ver';
+    return null;
+  }
 
   const cssVars = (color) => { const [a, b] = COLORS[color] || COLORS.blue; return `--c1:${a};--c2:${b}`; };
   /** Formato uniforme de fechas en toda la app: dd/mm/aaaa */
@@ -1789,6 +1825,25 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (!S) return;
     S.settings = { ...defaultSettings(), ...S.settings };
     if (S.settings.appName === 'Acervo') S.settings.appName = 'FileHub';
+    // Perfiles: nombres y niveles de acceso a documentos por defecto
+    if (Array.isArray(S.roles)) {
+      S.roles.forEach(r => {
+        if (r.id === 'gestor') r.name = 'Responsable de Área';
+        if (r.id === 'consulta') r.name = 'Consultor';
+        r.caps = r.caps || {};
+        if (r.caps.docVer == null && r.caps.docDescargar == null && r.caps.docEditar == null) {
+          if (r.id === 'admin' || r.id === 'gestor') {
+            r.caps.docVer = true; r.caps.docDescargar = true; r.caps.docEditar = true;
+          } else if (r.id === 'colaborador') {
+            r.caps.docVer = false; r.caps.docDescargar = true; r.caps.docEditar = true;
+          } else if (r.id === 'consulta') {
+            r.caps.docVer = true; r.caps.docDescargar = false; r.caps.docEditar = false;
+          } else {
+            r.caps.docVer = true; r.caps.docDescargar = false; r.caps.docEditar = false;
+          }
+        }
+      });
+    }
     if (!Array.isArray(S.settings.domains)) S.settings.domains = S.settings.domain ? [String(S.settings.domain).toLowerCase()] : [];
     delete S.settings.domain;
     S.settings.versionInicial = intVersion(S.settings.versionInicial);
@@ -2098,8 +2153,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     let best = null, expired = null;
     for (const g of gs) {
       const st = grantStatus(g);
-      if (st === 'vigente') { if (!best || LV[g.level] > LV[best.level]) best = g; }
-      else if (st === 'expirado') { if (!expired || g.expiresAt > expired.expiresAt) expired = g; }
+      // levelOverride === true → nivel especial del grant; si no, nivel por defecto del perfil
+      const eff = g.levelOverride ? g.level : roleDefaultLevel(roleOf(u));
+      const g2 = { ...g, level: eff || g.level || 'ver' };
+      if (st === 'vigente') { if (!best || LV[g2.level] > LV[best.level]) best = g2; }
+      else if (st === 'expirado') { if (!expired || g.expiresAt > expired.expiresAt) expired = g2; }
     }
     if (best) return { level: best.level, status: 'vigente', grant: best };
     if (expired) return S.settings.expiredBehavior === 'ver'
@@ -2549,7 +2607,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         return `<a class="url-ver" href="${safe}" target="_blank" rel="noopener noreferrer" title="${safe}" onclick="event.stopPropagation()">Ver</a>`;
       }
       // local:// → abrir el documento en el visor de la app
-      return `<button type="button" class="url-ver" data-act="openDoc" data-id="${d.id}" title="${safe}" onclick="event.stopPropagation()">Ver</button>`;
+      return `<button type="button" class="url-ver" data-act="openDoc" data-id="${d.id}" title="${safe}">Ver</button>`;
     };
     const rows = docs.map(d => {
       const a = areaById(d.areaId), f = folderById(d.folderId), u = unitById(a?.unitId);
@@ -3086,7 +3144,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       <td>${estadoChip(d)}</td>
       <td>${/^https?:\/\//i.test(url)
         ? `<a class="url-ver" href="${esc(url)}" target="_blank" rel="noopener noreferrer" title="${esc(url)}" onclick="event.stopPropagation()">Ver</a>`
-        : `<button type="button" class="url-ver" data-act="openDoc" data-id="${d.id}" title="${esc(url)}" onclick="event.stopPropagation()">Ver</button>`}</td>
+        : `<button type="button" class="url-ver" data-act="openDoc" data-id="${d.id}" title="${esc(url)}">Ver</button>`}</td>
       <td>${menu}</td>
     </tr>`;
   }
@@ -4835,7 +4893,25 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (!can('managePerms')) return toast('No tienes permiso para asignar accesos', 'err');
     const st = S.settings; const isNew = !user;
     const curGrants = user ? S.grants.filter(g => g.userId === user.id && grantStatus(g) !== 'revocado') : [];
+    const vigentes = curGrants.filter(g => grantStatus(g) === 'vigente');
     const defExp = now() + st.defaultTempHours * 3600e3;
+    // Precargar áreas, nivel y vigencia al editar
+    const seedAreaIds = new Set([
+      ...(preAreas || []),
+      ...vigentes.map(g => g.areaId),
+    ]);
+    const overrideLevels = vigentes.filter(g => g.levelOverride).map(g => g.level);
+    const seedLevel = overrideLevels.length
+      ? (highestLevel(overrideLevels) || vigentes[0]?.level)
+      : null; // null = usar default del perfil (checkboxes vacíos)
+    const seedLevels = seedLevel
+      ? (seedLevel === 'editar' ? ['ver', 'descargar', 'editar']
+        : seedLevel === 'descargar' ? ['ver', 'descargar']
+        : ['ver'])
+      : [];
+    const tempG = vigentes.find(g => g.type === 'temporal');
+    const seedType = tempG ? 'temporal' : 'permanente';
+    const seedExp = tempG?.expiresAt || defExp;
     // Solo dominios configurados; al editar una cuenta existente se conserva su dominio aunque ya no esté en la lista
     const curDom = user ? user.email.split('@')[1] : st.domains[0];
     const doms = [...st.domains]; if (user && curDom && !doms.includes(curDom)) doms.push(curDom);
@@ -4859,16 +4935,21 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             <div class="hint" id="roleHint"></div></div>
         </div>
         ${doms.length ? '' : `<div class="notice-warn">${ic('triangle-alert')}<div><strong>No hay dominios de correo configurados.</strong><br/>Agrega al menos uno en Configuración → General para poder crear usuarios.${can('settings') ? ' <button type="button" class="btn-ghost" data-go-domains>Ir a configurar</button>' : ''}</div></div>`}
-        ${curGrants.length ? `<div class="field"><span class="label">Accesos actuales</span><div class="grants" style="padding:12px;background:var(--bg);border-radius:12px">${curGrants.map(g => grantLine(g, true)).join('')}</div></div>` : ''}
-        <div class="field"><div style="display:flex;justify-content:space-between;align-items:center"><span class="label">${curGrants.length ? 'Agregar o actualizar áreas' : 'Tarjetas (áreas) con acceso'}</span><button type="button" class="btn-ghost btn btn-sm" data-all>Seleccionar todas</button></div>
-          <div class="area-picks">${S.areas.map(a => `<label class="area-pick" style="${cssVars(a.color)}"><input type="checkbox" name="areas" value="${a.id}" ${preAreas.includes(a.id) ? 'checked' : ''}/><span class="dot">${ic(a.icon)}</span>${esc(a.name)}<span class="chk">${ic('check')}</span></label>`).join('')}</div></div>
-        <div class="field"><span class="label">Nivel de acceso</span><div class="option-cards">
-          ${['ver', 'descargar', 'editar'].map((l, i) => `<label class="opt"><input type="radio" name="level" value="${l}" ${i === 0 ? 'checked' : ''}/><span class="t">${ic(LV_ICON[l])}${['Ver', 'Descargar', 'Editar en línea'][i]}</span><span class="d">${['Consulta en pantalla, sin copiar ni imprimir.', `Ver y descargar en ${st.downloadFormat === 'pdf' ? 'PDF' : 'formato original'}.`, 'Modificar el documento y guardar nuevas versiones.'][i]}</span></label>`).join('')}</div></div>
+        ${curGrants.length ? `<div class="field"><span class="label">Accesos vigentes (referencia)</span><div class="grants" style="padding:12px;background:var(--bg);border-radius:12px">${curGrants.map(g => grantLine(g, true)).join('')}</div><div class="hint">Al guardar, las áreas marcadas abajo sustituyen estos permisos (no hace falta revocar antes).</div></div>` : ''}
+        <div class="field"><div style="display:flex;justify-content:space-between;align-items:center"><span class="label">${curGrants.length ? 'Áreas con acceso (editar y guardar)' : 'Tarjetas (áreas) con acceso'}</span><button type="button" class="btn-ghost btn btn-sm" data-all>Seleccionar todas</button></div>
+          <div class="area-picks">${S.areas.map(a => `<label class="area-pick" style="${cssVars(a.color)}"><input type="checkbox" name="areas" value="${a.id}" ${seedAreaIds.has(a.id) ? 'checked' : ''}/><span class="dot">${ic(a.icon)}</span>${esc(a.name)}<span class="chk">${ic('check')}</span></label>`).join('')}</div></div>
+        <div class="field"><span class="label">Nivel de acceso</span>
+          <p class="tiny" style="margin:0 0 8px">Puedes marcar uno, varios o todos. Si no marcas ninguno, se aplican los niveles por defecto del perfil (y prevalecen sobre ellos al marcarlos).</p>
+          <div class="option-cards">
+          ${['ver', 'descargar', 'editar'].map((l, i) => `<label class="opt"><input type="checkbox" name="levels" value="${l}" ${seedLevels.includes(l) ? 'checked' : ''}/><span class="t">${ic(LV_ICON[l])}${['Ver', 'Descargar', 'Editar'][i]}</span><span class="d">${['Consulta en pantalla, sin copiar ni imprimir.', `Ver y descargar en ${st.downloadFormat === 'pdf' ? 'PDF' : 'formato original'}.`, 'Ver, descargar y modificar el documento en línea.'][i]}</span></label>`).join('')}
+          </div>
+          <div class="hint" id="levelHint">Sin selección: se usará el nivel por defecto del perfil elegido.</div>
+        </div>
         <div class="field"><span class="label">Vigencia</span><div class="option-cards two">
-          <label class="opt"><input type="radio" name="type" value="permanente" checked/><span class="t">${ic('infinity')}Permanente</span><span class="d">Sin fecha de fin. Revocable en cualquier momento.</span></label>
-          <label class="opt"><input type="radio" name="type" value="temporal"/><span class="t">${ic('timer')}Temporal</span><span class="d">Expira automáticamente en la fecha indicada.</span></label></div>
-          <div class="reveal" id="tempBox"><div><div style="padding-top:14px">
-            <label class="label" for="gExp">Expira el</label><input class="input" type="datetime-local" id="gExp" name="exp" value="${toLocalInput(defExp)}" min="${toLocalInput(now())}"/>
+          <label class="opt"><input type="radio" name="type" value="permanente" ${seedType === 'permanente' ? 'checked' : ''}/><span class="t">${ic('infinity')}Permanente</span><span class="d">Sin fecha de fin. Revocable en cualquier momento.</span></label>
+          <label class="opt"><input type="radio" name="type" value="temporal" ${seedType === 'temporal' ? 'checked' : ''}/><span class="t">${ic('timer')}Temporal</span><span class="d">Expira automáticamente en la fecha indicada.</span></label></div>
+          <div class="reveal ${seedType === 'temporal' ? 'open' : ''}" id="tempBox"><div><div style="padding-top:14px">
+            <label class="label" for="gExp">Expira el</label><input class="input" type="datetime-local" id="gExp" name="exp" value="${toLocalInput(seedExp)}" min="${toLocalInput(now())}"/>
             <div class="chips-quick">${[['1 h', 1], ['8 h', 8], ['24 h', 24], ['3 días', 72], ['7 días', 168], ['30 días', 720], ['90 días', 2160]].map(([t, h]) => `<button type="button" data-h="${h}">${t}</button>`).join('')}</div>
             <div class="hint" id="expHint"></div>
           </div></div></div></div>
@@ -4905,17 +4986,28 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         c.$$('[name=type]').forEach(r => r.addEventListener('change', () => { tempBox.classList.toggle('open', f.type.value === 'temporal'); summary(); }));
         c.$$('[data-h]').forEach(b => b.addEventListener('click', () => { f.exp.value = toLocalInput(now() + (+b.dataset.h) * 3600e3); c.$$('[data-h]').forEach(x => x.classList.toggle('on', x === b)); summary(); }));
         f.exp.addEventListener('change', summary);
-        c.$$('[name=areas],[name=level]').forEach(x => x.addEventListener('change', summary));
+        c.$$('[name=areas],[name=levels]').forEach(x => x.addEventListener('change', summary));
         c.$$('[data-revoke]').forEach(b => b.addEventListener('click', () => { revokeGrant(b.dataset.revoke); b.closest('.grant').style.opacity = .35; b.remove(); }));
+        function selectedLevels() { return c.$$('[name=levels]:checked').map(x => x.value); }
+        function effectiveLevel(role) {
+          const hi = highestLevel(selectedLevels());
+          return hi || roleDefaultLevel(role);
+        }
         function summary() {
           const areas = c.$$('[name=areas]:checked').map(x => areaById(x.value).name);
-          const lv = f.level.value, tp = f.type.value;
           const r = S.roles.find(x => x.id === f.role.value);
+          const lv = effectiveLevel(r);
+          const explicit = selectedLevels().length > 0;
+          const tp = f.type.value;
           const exp = new Date(f.exp.value).getTime();
           c.$('#expHint').textContent = tp === 'temporal' && exp > now() ? `Expira en ${fmtLeft(exp - now())}. Después no podrá abrir los documentos.` : '';
+          const lh = c.$('#levelHint');
+          if (lh) lh.textContent = explicit
+            ? `Nivel especial asignado: ${LV_LABEL[lv]} (prevalece sobre el perfil).`
+            : `Sin selección: se usará el del perfil (${LV_LABEL[roleDefaultLevel(r)]} · ${r?.name || ''}).`;
           const who = f.email.value && doms.length ? `${f.email.value}@${f.domain.value}` : 'El usuario';
           c.$('#summary').innerHTML = r?.caps.allAreas ? `${ic('shield-check')} <b>${esc(who)}</b> tendrá acceso total por su perfil ${esc(r.name)}.`
-            : areas.length ? `<b>${esc(who)}</b> podrá <b>${LV_LABEL[lv].toLowerCase()}</b> en ${areas.map(esc).join(', ')} — ${tp === 'temporal' ? `hasta el ${fmtDateTime(exp)}` : 'de forma permanente (revocable)'}`
+            : areas.length ? `<b>${esc(who)}</b> podrá <b>${LV_LABEL[lv].toLowerCase()}</b>${explicit ? ' (especial)' : ' (perfil)'} en ${areas.map(esc).join(', ')} — ${tp === 'temporal' ? `hasta el ${fmtDateTime(exp)}` : 'de forma permanente (revocable)'}`
               : curGrants.length ? 'Selecciona áreas para agregar o actualizar accesos, o guarda para conservar los actuales.' : 'Selecciona al menos un área.';
           icons();
         }
@@ -4934,20 +5026,52 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           if (u && pass) { const e = passPolicyError(pass, st.minPassword); if (e) { f.pass.classList.add('invalid'); return toast(e, 'err'); } }
           const areas = c.$$('[name=areas]:checked').map(x => x.value);
           const role = S.roles.find(x => x.id === f.role.value);
+          if (!role) return toast('Selecciona un perfil', 'err');
           if (!areas.length && !role.caps.allAreas && !curGrants.length && !u) return toast('Selecciona al menos un área', 'err');
           const type = f.type.value; const expiresAt = type === 'temporal' ? new Date(f.exp.value).getTime() : null;
           if (type === 'temporal' && (!expiresAt || expiresAt <= now())) { f.exp.classList.add('invalid'); return toast('La fecha de expiración debe ser futura', 'err'); }
           if (u && !keepsAdmin(S.users.map(x => x.id === u.id ? { ...x, role: role.id } : x))) return toast(ADMIN_MSG, 'err');
           const name = f.name.value.trim() || local.replace(/[._-]+/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
-          if (!u) { u = { id: Repo.uid('u_'), email, name, role: role.id, pass: await Repo.hashPassword(pass), active: true, createdAt: now(), createdBy: me.id }; S.users.push(u); log('usuario', `Creó la cuenta ${email}`); }
-          else { const old = u.email; u.email = email; u.name = name; u.role = role.id; if (pass) u.pass = await Repo.hashPassword(pass); log('usuario', `Actualizó la cuenta ${email}${old !== email ? ` (antes ${old})` : ''}${pass ? ' y su contraseña' : ''}`); }
-          for (const aid of areas) {
-            S.grants.filter(g => g.userId === u.id && g.areaId === aid && !g.revoked).forEach(g => { g.revoked = true; g.revokedAt = now(); g.revokedBy = me.id; g.replaced = true; });
-            S.grants.push({ id: Repo.uid('g_'), userId: u.id, areaId: aid, level: f.level.value, type, expiresAt, revoked: false, createdAt: now(), createdBy: me.id });
+          if (!u) {
+            u = { id: Repo.uid('u_'), email, name, role: role.id, pass: await Repo.hashPassword(pass), active: true, createdAt: now(), createdBy: me.id, roleHistory: [] };
+            S.users.push(u);
+            log('usuario', `Creó la cuenta ${email}`);
+          } else {
+            const oldEmail = u.email;
+            const oldRole = u.role;
+            u.email = email;
+            u.name = name;
+            if (oldRole !== role.id) {
+              u.roleHistory = Array.isArray(u.roleHistory) ? u.roleHistory : [];
+              u.roleHistory.push({ role: oldRole, at: now(), by: me.id });
+              log('usuario', `Cambió el perfil de ${email}: ${S.roles.find(r => r.id === oldRole)?.name || oldRole} → ${role.name}`);
+            }
+            u.role = role.id;
+            if (pass) u.pass = await Repo.hashPassword(pass);
+            log('usuario', `Actualizó la cuenta ${email}${oldEmail !== email ? ` (antes ${oldEmail})` : ''}${pass ? ' y su contraseña' : ''}`);
           }
-          if (areas.length) log('permiso', `Otorgó ${LV_LABEL[f.level.value].toLowerCase()} (${type}) a ${email} en ${areas.map(x => areaById(x).name).join(', ')}`);
-          save(); c.close(); render(); toast('Permisos guardados');
-        });
+          const lvl = effectiveLevel(role);
+          const explicit = selectedLevels().length > 0;
+          // Sustituye permisos de las áreas marcadas (sin exigir revocar antes)
+          if (areas.length) {
+            for (const aid of areas) {
+              S.grants.filter(g => g.userId === u.id && g.areaId === aid && !g.revoked).forEach(g => {
+                g.revoked = true; g.revokedAt = now(); g.revokedBy = me.id; g.replaced = true;
+              });
+              S.grants.push({
+                id: Repo.uid('g_'), userId: u.id, areaId: aid, level: lvl, levelOverride: explicit,
+                type, expiresAt, revoked: false, createdAt: now(), createdBy: me.id,
+              });
+            }
+            // Áreas que tenía y se desmarcaron: se revocan (cambio de permisos)
+            const kept = new Set(areas);
+            S.grants.filter(g => g.userId === u.id && !g.revoked && !kept.has(g.areaId)).forEach(g => {
+              g.revoked = true; g.revokedAt = now(); g.revokedBy = me.id; g.replaced = true;
+            });
+            log('permiso', `Actualizó accesos de ${email}: ${LV_LABEL[lvl].toLowerCase()}${explicit ? ' (especial)' : ' (perfil)'} · ${type} · ${areas.map(x => areaById(x)?.name).join(', ')}`);
+          }
+          save(); c.close(); render(); toast(isNew ? 'Permisos guardados' : 'Cuenta y accesos actualizados');
+        })
       },
     });
   }
@@ -5127,7 +5251,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         ${users.map(u => {
           const gs = S.grants.filter(g => g.userId === u.id && !(g.revoked && g.replaced)).sort((a, b) => grantStatus(a).localeCompare(grantStatus(b)) * -1);
           return `<tr><td><input type="checkbox" class="ck" data-ck="${u.id}" aria-label="Seleccionar ${esc(u.email)}"/></td><td><div class="u"><span class="avatar">${initials(u.name)}</span><div><strong>${esc(u.name)}</strong><span class="tiny">${esc(u.email)}${u.id === me.id ? ' · tú' : ''}</span></div></div></td>
-            <td><span class="chip ${roleOf(u).caps.allAreas ? 'accent' : ''}">${esc(roleOf(u).name)}</span></td>
+            <td><span class="chip ${roleOf(u).caps.allAreas ? 'accent' : ''}">${esc(roleOf(u).name)}</span>${(u.roleHistory && u.roleHistory.length) ? `<div class="tiny" style="margin-top:4px" title="Historial de perfiles">${u.roleHistory.slice(-4).map(h => esc((S.roles.find(r => r.id === h.role) || {}).name || h.role)).join(' → ')} → ${esc(roleOf(u).name)}</div>` : ''}</td>
             <td><div class="grants">${roleOf(u).caps.allAreas ? '<span class="tiny">Acceso total por perfil</span>' : gs.length ? gs.map(g => grantLine(g)).join('') : '<span class="tiny">Sin accesos</span>'}</div></td>
             <td>${u.active ? '<span class="chip ok">Activo</span>' : '<span class="chip danger">Inactivo</span>'}<div class="tiny" style="margin-top:4px">${u.lastLogin ? 'Último acceso ' + fmtRel(u.lastLogin) : 'Nunca ha iniciado sesión'}</div></td>
             <td><button class="icon-btn" data-user-menu="${u.id}" aria-label="Opciones">${ic('ellipsis')}</button></td></tr>`;
@@ -5142,9 +5266,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (tab === 'audit') return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h3>Bitácora</h3><p class="muted">Últimos ${S.audit.length} movimientos.</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <select class="select" id="auditF" style="width:200px;height:38px"><option value="">Todas las acciones</option>${[...new Set(S.audit.map(a => a.action))].map(a => `<option>${esc(a)}</option>`).join('')}</select>
+        <button class="btn btn-secondary btn-sm" id="auditDelSel" disabled>${ic('trash-2')}Eliminar seleccionados</button>
         <button class="btn btn-secondary btn-sm" id="auditDelAll" ${S.audit.length ? '' : 'disabled'}>${ic('trash-2')}Eliminar todos</button>
         <button class="btn btn-danger btn-sm" id="auditReset" ${S.audit.length ? '' : 'disabled'}>${ic('rotate-ccw')}Resetear bitácora</button>
       </div></div>
+      <div style="display:flex;align-items:center;gap:10px;margin:10px 0 6px">
+        <label class="tiny" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="auditSelAll"/> Seleccionar todos (filtro actual)</label>
+        <span class="tiny" id="auditSelCount">0 seleccionados</span>
+      </div>
       <div id="auditList">${auditList('')}</div></div>`;
     if (tab === 'data') return `<div class="panel"><h3>Almacenamiento</h3><p class="muted">Hoy los datos viven en este navegador. La capa de datos está aislada para conectarse a Supabase sin cambiar la interfaz.</p>
       ${!window.STORAGE_PERSISTENT ? `<div class="hint" style="font-size:13px;padding:12px 14px;background:var(--warn-soft);color:var(--warn);border-radius:12px;margin-bottom:8px">Este navegador bloquea localStorage en esta vista; los datos viven en memoria y se reinician al recargar. Abre la app directamente para que persistan.</div>` : ''}
@@ -5163,7 +5292,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const AUDIT_IC = { acceso: 'log-in', área: 'layout-grid', carpeta: 'folder', documento: 'file-text', edición: 'pencil-line', descarga: 'download', consulta: 'eye', permiso: 'key-round', usuario: 'user', sistema: 'cpu', configuración: 'settings' };
   function auditList(f) {
     const rows = S.audit.filter(a => !f || a.action === f).slice(0, 150);
-    return rows.length ? rows.map(a => `<div class="audit-row" data-audit-id="${a.id}"><span class="ai">${ic(AUDIT_IC[a.action] || 'dot')}</span><div style="flex:1"><div>${esc(a.text)}</div><span class="tiny">${esc(userName(a.by))} · ${fmtDateTime(a.at)}</span></div><span class="chip">${esc(a.action)}</span><button type="button" class="icon-btn" data-audit-del="${a.id}" title="Eliminar este registro" aria-label="Eliminar">${ic('trash-2')}</button></div>`).join('') : '<p class="muted">Sin movimientos.</p>';
+    return rows.length ? rows.map(a => `<div class="audit-row" data-audit-id="${a.id}"><label class="tiny" style="display:flex;align-items:center"><input type="checkbox" class="audit-check" value="${a.id}"/></label><span class="ai">${ic(AUDIT_IC[a.action] || 'dot')}</span><div style="flex:1"><div>${esc(a.text)}</div><span class="tiny">${esc(userName(a.by))} · ${fmtDateTime(a.at)}</span></div><span class="chip">${esc(a.action)}</span><button type="button" class="icon-btn" data-audit-del="${a.id}" title="Eliminar este registro" aria-label="Eliminar">${ic('trash-2')}</button></div>`).join('') : '<p class="muted">Sin movimientos.</p>';
   }
 
   function bindSettings() {
@@ -5424,12 +5553,27 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     }));
     $('[data-new-role]', P)?.addEventListener('click', () => roleModal());
     $$('[data-edit-role]', P).forEach(b => b.addEventListener('click', () => roleModal(S.roles.find(r => r.id === b.dataset.editRole))));
+    const syncAuditSel = () => {
+      const boxes = $$('#auditList .audit-check');
+      const n = boxes.filter(b => b.checked).length;
+      const selBtn = $('#auditDelSel');
+      if (selBtn) selBtn.disabled = !n;
+      const cnt = $('#auditSelCount');
+      if (cnt) cnt.textContent = `${n} seleccionado${n === 1 ? '' : 's'}`;
+      const all = $('#auditSelAll');
+      if (all) {
+        all.checked = boxes.length > 0 && boxes.every(b => b.checked);
+        all.indeterminate = n > 0 && n < boxes.length;
+      }
+    };
     const refreshAudit = () => {
       const f = $('#auditF')?.value || '';
       if ($('#auditList')) { $('#auditList').innerHTML = auditList(f); icons(); }
       const n = S.audit.length;
       if ($('#auditDelAll')) $('#auditDelAll').disabled = !n;
       if ($('#auditReset')) $('#auditReset').disabled = !n;
+      if ($('#auditSelAll')) { $('#auditSelAll').checked = false; $('#auditSelAll').indeterminate = false; }
+      syncAuditSel();
     };
     $('#auditF')?.addEventListener('change', () => refreshAudit());
     const delOne = async (id) => {
@@ -5440,6 +5584,24 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     $('#auditList')?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-audit-del]');
       if (btn) delOne(btn.dataset.auditDel);
+    });
+    $('#auditList')?.addEventListener('change', (e) => {
+      if (e.target.classList.contains('audit-check')) syncAuditSel();
+    });
+    $('#auditSelAll')?.addEventListener('change', () => {
+      const on = !!$('#auditSelAll')?.checked;
+      $$('#auditList .audit-check').forEach(b => { b.checked = on; });
+      syncAuditSel();
+    });
+    $('#auditDelSel')?.addEventListener('click', async () => {
+      const ids = $$('#auditList .audit-check:checked').map(b => b.value);
+      if (!ids.length) return;
+      if (!(await askActionPassword('Eliminar registros seleccionados de la bitácora'))) return;
+      if (!await confirmDialog({ title: '¿Eliminar seleccionados?', text: `Se eliminarán ${ids.length} registro${ids.length === 1 ? '' : 's'} de la bitácora.`, ok: 'Eliminar', danger: true })) return;
+      const set = new Set(ids);
+      S.audit = S.audit.filter(a => !set.has(a.id));
+      save(); log('sistema', `Eliminó ${ids.length} registro(s) de la bitácora`); save();
+      refreshAudit(); toast(`${ids.length} registro${ids.length === 1 ? '' : 's'} eliminado${ids.length === 1 ? '' : 's'}`);
     });
     $('#auditDelAll')?.addEventListener('click', async () => {
       if (!S.audit.length) return;
