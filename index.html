@@ -445,6 +445,19 @@ a.url-ver:hover, button.url-ver:hover { text-decoration: underline; }
 
 .matrix-tbl tr:hover td { background: var(--bg); }
 .matrix-tbl a.url-link { color: var(--accent); max-width: 220px; display: inline-block; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+.matrix-tbl th.matrix-sel-td, .matrix-tbl td.matrix-sel-td,
+.doc-tbl th.matrix-sel-td, .doc-tbl td.matrix-sel-td {
+  width: 44px; min-width: 44px; max-width: 44px;
+  text-align: center; vertical-align: middle;
+  white-space: nowrap; overflow: visible;
+}
+.matrix-tbl .matrix-sel, .doc-tbl .matrix-sel { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+.matrix-tbl tr.row-selected td, .doc-tbl tr.row-selected td {
+  background: rgba(48, 209, 88, 0.22) !important;
+}
+.matrix-tbl tr.row-selected:hover td, .doc-tbl tr.row-selected:hover td {
+  background: rgba(48, 209, 88, 0.30) !important;
+}
 .matrix-tbl .m-open { color: var(--accent); font-weight: 500; cursor: pointer; background: none; border: 0; padding: 0; font: inherit; }
 .viewer-banner { margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--warn); font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
 .viewer-banner strong { display: block; color: var(--text); margin-bottom: 2px; }
@@ -1827,6 +1840,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         }
         const { data, error } = await sb.storage.from(SB_BUCKET).download(path);
         if (error || !data) {
+          // Intento por URL pública
+          try {
+            const { data: pub } = sb.storage.from(SB_BUCKET).getPublicUrl(path);
+            if (pub?.publicUrl) {
+              const r = await fetch(pub.publicUrl);
+              if (r.ok) {
+                const blob = await r.blob();
+                const ct = blob.type || '';
+                if (ct.includes('json')) { try { return JSON.parse(await blob.text()); } catch { return await blob.text(); } }
+                if (ct.includes('text') || ct.includes('html')) return await blob.text();
+                return blob;
+              }
+            }
+          } catch (e2) {}
           if (this._mem.has(key)) return this._mem.get(key);
           return undefined;
         }
@@ -1851,7 +1878,21 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     },
     async clear() {
       this._mem.clear();
-      // no borramos todo el bucket desde el cliente por seguridad
+      if (!sb) return true;
+      try {
+        const names = [];
+        let offset = 0;
+        for (let n = 0; n < 40; n++) {
+          const { data, error } = await sb.storage.from(SB_BUCKET).list('', { limit: 100, offset });
+          if (error || !data || !data.length) break;
+          data.forEach(f => { if (f.name) names.push(f.name); });
+          if (data.length < 100) break;
+          offset += 100;
+        }
+        for (let i = 0; i < names.length; i += 50) {
+          try { await sb.storage.from(SB_BUCKET).remove(names.slice(i, i + 50)); } catch (e) {}
+        }
+      } catch (e) { console.warn('Files.clear', e); }
       return true;
     },
     publicUrl(key) {
@@ -1881,7 +1922,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     },
 
     _isValidDb(db) {
-      return !!(db && typeof db === 'object' && Array.isArray(db.users) && Array.isArray(db.roles));
+      return !!(db && typeof db === 'object' && !db.__wiped && Array.isArray(db.users) && Array.isArray(db.roles));
     },
 
     async loadAsync() {
@@ -1889,15 +1930,22 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       if (sb) {
         try {
           const { data, error } = await sb.from('app_state').select('data, updated_at').eq('id', 'main').maybeSingle();
-          if (!error && data && data.data && this._isValidDb(data.data)) {
-            this.db = data.data;
-            try { LS.store.setItem(KEY, JSON.stringify(this.db)); } catch (e) {}
-            return this.db;
+          if (!error && data && data.data) {
+            // Reseteo de fábrica remoto: no restaurar desde caché local
+            if (data.data.__wiped) {
+              this.db = null;
+              try { LS.store.removeItem(KEY); } catch (e) {}
+              return null;
+            }
+            if (this._isValidDb(data.data)) {
+              this.db = data.data;
+              try { LS.store.setItem(KEY, JSON.stringify(this.db)); } catch (e) {}
+              return this.db;
+            }
           }
-          // Fila vacía {} o incompleta: no es un repositorio válido
         } catch (e) { console.warn('Supabase load', e); }
       }
-      // 2) Local (migración)
+      // 2) Local (migración solo si la nube no tiene estado válido ni tombstone)
       LEGACY_KEYS.forEach(k => { try { LS.store.removeItem(k); } catch (e) {} });
       try { this.db = JSON.parse(LS.store.getItem(KEY)); } catch { this.db = null; }
       if (!this._isValidDb(this.db)) this.db = null;
@@ -1950,12 +1998,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     },
 
     async wipe() {
-      LS.store.removeItem(KEY);
-      await Files.clear();
-      if (sb) {
-        try { await sb.from('app_state').delete().eq('id', 'main'); } catch (e) {}
-      }
+      if (this._saveTimer) { clearTimeout(this._saveTimer); this._saveTimer = null; }
+      this._ignoreRealtimeUntil = Date.now() + 20000;
       this.db = null;
+      try { LS.store.removeItem(KEY); } catch (e) {}
+      if (sb) {
+        try {
+          await sb.from('app_state').upsert({
+            id: 'main',
+            data: { __wiped: true, wipedAt: Date.now() },
+            updated_at: new Date().toISOString(),
+          });
+        } catch (e) { console.warn('wipe upsert', e); }
+      }
+      try { await Files.clear(); } catch (e) { console.warn('wipe files', e); }
     },
 
     log(by, action, text) {
@@ -1972,8 +2028,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       this._realtime = sb.channel('cyper-state')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state', filter: 'id=eq.main' }, (payload) => {
           if (Date.now() < this._ignoreRealtimeUntil) return;
+          const ev = payload.eventType || payload.event || '';
           const next = payload.new && payload.new.data;
-          if (!next || !this._isValidDb(next)) return;
+          if (ev === 'DELETE' || !next || !this._isValidDb(next)) {
+            this.db = null;
+            try { LS.store.removeItem(KEY); } catch (e) {}
+            if (typeof onRemote === 'function') onRemote(null);
+            return;
+          }
           try {
             const remoteStr = JSON.stringify(next);
             const localStr = JSON.stringify(this.db);
@@ -2093,7 +2155,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   // Tiempo real: reflejar cambios de otros dispositivos sin recargar
   Repo.startRealtime((next) => {
-    if (!next || !(Array.isArray(next.users) && Array.isArray(next.roles))) return;
+    if (!next || !(Array.isArray(next.users) && Array.isArray(next.roles))) {
+      S = null; me = null;
+      try { SessionStore.removeItem(SESSION); } catch (e) {}
+      try { if (typeof render === 'function') render(); } catch (e) {}
+      return;
+    }
     S = next;
     window.S = S;
     try {
@@ -2365,7 +2432,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     { view: 'home', unitId: null, areaId: null, folderId: null, tab: 'general', q: '' },
     _savedRoute || {}
   );
-  const ui = { docView: 'list', sort: 'recent', filter: '', matrixFilter: '', colWidths: {} };
+  const ui = { docView: 'list', sort: 'recent', filter: '', matrixFilter: '', colWidths: {}, matrixSelectMode: false, matrixSelected: new Set(), folderSelectMode: false, folderSelected: new Set(), lastSearchDocs: [] };
 
   function applyTheme() {
     let t = S?.settings?.theme || 'auto';
@@ -2910,6 +2977,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
   /* ---------------- Pestaña Dashboard ---------------- */
   function matrixView() {
+    if (!ui.matrixSelected) ui.matrixSelected = new Set();
+    const selMode = !!ui.matrixSelectMode;
     let docs = S.docs.filter(d => areaAccess(d.areaId).level);
     // Eliminados al final
     docs = docs.sort((a, b) => {
@@ -2936,7 +3005,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const st = computeEstado(d);
       const del = st === 'eliminado' ? ' style="background:var(--danger-soft)"' : '';
       const rector = d.rectorId ? (docById(d.rectorId)?.nomenclatura || '—') : '—';
-      return `<tr data-act="openDoc" data-id="${d.id}" style="cursor:pointer"${del}>
+      const checked = ui.matrixSelected.has(d.id) ? 'checked' : '';
+      return `<tr data-act="${selMode ? '' : 'openDoc'}" data-id="${d.id}" style="cursor:pointer"${del}>
+        ${selMode ? `<td onclick="event.stopPropagation()"><input type="checkbox" class="matrix-sel" data-id="${d.id}" ${checked} aria-label="Seleccionar"/></td>` : ''}
         <td>${esc(u?.name || '—')}</td>
         <td class="mono">${esc(d.nomenclatura)}</td>
         <td title="${esc(d.nombre)}">${esc(d.nombre)}</td>
@@ -2983,7 +3054,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         fmtDate(d.fechaEmision), fmtDocDate(d), fmtDate(d.fechaAutorizacion), fmtDate(d.fechaDifusion),
         d.url || localDocUrl(d.id), rector, estadoLabel(st)
       ];
-      return `<tr data-act="openDoc" data-id="${d.id}" style="cursor:pointer"${del} data-cells="${encodeURIComponent(JSON.stringify(cells))}">
+      const checked = ui.matrixSelected.has(d.id) ? 'checked' : '';
+      const rowSelCls = checked ? ' class="row-selected"' : '';
+      return `<tr data-act="${selMode ? '' : 'openDoc'}" data-id="${d.id}" style="cursor:pointer"${del}${rowSelCls} data-cells="${encodeURIComponent(JSON.stringify(cells))}">
+        ${selMode ? `<td class="matrix-sel-td" onclick="event.stopPropagation()"><input type="checkbox" class="matrix-sel" data-id="${d.id}" ${checked} aria-label="Seleccionar documento"/></td>` : ''}
         <td>${esc(cells[0])}</td>
         <td class="mono">${esc(cells[1])}</td>
         <td title="${esc(cells[2])}">${esc(cells[2])}</td>
@@ -3004,7 +3078,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       </tr>`;
     }).join('');
     const colLabels = ['Unidad de negocio','Nomenclatura','Nombre','Macroproceso','Área','Departamento','Tipo de Documento','Categoría','Clasificación','Versión','Fecha de emisión','Fecha de última actualización','Fecha de autorización','Fecha de difusión','URL','Documento Rector','Estado'];
-    const ths = colLabels.map((lab, i) => `<th data-col="${i}"><span class="th-label">${lab}</span><button type="button" class="col-filter-btn" data-col-filter="${i}" title="Filtrar columna" aria-label="Filtrar ${esc(lab)}">${ic('chevrons-up-down')}</button></th>`).join('');
+    const ths = (selMode ? `<th class="matrix-sel-td" title="Seleccionar" style="width:44px;min-width:44px;max-width:44px;text-align:center">${ic('check-square')}</th>` : '') + colLabels.map((lab, i) => `<th data-col="${i}"><span class="th-label">${lab}</span><button type="button" class="col-filter-btn" data-col-filter="${i}" title="Filtrar columna" aria-label="Filtrar ${esc(lab)}">${ic('chevrons-up-down')}</button></th>`).join('');
     return `<section class="hero hero-sm"><div class="eyebrow">Matriz Documental</div>
       <h1>Listado maestro de documentos.</h1>
       <p>Matriz consolidada de documentos</p></section>
@@ -3020,14 +3094,15 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <label class="dsel"><span>Año</span><select class="select" id="mfYear">${opt('', 'Todos los años', mf.year) + years.map(y => opt(y, y, mf.year)).join('')}</select></label>
         <label class="dsel"><span>Categoría</span><select class="select" id="mfCat">${opt('', 'Todas las categorías', mf.cat) + cats.map(c => opt(c, c, mf.cat)).join('')}</select></label>
         <label class="dsel"><span>Tipo de documento</span><select class="select" id="mfTipo">${opt('', 'Todos los tipos', mf.tipo) + tipos.map(t => opt(t, t, mf.tipo)).join('')}</select></label>
+        <button type="button" class="btn btn-secondary btn-sm" id="matrixSelBtn">${(ui.matrixSelected && ui.matrixSelected.size) ? `${ic('download')}Descargar (${ui.matrixSelected.size})` : (ui.matrixSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`)}</button>
         <button class="btn btn-ghost btn-sm" id="mfClear">${ic('rotate-ccw')}Limpiar</button>
       </div>
       ${docs.length ? `<div class="matrix-wrap" style="overflow-x:auto"><table class="matrix-tbl resizable-cols" id="matrixTbl"><thead><tr>${ths}</tr></thead><tbody id="matrixBody">${rowsF}</tbody></table></div>` : emptyState('table', 'Sin documentos', 'Aún no hay documentos en las áreas a las que tienes acceso.')}`;
   }
 
   function bindMatrix() {
-    const refresh = () => { $('#view').innerHTML = matrixView(); icons(); bindMatrix(); bindViewActs(); };
-    // Fallback if bindViewActs not separate
+    const refresh = () => { $('#view').innerHTML = matrixView(); icons(); bindMatrix();  };
+    // (acts globales via document click)
     const rebindClick = () => {
       $$('#view [data-act]').forEach(el => {
         if (el.dataset.matrixBound) return;
@@ -3056,6 +3131,38 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       $('#view').innerHTML = matrixView(); icons(); bindMatrix(); bindMatrixActs();
     });
     $('#matrixXlsx')?.addEventListener('click', () => exportMatrixXlsx());
+    $('#matrixSelBtn')?.addEventListener('click', async () => {
+      if (!ui.matrixSelected) ui.matrixSelected = new Set();
+      if (!ui.matrixSelectMode) {
+        ui.matrixSelectMode = true;
+        $('#view').innerHTML = matrixView(); icons(); bindMatrix(); 
+        return;
+      }
+      if (!ui.matrixSelected.size) {
+        ui.matrixSelectMode = false;
+        $('#view').innerHTML = matrixView(); icons(); bindMatrix(); 
+        return;
+      }
+      const docs = [...ui.matrixSelected].map(id => docById(id)).filter(Boolean);
+      await downloadDocsBulk(docs, 'matriz-seleccion');
+    });
+    $('#matrixBody')?.addEventListener('change', (e) => {
+      const cb = e.target.closest('.matrix-sel');
+      if (!cb) return;
+      if (!ui.matrixSelected) ui.matrixSelected = new Set();
+      if (cb.checked) ui.matrixSelected.add(cb.dataset.id);
+      else ui.matrixSelected.delete(cb.dataset.id);
+      const tr = cb.closest('tr');
+      if (tr) tr.classList.toggle('row-selected', cb.checked);
+      const btn = $('#matrixSelBtn');
+      if (btn) {
+        const n = ui.matrixSelected.size;
+        btn.innerHTML = n
+          ? `${ic('download')}Descargar (${n})`
+          : (ui.matrixSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`);
+        icons();
+      }
+    });
     enableResizableColumns('#matrixTbl');
     // Excel-like column filters
     if (!ui.matrixColFilters) ui.matrixColFilters = {};
@@ -3325,6 +3432,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             <option value="recent" ${ui.sort === 'recent' ? 'selected' : ''}>Más recientes</option>
             <option value="code" ${ui.sort === 'code' ? 'selected' : ''}>Por nomenclatura</option>
             <option value="name" ${ui.sort === 'name' ? 'selected' : ''}>Por nombre</option></select>
+          <button type="button" class="btn btn-secondary btn-sm" id="folderSelBtn">${(ui.folderSelected && ui.folderSelected.size) ? `${ic('download')}Descargar (${ui.folderSelected.size})` : (ui.folderSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`)}</button>
           <label class="search" style="width:220px">${ic('filter')}<input id="docFilter" placeholder="Filtrar en carpeta" value="${esc(ui.filter)}" /></label>
         </div>
         ${up ? `<button class="btn btn-primary" data-act="pick">${ic('upload')}Subir documentos</button>` : ''}
@@ -3344,7 +3452,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const folderColTh = (lab, i, filterable = true) => filterable && lab
     ? `<th data-col="${i}"><span class="th-label">${lab}</span><button type="button" class="col-filter-btn" data-folder-col-filter="${i}" title="Filtrar columna" aria-label="Filtrar ${lab}">${ic('chevrons-up-down')}</button></th>`
     : `<th${lab ? '' : ' style="width:44px"'}>${lab || ''}</th>`;
-  const docHeader = () => `<thead><tr>
+  const docHeader = () => {
+    const selMode = !!ui.folderSelectMode;
+    return `<thead><tr>
+      ${selMode ? `<th class="matrix-sel-td" title="Seleccionar" style="width:44px;min-width:44px;max-width:44px;text-align:center">${ic('check-square')}</th>` : ''}
       ${folderColTh('', 0, false)}
       ${folderColTh('Documento', 1)}
       ${folderColTh('Nomenclatura', 2)}
@@ -3364,6 +3475,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       ${folderColTh('URL', 16)}
       ${folderColTh('', 17, false)}
     </tr></thead>`;
+  };
   // rows: documentos o elementos de árbol {d, depth, ref, hit}
   const levelLegend = () => `<div class="lvl-legend">${CATEGORIAS.map(c => `<span class="lg lvl-${LEVEL[c]}"><i></i>${CAT_LEVEL[c]} · ${c}</span>`).join('')}</div>`;
   const docTable = (rows, info = false) => `${info ? '' : levelLegend()}<div class="doc-list ${info ? 'info' : ''}"><div class="doc-scroll table-wrap"><table class="tbl doc-tbl" id="${info ? 'infoDocTbl' : 'folderDocTbl'}">${docHeader()}<tbody>${rows.map(r => r.d ? docRow(r.d, info, r) : docRow(r, info)).join('')}</tbody></table></div></div>`;
@@ -3421,7 +3533,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (!info && !t.ref) styles.push('cursor:pointer');
     if (del) styles.push('background:var(--danger-soft)');
     const styleAttr = styles.length ? ` style="${styles.join(';')}"` : '';
-    const act = info || t.ref ? '' : ` data-act="openDoc" data-id="${d.id}"`;
+    const folderSel = !info && !!ui.folderSelectMode;
+    if (!ui.folderSelected) ui.folderSelected = new Set();
+    const isSel = folderSel && ui.folderSelected.has(d.id);
+    const act = (info || t.ref || folderSel) ? '' : ` data-act="openDoc" data-id="${d.id}"`;
     const menu = info
       ? `<span class="tiny" title="Solo informativo">${ic('eye-off')}</span>`
       : t.ref
@@ -3447,7 +3562,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       url || '',
       ''
     ];
-    return `<tr class="doc-tr lvl-${lvlOf(d)} ${t.ref ? 'ref' : ''} ${t.hit ? 'hit' : ''}"${act}${styleAttr} data-cells="${encodeURIComponent(JSON.stringify(cells))}">
+    return `<tr class="doc-tr lvl-${lvlOf(d)} ${t.ref ? 'ref' : ''} ${t.hit ? 'hit' : ''} ${isSel ? 'row-selected' : ''}"${act}${styleAttr} data-cells="${encodeURIComponent(JSON.stringify(cells))}" data-id="${d.id}">
+      ${folderSel ? `<td class="matrix-sel-td" onclick="event.stopPropagation()"><input type="checkbox" class="matrix-sel folder-sel" data-id="${d.id}" ${isSel ? 'checked' : ''} aria-label="Seleccionar"/></td>` : ''}
       <td>${badge(d.ext)}</td>
       <td class="doc-name" style="${pad}"><div>${depth ? `<i class="tree-mark">${ic('corner-down-right')}</i>` : ''}<div><strong>${esc(d.nomenclatura)} ${esc(d.nombre)}</strong><span>${sub}</span></div></div></td>
       <td class="mono">${esc(d.nomenclatura)}</td>
@@ -3745,10 +3861,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       addDesc(d.id);
     }
     const list = [...all.values()].sort((x, y) => x.nomenclatura.localeCompare(y.nomenclatura, 'es', { numeric: true }));
+    ui.lastSearchDocs = list;
     const rel = list.length - res.length;
     return `${crumbs([{ label: 'Búsqueda' }])}
       <div class="page-title"><h1>“${esc(route.q)}”</h1></div>
       <p class="page-sub">${res.length} ${res.length === 1 ? 'resultado' : 'resultados'}${rel ? ` + ${rel} ${rel === 1 ? 'documento relacionado' : 'documentos relacionados'} (rector o asociados)` : ''} en las áreas a las que tienes acceso</p>
+      ${list.length ? `<div style="margin:12px 0"><button type="button" class="btn btn-secondary btn-sm" id="searchDlAll">${ic('download')}Descargar resultados (${list.length})</button></div>` : ''}
       <div style="margin-top:24px">${res.length ? docTable(treeOrder(list, { refs: false, hits })) : emptyState('search-x', 'Sin coincidencias', 'Prueba con otra nomenclatura o nombre.')}</div>`;
   }
 
@@ -3853,15 +3971,57 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       let t; q.addEventListener('input', () => {
         clearTimeout(t); t = setTimeout(() => {
           const v = q.value.trim();
-          if (v.length >= 2) { route.q = v; route.view = 'search'; $('#view').innerHTML = searchView(); icons(); }
+          if (v.length >= 2) {
+            route.q = v; route.view = 'search';
+            $('#view').innerHTML = searchView(); icons();
+            $('#searchDlAll')?.addEventListener('click', () => {
+              downloadDocsBulk(ui.lastSearchDocs || [], 'busqueda-' + (route.q || 'docs').toString().slice(0, 40));
+            });
+          }
           else if (!v && route.view === 'search') go('home');
         }, 220);
       });
       if (route.view === 'search') { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
     }
+    $('#searchDlAll')?.addEventListener('click', () => {
+      downloadDocsBulk(ui.lastSearchDocs || [], 'busqueda-' + (route.q || 'docs').toString().slice(0, 40));
+    });
     if (ui.docView === 'list') { enableResizableColumns('#folderDocTbl'); bindFolderColFilters(); }
     enableResizableColumns('#infoDocTbl');
     if ($('#infoDocTbl')) bindFolderColFilters('#infoDocTbl');
+    // Selección masiva en matriz de carpeta
+    $('#folderSelBtn')?.addEventListener('click', async () => {
+      if (!ui.folderSelected) ui.folderSelected = new Set();
+      if (!ui.folderSelectMode) {
+        ui.folderSelectMode = true;
+        render();
+        return;
+      }
+      if (!ui.folderSelected.size) {
+        ui.folderSelectMode = false;
+        render();
+        return;
+      }
+      const docs = [...ui.folderSelected].map(id => docById(id)).filter(Boolean);
+      await downloadDocsBulk(docs, 'carpeta-seleccion');
+    });
+    $('#folderDocTbl')?.addEventListener('change', (e) => {
+      const cb = e.target.closest('.folder-sel');
+      if (!cb) return;
+      if (!ui.folderSelected) ui.folderSelected = new Set();
+      if (cb.checked) ui.folderSelected.add(cb.dataset.id);
+      else ui.folderSelected.delete(cb.dataset.id);
+      const tr = cb.closest('tr');
+      if (tr) tr.classList.toggle('row-selected', cb.checked);
+      const btn = $('#folderSelBtn');
+      if (btn) {
+        const n = ui.folderSelected.size;
+        btn.innerHTML = n
+          ? `${ic('download')}Descargar (${n})`
+          : (ui.folderSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`);
+        icons();
+      }
+    });
     const sort = $('#sortSel'); sort && sort.addEventListener('change', () => { ui.sort = sort.value; render(); });
     const filt = $('#docFilter');
     if (filt) {
@@ -3914,10 +4074,13 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     openUnit: (el) => { go('unit', { unitId: el.dataset.id }); },
     unitMenu: (el) => {
       const u = unitById(el.dataset.id);
+      const areaIds = (S.areas || []).filter(a => a.unitId === u.id).map(a => a.id);
       openMenu(el, [
         { icon: 'pencil', label: 'Editar unidad', run: () => unitModal(u) },
         { icon: 'plus', label: 'Nueva área', run: () => areaModal(null, u.id) },
         { icon: 'building-2', label: 'Nueva unidad de negocio', run: () => unitModal() },
+        { icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfUnit(u.id), 'unidad-' + (u.code || u.name || 'docs')) },
+        ...(can('managePerms') ? [{ icon: 'user-plus', label: 'Compartir unidad', run: () => grantModal(null, areaIds) }] : []),
         '-',
         { icon: 'trash-2', label: 'Eliminar unidad', danger: true, run: () => deleteUnit(u) },
       ]);
@@ -3933,6 +4096,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       openMenu(el, [
         { icon: 'pencil', label: 'Editar área', run: () => areaModal(a) },
         { icon: 'folder-plus', label: 'Nueva carpeta', run: () => folderModal(null, a.id) },
+        { icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfArea(a.id), 'area-' + (a.code || a.name || 'docs')) },
         ...(can('managePerms') ? [{ icon: 'user-plus', label: 'Compartir área', run: () => grantModal(null, [a.id]) }] : []),
         '-',
         { icon: 'trash-2', label: 'Eliminar área', danger: true, run: () => deleteArea(a) },
@@ -3944,6 +4108,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const f = folderById(el.dataset.id);
       openMenu(el, [
         { icon: 'pencil', label: 'Renombrar carpeta', run: () => folderModal(f, f.areaId) },
+        { icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfFolder(f.id), 'depto-' + (f.code || f.name || 'docs')) },
+        ...(can('managePerms') ? [{ icon: 'user-plus', label: 'Compartir departamento', run: () => grantModal(null, [f.areaId]) }] : []),
         '-',
         { icon: 'trash-2', label: 'Eliminar carpeta', danger: true, run: () => deleteFolder(f) },
       ]);
@@ -3955,7 +4121,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const d = S.docs.find(x => x.id === el.dataset.id);
       const lvl = areaAccess(d.areaId).level;
       const items = [{ icon: 'eye', label: 'Abrir', run: () => openViewer(d) }];
-      if (LV[lvl] >= 2) items.push({ icon: 'download', label: 'Descargar', run: () => downloadDoc(d) });
+      if (LV[lvl] >= 2) items.push({ icon: 'download', label: 'Descargar original', run: () => downloadDoc(d, 'original') });
       if (lvl === 'editar' && can('upload')) items.push({ icon: 'file-pen', label: 'Editar datos', run: () => metaModal(d) });
       if (lvl === 'editar' && can('upload')) items.push({ icon: 'file-up', label: 'Subir nueva versión', run: () => newVersionUpload(d) });
       if (can('deleteDocs') && lvl === 'editar') items.push('-', { icon: 'trash-2', label: 'Eliminar', danger: true, run: () => deleteDoc(d) });
@@ -5121,19 +5287,36 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const saveBlob = (blob, name) => { const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); };
   const safeName = (d) => `${d.nomenclatura} ${d.nombre} ${d.version}`.replace(/[\\/:*?"<>|]+/g, '-');
 
-  async function downloadDoc(d, format = 'pdf', historyEntry = null) {
+  async function downloadDoc(d, format = 'original', historyEntry = null) {
     const acc = areaAccess(d.areaId);
     if (LV[acc.level] < 2) return toast('Tu permiso no incluye descargas', 'err');
-    if (format !== 'pdf' && acc.level !== 'editar' && S.settings.downloadFormat !== 'original') format = 'pdf';
-    let html, blob, ext = d.ext;
-    if (historyEntry) { const h = await Files.get(historyEntry.key); html = h?.html; blob = h?.orig; ext = h?.ext || ext; }
-    else { html = d.editable ? await Files.get('html:' + d.id) : null; blob = await Files.get('orig:' + d.id); }
+    if (format !== 'pdf' && format !== 'word' && format !== 'original') format = 'original';
+    let html, blob, ext = d.ext, fname = d.fileName;
+    if (historyEntry) {
+      const h = await Files.get(historyEntry.key);
+      html = h?.html; blob = h?.orig; ext = h?.ext || ext;
+      if (h?.fileName) fname = h.fileName;
+    } else if (format === 'original') {
+      if (typeof fetchDocBlob === 'function') {
+        const got = await fetchDocBlob(d);
+        if (got?.blob) {
+          log('descarga', `Descargó ${d.nomenclatura} (ORIGINAL)`); save();
+          return saveBlob(got.blob, got.fname || fname || (safeName(d) + (d.ext ? '.' + d.ext : '')));
+        }
+        return toast('No se encontró el archivo original para descargar', 'err');
+      }
+      blob = await Files.get('orig:' + d.id);
+      html = d.editable ? await Files.get('html:' + d.id) : null;
+    } else {
+      html = d.editable ? await Files.get('html:' + d.id) : null;
+      blob = await Files.get('orig:' + d.id);
+    }
     const name = safeName(d);
-    log('descarga', `Descargó ${d.nomenclatura} (${format.toUpperCase()})`); save();
+    log('descarga', `Descargó ${d.nomenclatura} (${String(format).toUpperCase()})`); save();
 
     if (format === 'original') {
-      if (blob) return saveBlob(blob, d.fileName);
-      format = 'word';
+      if (blob instanceof Blob || blob instanceof File) return saveBlob(blob, fname || (name + (ext ? '.' + ext : '')));
+      return toast('No se encontró el archivo original para descargar', 'err');
     }
     if (format === 'word') {
       const doc = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(d.nombre)}</title></head><body>${html || ''}</body></html>`;
@@ -5169,6 +5352,95 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       }
       saveBlob(pdf.output('blob'), name + '.pdf');
     });
+  }
+
+  /* ---------------- Descarga masiva (ZIP) ---------------- */
+  async function ensureJSZip() {
+    if (window.JSZip) return window.JSZip;
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error('No se pudo cargar JSZip'));
+      document.head.appendChild(s);
+    });
+    return window.JSZip;
+  }
+  function docsOfUnit(unitId) {
+    const areaIds = new Set((S.areas || []).filter(a => a.unitId === unitId).map(a => a.id));
+    const folderIds = new Set((S.folders || []).filter(f => areaIds.has(f.areaId)).map(f => f.id));
+    return (S.docs || []).filter(d => areaIds.has(d.areaId) || folderIds.has(d.folderId));
+  }
+  function docsOfArea(areaId) {
+    const folderIds = new Set((S.folders || []).filter(f => f.areaId === areaId).map(f => f.id));
+    return (S.docs || []).filter(d => d.areaId === areaId || folderIds.has(d.folderId));
+  }
+  function docsOfFolder(folderId) {
+    return (S.docs || []).filter(d => d.folderId === folderId);
+  }
+  async function fetchDocBlob(d) {
+    // 1) Storage vía Files
+    let blob = await Files.get('orig:' + d.id);
+    if (blob instanceof Blob || blob instanceof File) return { blob, fname: d.fileName || (safeName(d) + (d.ext ? '.' + d.ext : '')) };
+    // 2) URL pública de Supabase / URL del documento
+    const candidates = [];
+    try { if (Files.publicUrl) candidates.push(Files.publicUrl('orig:' + d.id)); } catch (e) {}
+    if (d.url && /^https?:\/\//i.test(d.url)) candidates.push(d.url);
+    for (const url of candidates) {
+      try {
+        const r = await fetch(url, { mode: 'cors' });
+        if (r.ok) {
+          const b = await r.blob();
+          if (b && b.size > 0) return { blob: b, fname: d.fileName || (safeName(d) + (d.ext ? '.' + d.ext : '')) };
+        }
+      } catch (e) {}
+    }
+    // 3) HTML editable
+    let html = await Files.get('html:' + d.id);
+    if (typeof html === 'string' && html) {
+      return { blob: new Blob([html], { type: 'text/html;charset=utf-8' }), fname: safeName(d) + '.html' };
+    }
+    return null;
+  }
+  async function downloadDocsBulk(docs, zipBaseName = 'documentos') {
+    const all = (docs || []).filter(Boolean);
+    if (!all.length) return toast('No hay documentos en este alcance', 'err');
+    const list = all.filter(d => {
+      const lv = areaAccess(d.areaId).level;
+      return lv && LV[lv] >= 2;
+    });
+    if (!list.length) return toast('No hay documentos con permiso de descarga en este alcance', 'err');
+    toast(`Preparando ${list.length} documento${list.length === 1 ? '' : 's'}…`);
+    try {
+      await ensureJSZip();
+      const zip = new JSZip();
+      let n = 0;
+      const used = new Set();
+      for (const d of list) {
+        const got = await fetchDocBlob(d);
+        if (!got || !got.blob) continue;
+        let path = got.fname || (safeName(d) + '.bin');
+        // carpeta lógica en el ZIP: área/departamento
+        const a = areaById(d.areaId);
+        const f = folderById(d.folderId);
+        const folderPath = [a?.name, f?.name].filter(Boolean).map(s => String(s).replace(/[\\/:*?"<>|]/g, '_')).join('/');
+        path = (folderPath ? folderPath + '/' : '') + path;
+        if (used.has(path) || zip.file(path)) path = (folderPath ? folderPath + '/' : '') + (d.nomenclatura || d.id) + '_' + (got.fname || 'doc');
+        used.add(path);
+        zip.file(path, got.blob);
+        n++;
+      }
+      if (!n) return toast('No se pudieron obtener los archivos (revisa Storage o permisos)', 'err');
+      const out = await zip.generateAsync({ type: 'blob' });
+      const stamp = new Date().toISOString().slice(0, 10);
+      saveBlob(out, `${zipBaseName}-${stamp}.zip`);
+      log('descarga', `Descarga masiva: ${n} documento(s) (${zipBaseName})`);
+      save();
+      toast(`${n} documento${n === 1 ? '' : 's'} descargado${n === 1 ? '' : 's'}`);
+    } catch (e) {
+      console.error(e);
+      toast('No se pudo generar la descarga masiva', 'err');
+    }
   }
 
   /* ---------------- Permisos ---------------- */
