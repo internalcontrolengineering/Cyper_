@@ -1492,7 +1492,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
 
   <!-- App -->
-  <script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
 /* =========================================================
    Capa de datos — FileHub
    ---------------------------------------------------------
@@ -1628,72 +1629,191 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const memFiles = new Map();
   let idbOk = true;
   try { idbOk = !!window.indexedDB; } catch (e) { idbOk = false; }
+  /* ---------- Supabase ---------- */
+  const SB_URL = 'https://roqumadgdzqpzojqowof.supabase.co';
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvcXVtYWRnZHpxcHpvanFvd29mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyNTM2NzksImV4cCI6MjEwNzgyOTY3OX0.ZSjIQTnvw2XvvUaclwe_TrNr6ezixhfKbLcaSPLoqoc';
+  const SB_BUCKET = 'filehub-docs';
+  const sb = (window.supabase && window.supabase.createClient)
+    ? window.supabase.createClient(SB_URL, SB_ANON)
+    : null;
+  window.FileHubSB = { client: sb, url: SB_URL, bucket: SB_BUCKET };
+
+  const filePath = (key) => String(key).replace(/[^a-zA-Z0-9._-]+/g, '_');
+
+  /* ---------- Archivos en Supabase Storage (con fallback memoria) ---------- */
   const Files = {
-    _db: null,
-    open() {
-      if (!idbOk) return Promise.reject(new Error('IndexedDB no disponible'));
-      if (this._db) return Promise.resolve(this._db);
-      return new Promise((res, rej) => {
-        const r = indexedDB.open('acervo.files', 1);
-        r.onupgradeneeded = () => r.result.createObjectStore('files');
-        r.onsuccess = () => { this._db = r.result; res(this._db); };
-        r.onerror = () => { idbOk = false; rej(r.error); };
-      });
-    },
+    _mem: memFiles,
     async put(key, value) {
-      const db = await this.open().catch(() => null);
-      if (!db) { memFiles.set(key, value); return true; }
-      return new Promise((res, rej) => {
-        const tx = db.transaction('files', 'readwrite');
-        tx.objectStore('files').put(value, key);
-        tx.oncomplete = () => res(true); tx.onerror = () => rej(tx.error);
-      });
+      const path = filePath(key);
+      try {
+        if (!sb) throw new Error('no sb');
+        if (value instanceof Blob || value instanceof File) {
+          const { error } = await sb.storage.from(SB_BUCKET).upload(path, value, { upsert: true, contentType: value.type || 'application/octet-stream' });
+          if (error) throw error;
+        } else if (typeof value === 'string') {
+          const blob = new Blob([value], { type: 'text/html;charset=utf-8' });
+          const { error } = await sb.storage.from(SB_BUCKET).upload(path, blob, { upsert: true, contentType: 'text/html;charset=utf-8' });
+          if (error) throw error;
+        } else if (value && typeof value === 'object') {
+          // Paquete de historial: html (string) + orig (Blob/File)
+          const meta = { ext: value.ext || null, fileName: value.fileName || null, hasHtml: false, hasOrig: false };
+          if (typeof value.html === 'string') {
+            meta.hasHtml = true;
+            const { error } = await sb.storage.from(SB_BUCKET).upload(path + '__html', new Blob([value.html], { type: 'text/html;charset=utf-8' }), { upsert: true, contentType: 'text/html;charset=utf-8' });
+            if (error) throw error;
+          } else if (value.html instanceof Blob || value.html instanceof File) {
+            meta.hasHtml = true;
+            const { error } = await sb.storage.from(SB_BUCKET).upload(path + '__html', value.html, { upsert: true });
+            if (error) throw error;
+          }
+          if (value.orig instanceof Blob || value.orig instanceof File) {
+            meta.hasOrig = true;
+            const { error } = await sb.storage.from(SB_BUCKET).upload(path + '__orig', value.orig, { upsert: true, contentType: value.orig.type || 'application/octet-stream' });
+            if (error) throw error;
+          }
+          const { error } = await sb.storage.from(SB_BUCKET).upload(path + '__meta.json', new Blob([JSON.stringify(meta)], { type: 'application/json' }), { upsert: true, contentType: 'application/json' });
+          if (error) throw error;
+        } else {
+          const { error } = await sb.storage.from(SB_BUCKET).upload(path, new Blob([JSON.stringify(value)], { type: 'application/json' }), { upsert: true, contentType: 'application/json' });
+          if (error) throw error;
+        }
+        return true;
+      } catch (e) {
+        console.warn('Files.put fallback mem', key, e);
+        this._mem.set(key, value);
+        return true;
+      }
     },
     async get(key) {
-      const db = await this.open().catch(() => null);
-      if (!db) return memFiles.get(key);
-      return new Promise((res, rej) => {
-        const r = db.transaction('files').objectStore('files').get(key);
-        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
-      });
+      const path = filePath(key);
+      try {
+        if (!sb) throw new Error('no sb');
+        // ¿paquete de historial?
+        const metaTry = await sb.storage.from(SB_BUCKET).download(path + '__meta.json');
+        if (!metaTry.error && metaTry.data) {
+          const meta = JSON.parse(await metaTry.data.text());
+          let html = null, orig = null;
+          if (meta.hasHtml) {
+            const h = await sb.storage.from(SB_BUCKET).download(path + '__html');
+            if (!h.error && h.data) html = await h.data.text();
+          }
+          if (meta.hasOrig) {
+            const o = await sb.storage.from(SB_BUCKET).download(path + '__orig');
+            if (!o.error && o.data) orig = o.data;
+          }
+          return { html, orig, ext: meta.ext, fileName: meta.fileName };
+        }
+        const { data, error } = await sb.storage.from(SB_BUCKET).download(path);
+        if (error || !data) {
+          if (this._mem.has(key)) return this._mem.get(key);
+          return undefined;
+        }
+        const ct = data.type || '';
+        if (ct.includes('json')) {
+          try { return JSON.parse(await data.text()); } catch { return await data.text(); }
+        }
+        if (ct.includes('text') || ct.includes('html')) return await data.text();
+        return data; // Blob
+      } catch (e) {
+        return this._mem.has(key) ? this._mem.get(key) : undefined;
+      }
     },
     async del(key) {
-      const db = await this.open().catch(() => null);
-      if (!db) { memFiles.delete(key); return true; }
-      return new Promise((res) => {
-        const tx = db.transaction('files', 'readwrite');
-        tx.objectStore('files').delete(key);
-        tx.oncomplete = () => res(true); tx.onerror = () => res(false);
-      });
+      const path = filePath(key);
+      this._mem.delete(key);
+      try {
+        if (!sb) return true;
+        await sb.storage.from(SB_BUCKET).remove([path, path + '__meta.json', path + '__html', path + '__orig']);
+      } catch (e) {}
+      return true;
     },
     async clear() {
-      const db = await this.open().catch(() => null);
-      if (!db) { memFiles.clear(); return true; }
-      return new Promise((res) => {
-        const tx = db.transaction('files', 'readwrite');
-        tx.objectStore('files').clear();
-        tx.oncomplete = () => res(true);
-      });
+      this._mem.clear();
+      // no borramos todo el bucket desde el cliente por seguridad
+      return true;
+    },
+    publicUrl(key) {
+      if (!sb) return 'local://docs/' + key;
+      const path = filePath(key);
+      const { data } = sb.storage.from(SB_BUCKET).getPublicUrl(path);
+      return data?.publicUrl || ('local://docs/' + key);
     },
   };
 
-  /* ---------- Repositorio de metadatos ---------- */
+  /* ---------- Repositorio de metadatos en Supabase ---------- */
   const Repo = {
     db: null,
     CAPS,
     uid,
     hashPassword,
     verifyPassword,
+    _saving: false,
+    _saveTimer: null,
+    _ignoreRealtimeUntil: 0,
+    _realtime: null,
+
     load() {
-      LEGACY_KEYS.forEach(k => { try { LS.store.removeItem(k); } catch (e) {} });
+      // sync stub: usar loadAsync
       try { this.db = JSON.parse(LS.store.getItem(KEY)); } catch { this.db = null; }
       return this.db;
     },
-    save() {
-      try { LS.store.setItem(KEY, JSON.stringify(this.db)); }
-      catch (e) { console.error(e); window.toast && toast('No se pudo guardar: almacenamiento lleno', 'err'); }
+
+    _isValidDb(db) {
+      return !!(db && typeof db === 'object' && Array.isArray(db.users) && Array.isArray(db.roles));
     },
-    /* Primera configuración: crea al administrador definido por el usuario. */
+
+    async loadAsync() {
+      // 1) Supabase
+      if (sb) {
+        try {
+          const { data, error } = await sb.from('app_state').select('data, updated_at').eq('id', 'main').maybeSingle();
+          if (!error && data && data.data && this._isValidDb(data.data)) {
+            this.db = data.data;
+            try { LS.store.setItem(KEY, JSON.stringify(this.db)); } catch (e) {}
+            return this.db;
+          }
+          // Fila vacía {} o incompleta: no es un repositorio válido
+        } catch (e) { console.warn('Supabase load', e); }
+      }
+      // 2) Local (migración)
+      LEGACY_KEYS.forEach(k => { try { LS.store.removeItem(k); } catch (e) {} });
+      try { this.db = JSON.parse(LS.store.getItem(KEY)); } catch { this.db = null; }
+      if (!this._isValidDb(this.db)) this.db = null;
+      if (this.db && sb) {
+        try { await this._push(this.db); } catch (e) { console.warn('migrate push', e); }
+      }
+      return this.db;
+    },
+
+    async _push(db) {
+      if (!sb || !db) return;
+      this._ignoreRealtimeUntil = Date.now() + 1500;
+      const { error } = await sb.from('app_state').upsert({
+        id: 'main',
+        data: db,
+        updated_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+      try { LS.store.setItem(KEY, JSON.stringify(db)); } catch (e) {}
+    },
+
+    save() {
+      if (!this.db) return;
+      try { LS.store.setItem(KEY, JSON.stringify(this.db)); } catch (e) {
+        console.error(e);
+        window.toast && toast('No se pudo guardar en caché local', 'err');
+      }
+      if (!sb) return;
+      if (this._saveTimer) clearTimeout(this._saveTimer);
+      this._saveTimer = setTimeout(() => {
+        this._saveTimer = null;
+        this._push(this.db).catch(e => {
+          console.error(e);
+          window.toast && toast('No se pudo sincronizar con Supabase', 'err');
+        });
+      }, 350);
+    },
+
     async init({ email, name, pass }) {
       const now = Date.now();
       const adminId = uid('u_');
@@ -1702,25 +1822,50 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const base = { version: 4, settings, roles: defaultRoles(), users, units: [], areas: [], folders: [], docs: [], grants: [], catalogs: { tipos: DEFAULT_TIPOS(), clasificaciones: [], macroprocesos: [] },
         audit: [{ id: uid('l_'), at: now, by: adminId, action: 'sistema', text: `Repositorio inicializado por ${email}` }] };
       this.db = base;
+      await this._push(base).catch(() => this.save());
       this.save();
       return this.db;
     },
-    /* Borra todo (metadatos, usuarios y archivos) y vuelve a la configuración inicial */
+
     async wipe() {
       LS.store.removeItem(KEY);
       await Files.clear();
+      if (sb) {
+        try { await sb.from('app_state').delete().eq('id', 'main'); } catch (e) {}
+      }
       this.db = null;
     },
+
     log(by, action, text) {
       this.db.audit.unshift({ id: uid('l_'), at: Date.now(), by, action, text });
       this.db.audit = this.db.audit.slice(0, 400);
     },
+
     export() {
       return JSON.stringify(this.db, null, 2);
     },
+
+    startRealtime(onRemote) {
+      if (!sb || this._realtime) return;
+      this._realtime = sb.channel('filehub-state')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state', filter: 'id=eq.main' }, (payload) => {
+          if (Date.now() < this._ignoreRealtimeUntil) return;
+          const next = payload.new && payload.new.data;
+          if (!next || !this._isValidDb(next)) return;
+          try {
+            const remoteStr = JSON.stringify(next);
+            const localStr = JSON.stringify(this.db);
+            if (remoteStr === localStr) return;
+            this.db = next;
+            try { LS.store.setItem(KEY, remoteStr); } catch (e) {}
+            if (typeof onRemote === 'function') onRemote(next);
+          } catch (e) { console.warn('realtime apply', e); }
+        })
+        .subscribe();
+    },
   };
 
-  window.Repo = Repo;
+    window.Repo = Repo;
   window.Files = Files;
   window.defaultSettings = defaultSettings;
   window.DEFAULT_TIPOS = DEFAULT_TIPOS;
@@ -1818,12 +1963,40 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   };
 
   /* ---------------- Estado ---------------- */
-  Repo.load();
+  await Repo.loadAsync();
   let S = Repo.db;
+  if (S && !(Array.isArray(S.users) && Array.isArray(S.roles))) {
+    S = null;
+    Repo.db = null;
+  }
+  // Tiempo real: reflejar cambios de otros dispositivos sin recargar
+  Repo.startRealtime((next) => {
+    if (!next || !(Array.isArray(next.users) && Array.isArray(next.roles))) return;
+    S = next;
+    window.S = S;
+    try {
+      const sid = SessionStore.getItem(SESSION);
+      me = sid ? (S.users || []).find(u => u.id === sid) : null;
+      if (sid && !me) { SessionStore.removeItem(SESSION); }
+      migrate();
+      if (typeof applyTheme === 'function') applyTheme();
+      if (typeof applyBrandSizes === 'function') applyBrandSizes();
+      if (typeof render === 'function') render();
+    } catch (e) { console.warn('realtime render', e); }
+  });
   const intVersion = (v) => String(Math.max(1, parseInt(String(v ?? '').replace(/[^0-9.]/g, ''), 10) || 1));
   function migrate() {
-    if (!S) return;
-    S.settings = { ...defaultSettings(), ...S.settings };
+    if (!S || typeof S !== 'object') return;
+    // Colecciones mínimas (evita crash si Supabase devolvió {} o datos parciales)
+    S.users = Array.isArray(S.users) ? S.users : [];
+    S.roles = Array.isArray(S.roles) ? S.roles : (typeof defaultRoles === 'function' ? defaultRoles() : []);
+    S.units = Array.isArray(S.units) ? S.units : [];
+    S.areas = Array.isArray(S.areas) ? S.areas : [];
+    S.folders = Array.isArray(S.folders) ? S.folders : [];
+    S.docs = Array.isArray(S.docs) ? S.docs : [];
+    S.grants = Array.isArray(S.grants) ? S.grants : [];
+    S.audit = Array.isArray(S.audit) ? S.audit : [];
+    S.settings = { ...defaultSettings(), ...(S.settings || {}) };
     if (S.settings.appName === 'Acervo') S.settings.appName = 'FileHub';
     // Perfiles: nombres y niveles de acceso a documentos por defecto
     if (Array.isArray(S.roles)) {
@@ -1888,9 +2061,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       if (mapped) { d.tipo = mapped.name; d.categoria = mapped.cat; }
       else if (/procedimiento de operaci[oó]n/i.test(d.tipo)) { d.tipo = 'Procedimiento'; d.categoria = d.categoria || 'Operativo'; }
     });
-    S.catalogs.clasificaciones = S.catalogs.clasificaciones || [];
-    S.catalogs.macroprocesos = S.catalogs.macroprocesos || [];
-    S.units = S.units || [];
+    S.catalogs.clasificaciones = Array.isArray(S.catalogs.clasificaciones) ? S.catalogs.clasificaciones : [];
+    S.catalogs.macroprocesos = Array.isArray(S.catalogs.macroprocesos) ? S.catalogs.macroprocesos : [];
+    S.units = Array.isArray(S.units) ? S.units : [];
+    S.areas = Array.isArray(S.areas) ? S.areas : [];
+    S.docs = Array.isArray(S.docs) ? S.docs : [];
     // Migrar áreas sin unitId a una unidad por defecto
     if (S.areas.some(a => !a.unitId)) {
       let u = S.units[0];
@@ -2030,7 +2205,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     while (used.has(prefix + String(n).padStart(2, '0'))) n++;
     return prefix + String(n).padStart(2, '0');
   }
-  function localDocUrl(id) { return 'local://docs/' + id; }
+  function localDocUrl(id) {
+    // URL pública del original en Supabase Storage
+    if (window.Files && Files.publicUrl) return Files.publicUrl('orig:' + id);
+    return 'local://docs/' + id;
+  }
 
   function addToCatalog(kind, v) {
     v = String(v || '').trim(); if (!v) return '';
