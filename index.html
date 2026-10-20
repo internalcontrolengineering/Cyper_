@@ -1002,75 +1002,108 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   .main { padding: 0 16px calc(96px + env(safe-area-inset-bottom, 0px)); }
   .nav-inner {
-    padding: 10px 12px;
-    gap: 8px 6px;
-    min-height: auto;
-    height: auto;
-    flex-wrap: wrap;
-    align-items: center;
+    padding: 10px 12px !important;
+    gap: 10px 8px !important;
+    min-height: auto !important;
+    height: auto !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
   }
-  /* Fila 1: logo + nombre herramienta + organización */
+  /* Fila 1: logo + nombre + organización a todo el ancho */
   .brand {
-    flex: 1 1 100%;
-    max-width: 100%;
-    min-width: 0;
-    gap: 10px;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    gap: 10px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
   }
   .brand .brand-text {
-    min-width: 0;
-    flex: 1 1 auto;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    overflow: hidden;
   }
   .brand .brand-title {
-    font-size: var(--title-size, 16px) !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    display: block;
+    font-size: 22px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    width: auto !important;
+    display: block !important;
+    writing-mode: horizontal-tb !important;
+    line-height: 1.2 !important;
   }
   .brand .brand-org, .brand small {
     display: block !important;
-    font-size: var(--org-size, 12px) !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    opacity: 0.85;
+    font-size: 15px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    opacity: 0.9;
+    writing-mode: horizontal-tb !important;
   }
   .brand .logo-img, .brand svg {
-    width: var(--logo-size, 36px) !important;
-    height: var(--logo-size, 36px) !important;
-    flex-shrink: 0;
+    width: 56px !important;
+    height: 56px !important;
+    max-width: 56px !important;
+    max-height: 56px !important;
+    flex-shrink: 0 !important;
   }
-  .nav-spacer { display: none !important; }
-  /* Fila 2: buscador, contador, permisos, tema, perfil */
+  .nav-spacer { display: none !important; width: 0 !important; flex: none !important; }
+  /* Fila 2: buscador más compacto + contador + iconos + perfil en una sola fila */
   .nav .search {
-    flex: 1 1 auto;
-    width: auto;
-    min-width: 120px;
-    max-width: none;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 64px !important;
+    max-width: calc(100% - 190px) !important;
+    order: 2;
   }
   .nav .search input {
-    opacity: 1;
-    width: auto;
-    flex: 1;
-    min-width: 0;
+    opacity: 1 !important;
+    width: 100% !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
   }
-  .nav .search:focus-within { width: auto; max-width: none; }
+  .nav .search:focus-within { width: auto; max-width: calc(100% - 190px); position: static; }
   .session-timer {
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    min-width: 52px;
-    padding: 5px 8px;
-    flex: 0 0 auto;
+    min-width: 44px;
+    padding: 4px 7px;
+    flex: 0 0 auto !important;
     line-height: 1;
+    order: 2;
   }
   .session-timer.hidden { display: none !important; }
-  .nav .icon-btn, .nav .avatar {
-    width: 40px; height: 40px; flex: none;
+  .nav .icon-btn, .nav .avatar, .nav .user-menu {
+    width: 36px !important;
+    height: 36px !important;
+    flex: 0 0 auto !important;
+    order: 2;
+  }
+  .nav .user-menu {
+    display: inline-flex !important;
+    align-items: center;
+    flex: 0 0 auto !important;
+    order: 2;
+  }
+  .nav .user-menu .avatar {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 12px !important;
   }
 
   /* Layout general */
@@ -1332,33 +1365,38 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 @media (max-width: 480px) {
   .main { padding: 0 12px calc(100px + env(safe-area-inset-bottom, 0px)); }
   .nav-inner {
-    padding: 10px;
-    gap: 8px 6px;
+    padding: 10px !important;
+    gap: 10px 6px !important;
     position: relative;
-    flex-wrap: wrap;
-    min-height: auto;
-    height: auto;
+    flex-wrap: wrap !important;
+    min-height: auto !important;
+    height: auto !important;
   }
   .brand {
-    flex: 1 1 100%;
-    max-width: 100%;
-    min-width: 0;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
   }
-  .brand .brand-text { min-width: 0; flex: 1 1 auto; }
+  .brand .brand-text { min-width: 0 !important; flex: 1 1 auto !important; }
   .brand .brand-title {
-    font-size: var(--title-size, 15px) !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    writing-mode: horizontal-tb !important;
   }
   .brand .brand-org, .brand small {
     display: block !important;
-    font-size: var(--org-size, 11px) !important;
+    font-size: 14px !important;
   }
   .brand .logo-img, .brand svg {
-    width: var(--logo-size, 34px) !important;
-    height: var(--logo-size, 34px) !important;
+    width: 52px !important;
+    height: 52px !important;
+    max-width: 52px !important;
+    max-height: 52px !important;
   }
   .session-timer {
     display: inline-flex !important;
@@ -1366,32 +1404,42 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     justify-content: center;
     font-size: 11px;
     font-weight: 600;
-    min-width: 46px;
-    padding: 5px 8px;
-    flex: 0 0 auto;
+    min-width: 42px;
+    padding: 4px 6px;
+    flex: 0 0 auto !important;
   }
   .nav .search {
-    display: flex;
-    flex: 1 1 auto;
-    width: auto;
-    min-width: 100px;
-    max-width: none;
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 56px !important;
+    max-width: calc(100% - 175px) !important;
     overflow: visible;
   }
   .nav .search input {
-    opacity: 1;
-    width: auto;
-    flex: 1;
-    min-width: 0;
+    opacity: 1 !important;
+    width: 100% !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    font-size: 12.5px !important;
+  }
+  .nav .icon-btn, .nav .avatar, .nav .user-menu {
+    width: 34px !important;
+    height: 34px !important;
+    flex: 0 0 auto !important;
+  }
+  .nav .user-menu .avatar {
+    width: 34px !important;
+    height: 34px !important;
   }
   .nav .search:focus-within {
-    position: static;
-    width: auto;
-    max-width: none;
+    position: static !important;
+    width: auto !important;
+    max-width: none !important;
     z-index: auto;
     box-shadow: none;
   }
-  .nav .search:focus-within input { opacity: 1; flex: 1; width: auto; }
+  .nav .search:focus-within input { opacity: 1 !important; flex: 1 !important; width: auto !important; }
   .toolbar-row .search { display: flex; width: 100% !important; max-width: none !important; padding: 0 12px; }
   .toolbar-row .search input { opacity: 1; width: auto; flex: 1; }
   .folders, .doc-grid { grid-template-columns: 1fr; }
@@ -2453,29 +2501,50 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     return Math.max(10, Math.min(32, +(S?.settings?.orgSize || 13)));
   }
   function applyBrandSizes() {
-    const ls = logoSizePx(), ts = titleSizePx(), os = orgSizePx();
+    const mobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
+    // En móvil: logo/textos más legibles; no heredar tamaños extremos de PC
+    const ls = mobile ? Math.min(Math.max(logoSizePx(), 52), 56) : logoSizePx();
+    const ts = mobile ? Math.min(Math.max(titleSizePx(), 20), 22) : titleSizePx();
+    const os = mobile ? Math.min(Math.max(orgSizePx(), 14), 15) : orgSizePx();
     const root = document.documentElement;
     root.style.setProperty('--logo-size', ls + 'px');
     root.style.setProperty('--title-size', ts + 'px');
     root.style.setProperty('--org-size', os + 'px');
-    root.style.setProperty('--nav-h', Math.max(56, ls + 28) + 'px');
-    // Aplicación directa al DOM para que el cambio se note al instante
+    root.style.setProperty('--nav-h', mobile ? 'auto' : (Math.max(56, ls + 28) + 'px'));
     document.querySelectorAll('.brand .logo-img').forEach(img => {
       img.style.width = ls + 'px';
       img.style.height = ls + 'px';
+      img.style.maxWidth = ls + 'px';
+      img.style.maxHeight = ls + 'px';
       img.setAttribute('width', String(ls));
       img.setAttribute('height', String(ls));
     });
     document.querySelectorAll('.brand .brand-title').forEach(el => {
       el.style.fontSize = ts + 'px';
       el.style.fontFamily = 'var(--font-brand, Inter, sans-serif)';
+      el.style.whiteSpace = 'nowrap';
+      el.style.overflow = 'hidden';
+      el.style.textOverflow = 'ellipsis';
+      el.style.maxWidth = '100%';
+      el.style.width = 'auto';
+      el.style.writingMode = 'horizontal-tb';
     });
     document.querySelectorAll('.brand .brand-org').forEach(el => {
       el.style.fontSize = os + 'px';
       el.style.fontFamily = 'var(--font-brand, Inter, sans-serif)';
       el.style.color = 'var(--text-3)';
+      el.style.display = 'block';
+      el.style.whiteSpace = 'nowrap';
+      el.style.overflow = 'hidden';
+      el.style.textOverflow = 'ellipsis';
+      el.style.maxWidth = '100%';
     });
   }
+  if (typeof window !== 'undefined' && !window.__brandMobileResize) {
+    window.__brandMobileResize = true;
+    window.addEventListener('resize', () => { try { applyBrandSizes(); } catch (e) {} });
+  }
+
   function LOGO_HTML() {
     const src = currentLogoSrc();
     if (!src) return '';
