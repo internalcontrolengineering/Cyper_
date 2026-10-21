@@ -2298,7 +2298,42 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   // Qué categorías pueden ser rector de cada categoría: Operativo ← Estratégico; Soporte ← Estratégico u Operativo
   const RECTOR_CATS = { 'Operativo': ['Estratégico'], 'Soporte': ['Estratégico', 'Operativo'] };
   const canBeRector = (childCat, rectorCat) => (RECTOR_CATS[childCat] || []).includes(rectorCat);
-  const childrenOf = (id) => S.docs.filter(d => d.rectorId === id);
+  const childrenOf = (id) => (S.docs || []).filter(d => d.rectorId === id);
+  /** Relacionados por rector/asociados/copias, sin importar carpeta o área. */
+  const collectRelatedDocs = (seeds, okFn = (d) => !!d) => {
+    const all = new Map();
+    const queue = (Array.isArray(seeds) ? seeds : [seeds]).filter(Boolean);
+    while (queue.length) {
+      const d = queue.shift();
+      if (!d || !d.id || all.has(d.id) || !okFn(d)) continue;
+      all.set(d.id, d);
+      // Subir por documento rector
+      if (d.rectorId) {
+        const r = docById(d.rectorId);
+        if (r && !all.has(r.id)) queue.push(r);
+      }
+      // Bajar por asociados (hijos)
+      childrenOf(d.id).forEach(c => { if (!all.has(c.id)) queue.push(c); });
+      // Hermanos con el mismo rector
+      if (d.rectorId) {
+        (S.docs || []).filter(x => x.rectorId === d.rectorId && x.id !== d.id).forEach(c => {
+          if (!all.has(c.id)) queue.push(c);
+        });
+      }
+      // Copias de este documento
+      (S.docs || []).filter(x => x.copiedFrom === d.id).forEach(c => { if (!all.has(c.id)) queue.push(c); });
+      // Original del que este es copia
+      if (d.copiedFrom) {
+        const src = docById(d.copiedFrom);
+        if (src && !all.has(src.id)) queue.push(src);
+        // Otras copias del mismo original
+        (S.docs || []).filter(x => x.copiedFrom === d.copiedFrom && x.id !== d.id).forEach(c => {
+          if (!all.has(c.id)) queue.push(c);
+        });
+      }
+    }
+    return [...all.values()];
+  };
   const catChip = (c) => c ? `<span class="chip ${CAT_CLASS[c] || ''}">${esc(c)}</span>` : '<span class="tiny">—</span>';
   function docAgeYears(d) {
     const ref = d.fechaActualizacion || (d.updatedAt ? new Date(d.updatedAt).toISOString().slice(0, 10) : null);
@@ -3095,6 +3130,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <label class="dsel"><span>Categoría</span><select class="select" id="mfCat">${opt('', 'Todas las categorías', mf.cat) + cats.map(c => opt(c, c, mf.cat)).join('')}</select></label>
         <label class="dsel"><span>Tipo de documento</span><select class="select" id="mfTipo">${opt('', 'Todos los tipos', mf.tipo) + tipos.map(t => opt(t, t, mf.tipo)).join('')}</select></label>
         <button type="button" class="btn btn-secondary btn-sm" id="matrixSelBtn">${(ui.matrixSelected && ui.matrixSelected.size) ? `${ic('download')}Descargar (${ui.matrixSelected.size})` : (ui.matrixSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`)}</button>
+        ${ui.matrixSelectMode ? `<button type="button" class="btn btn-secondary btn-sm" id="matrixMoveBtn" ${!(ui.matrixSelected && ui.matrixSelected.size) ? 'disabled' : ''}>${ic('folder-input')}Mover o copiar${ui.matrixSelected && ui.matrixSelected.size ? ` (${ui.matrixSelected.size})` : ''}</button>` : ''}
+        ${ui.matrixSelectMode && can('deleteDocs') ? `<button type="button" class="btn btn-danger btn-sm" id="matrixDelBtn" ${!(ui.matrixSelected && ui.matrixSelected.size) ? 'disabled' : ''}>${ic('trash-2')}Eliminar${ui.matrixSelected && ui.matrixSelected.size ? ` (${ui.matrixSelected.size})` : ''}</button>` : ''}
         <button class="btn btn-ghost btn-sm" id="mfClear">${ic('rotate-ccw')}Limpiar</button>
       </div>
       ${docs.length ? `<div class="matrix-wrap" style="overflow-x:auto"><table class="matrix-tbl resizable-cols" id="matrixTbl"><thead><tr>${ths}</tr></thead><tbody id="matrixBody">${rowsF}</tbody></table></div>` : emptyState('table', 'Sin documentos', 'Aún no hay documentos en las áreas a las que tienes acceso.')}`;
@@ -3146,6 +3183,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const docs = [...ui.matrixSelected].map(id => docById(id)).filter(Boolean);
       await downloadDocsBulk(docs, 'matriz-seleccion');
     });
+    $('#matrixMoveBtn')?.addEventListener('click', () => {
+      if (!ui.matrixSelected || !ui.matrixSelected.size) return;
+      const docs = [...ui.matrixSelected].map(id => docById(id)).filter(Boolean);
+      moveDocsModal(docs);
+    });
+    $('#matrixDelBtn')?.addEventListener('click', async () => {
+      if (!ui.matrixSelected || !ui.matrixSelected.size) return;
+      const docs = [...ui.matrixSelected].map(id => docById(id)).filter(Boolean);
+      await deleteDocsBulk(docs);
+    });
     $('#matrixBody')?.addEventListener('change', (e) => {
       const cb = e.target.closest('.matrix-sel');
       if (!cb) return;
@@ -3154,14 +3201,24 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       else ui.matrixSelected.delete(cb.dataset.id);
       const tr = cb.closest('tr');
       if (tr) tr.classList.toggle('row-selected', cb.checked);
+      const n = ui.matrixSelected.size;
       const btn = $('#matrixSelBtn');
       if (btn) {
-        const n = ui.matrixSelected.size;
         btn.innerHTML = n
           ? `${ic('download')}Descargar (${n})`
           : (ui.matrixSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`);
-        icons();
       }
+      const mv = $('#matrixMoveBtn');
+      if (mv) {
+        mv.disabled = !n;
+        mv.innerHTML = `${ic('folder-input')}Mover o copiar${n ? ` (${n})` : ''}`;
+      }
+      const del = $('#matrixDelBtn');
+      if (del) {
+        del.disabled = !n;
+        del.innerHTML = `${ic('trash-2')}Eliminar${n ? ` (${n})` : ''}`;
+      }
+      icons();
     });
     enableResizableColumns('#matrixTbl');
     // Excel-like column filters
@@ -3433,6 +3490,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             <option value="code" ${ui.sort === 'code' ? 'selected' : ''}>Por nomenclatura</option>
             <option value="name" ${ui.sort === 'name' ? 'selected' : ''}>Por nombre</option></select>
           <button type="button" class="btn btn-secondary btn-sm" id="folderSelBtn">${(ui.folderSelected && ui.folderSelected.size) ? `${ic('download')}Descargar (${ui.folderSelected.size})` : (ui.folderSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`)}</button>
+          ${ui.folderSelectMode ? `<button type="button" class="btn btn-secondary btn-sm" id="folderMoveBtn" ${!(ui.folderSelected && ui.folderSelected.size) ? 'disabled' : ''}>${ic('folder-input')}Mover o copiar${ui.folderSelected && ui.folderSelected.size ? ` (${ui.folderSelected.size})` : ''}</button>` : ''}
+          ${ui.folderSelectMode && can('deleteDocs') ? `<button type="button" class="btn btn-danger btn-sm" id="folderDelBtn" ${!(ui.folderSelected && ui.folderSelected.size) ? 'disabled' : ''}>${ic('trash-2')}Eliminar${ui.folderSelected && ui.folderSelected.size ? ` (${ui.folderSelected.size})` : ''}</button>` : ''}
           <label class="search" style="width:220px">${ic('filter')}<input id="docFilter" placeholder="Filtrar en carpeta" value="${esc(ui.filter)}" /></label>
         </div>
         ${up ? `<button class="btn btn-primary" data-act="pick">${ic('upload')}Subir documentos</button>` : ''}
@@ -3441,8 +3500,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <span>o <button class="btn-ghost" style="font-weight:500" data-act="pick">selecciónalos de tu equipo</button> · máx. ${S.settings.maxMB} MB por archivo</span>
         <input type="file" id="fileInput" multiple hidden accept="${S.settings.allowedExt.split(',').map(e => '.' + e.trim()).join(',')}" /></div>` : ''}
       ${docs.length ? (ui.docView === 'list'
-        ? docTable(treeOrder(docs))
-        : `<div class="doc-grid">${treeOrder(docs).map((it, i) => docTile(it, i)).join('')}</div>`)
+        ? docTable(treeOrder(docs, { refs: false }))
+        : `<div class="doc-grid">${treeOrder(docs, { refs: false }).map((it, i) => docTile(it, i)).join('')}</div>`)
         : emptyState('file-text', ui.filter ? 'Sin resultados' : 'Carpeta vacía', ui.filter ? 'Ningún documento coincide con el filtro.' : up ? 'Sube el primer documento de este departamento.' : 'Aún no hay documentos en esta carpeta.')}`;
   }
 
@@ -3519,8 +3578,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const r = d.rectorId ? docById(d.rectorId) : null;
     const nk = childrenOf(d.id).length;
     const st = computeEstado(d);
+    const copySrc = d.copiedFrom ? docById(d.copiedFrom) : null;
     const sub = info ? `${esc(a?.name || '')} / ${esc(f?.name || '')}`
       : t.ref ? `Documento rector · ${esc(a?.name || '')} / ${esc(f?.name || '')}`
+      : copySrc ? `Copia de ${esc(copySrc.nomenclatura)}${copySrc.folderId !== d.folderId ? ` · ${esc(folderById(copySrc.folderId)?.name || '')}` : ''}`
       : (t.orphan || (t.depth && r && r.folderId !== d.folderId)) && r ? `Rector: ${esc(r.nomenclatura)}${r.folderId !== d.folderId ? ` · ${esc(folderById(r.folderId)?.name || '')}` : ''}`
       : (!t.depth && nk && !info) ? `${nk} ${nk === 1 ? 'documento asociado' : 'documentos asociados'}`
       : esc(d.fileName);
@@ -3852,20 +3913,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const q = route.q.trim().toLowerCase();
     const ok = (d) => d && areaAccess(d.areaId).level;
     const res = S.docs.filter(d => ok(d) && (d.nomenclatura + ' ' + d.nombre + ' ' + d.fileName + ' ' + d.tipo + ' ' + (d.categoria || '') + ' ' + d.clasificacion).toLowerCase().includes(q));
-    // Cada resultado trae consigo su documento rector y sus documentos asociados
-    const hits = new Set(res.map(d => d.id)), all = new Map(res.map(d => [d.id, d]));
-    const addDesc = (id) => childrenOf(id).filter(ok).forEach(k => { if (!all.has(k.id)) { all.set(k.id, k); addDesc(k.id); } });
-    for (const d of res) {
-      let r = d.rectorId && docById(d.rectorId), guard = 0;
-      while (r && guard++ < 5) { if (ok(r)) all.set(r.id, r); r = r.rectorId && docById(r.rectorId); }
-      addDesc(d.id);
-    }
-    const list = [...all.values()].sort((x, y) => x.nomenclatura.localeCompare(y.nomenclatura, 'es', { numeric: true }));
+    // Relacionados por rector/asociados/copias aunque estén en otras carpetas o áreas
+    const hits = new Set(res.map(d => d.id));
+    const list = collectRelatedDocs(res, ok).sort((x, y) => x.nomenclatura.localeCompare(y.nomenclatura, 'es', { numeric: true }));
     ui.lastSearchDocs = list;
     const rel = list.length - res.length;
     return `${crumbs([{ label: 'Búsqueda' }])}
       <div class="page-title"><h1>“${esc(route.q)}”</h1></div>
-      <p class="page-sub">${res.length} ${res.length === 1 ? 'resultado' : 'resultados'}${rel ? ` + ${rel} ${rel === 1 ? 'documento relacionado' : 'documentos relacionados'} (rector o asociados)` : ''} en las áreas a las que tienes acceso</p>
+      <p class="page-sub">${res.length} ${res.length === 1 ? 'resultado' : 'resultados'}${rel ? ` + ${rel} ${rel === 1 ? 'documento relacionado' : 'documentos relacionados'} (rector, asociados o copias; cualquier carpeta)` : ''} en las áreas a las que tienes acceso</p>
       ${list.length ? `<div style="margin:12px 0"><button type="button" class="btn btn-secondary btn-sm" id="searchDlAll">${ic('download')}Descargar resultados (${list.length})</button></div>` : ''}
       <div style="margin-top:24px">${res.length ? docTable(treeOrder(list, { refs: false, hits })) : emptyState('search-x', 'Sin coincidencias', 'Prueba con otra nomenclatura o nombre.')}</div>`;
   }
@@ -4005,6 +4060,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const docs = [...ui.folderSelected].map(id => docById(id)).filter(Boolean);
       await downloadDocsBulk(docs, 'carpeta-seleccion');
     });
+    $('#folderMoveBtn')?.addEventListener('click', () => {
+      if (!ui.folderSelected || !ui.folderSelected.size) return;
+      const docs = [...ui.folderSelected].map(id => docById(id)).filter(Boolean);
+      moveDocsModal(docs);
+    });
+    $('#folderDelBtn')?.addEventListener('click', async () => {
+      if (!ui.folderSelected || !ui.folderSelected.size) return;
+      const docs = [...ui.folderSelected].map(id => docById(id)).filter(Boolean);
+      await deleteDocsBulk(docs);
+    });
     $('#folderDocTbl')?.addEventListener('change', (e) => {
       const cb = e.target.closest('.folder-sel');
       if (!cb) return;
@@ -4013,14 +4078,24 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       else ui.folderSelected.delete(cb.dataset.id);
       const tr = cb.closest('tr');
       if (tr) tr.classList.toggle('row-selected', cb.checked);
+      const n = ui.folderSelected.size;
       const btn = $('#folderSelBtn');
       if (btn) {
-        const n = ui.folderSelected.size;
         btn.innerHTML = n
           ? `${ic('download')}Descargar (${n})`
           : (ui.folderSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`);
-        icons();
       }
+      const mv = $('#folderMoveBtn');
+      if (mv) {
+        mv.disabled = !n;
+        mv.innerHTML = `${ic('folder-input')}Mover o copiar${n ? ` (${n})` : ''}`;
+      }
+      const del = $('#folderDelBtn');
+      if (del) {
+        del.disabled = !n;
+        del.innerHTML = `${ic('trash-2')}Eliminar${n ? ` (${n})` : ''}`;
+      }
+      icons();
     });
     const sort = $('#sortSel'); sort && sort.addEventListener('change', () => { ui.sort = sort.value; render(); });
     const filt = $('#docFilter');
@@ -4124,6 +4199,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       if (LV[lvl] >= 2) items.push({ icon: 'download', label: 'Descargar original', run: () => downloadDoc(d, 'original') });
       if (lvl === 'editar' && can('upload')) items.push({ icon: 'file-pen', label: 'Editar datos', run: () => metaModal(d) });
       if (lvl === 'editar' && can('upload')) items.push({ icon: 'file-up', label: 'Subir nueva versión', run: () => newVersionUpload(d) });
+      if (lvl === 'editar' && can('upload')) items.push({ icon: 'folder-input', label: 'Mover o copiar…', run: () => moveDocsModal([d]) });
       if (can('deleteDocs') && lvl === 'editar') items.push('-', { icon: 'trash-2', label: 'Eliminar', danger: true, run: () => deleteDoc(d) });
       openMenu(el, items);
     },
@@ -5038,6 +5114,40 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     log('documento', `Eliminó ${d.nomenclatura} · ${d.nombre}`); save(); render(); toast('Documento eliminado');
   }
 
+  async function deleteDocsBulk(docs) {
+    const list = (docs || []).filter(Boolean);
+    if (!list.length) return toast('No hay documentos seleccionados', 'err');
+    if (!can('deleteDocs')) return toast('No tienes permiso para eliminar documentos', 'err');
+    const deletable = list.filter(d => areaAccess(d.areaId).level === 'editar');
+    if (!deletable.length) return toast('No tienes permiso de edición sobre los seleccionados', 'err');
+    const skipped = list.length - deletable.length;
+    const names = deletable.slice(0, 5).map(d => esc(d.nomenclatura)).join(', ');
+    const more = deletable.length > 5 ? ` y ${deletable.length - 5} más` : '';
+    let childNote = 0;
+    deletable.forEach(d => { childNote += childrenOf(d.id).filter(k => !deletable.some(x => x.id === k.id)).length; });
+    const text = `Se eliminarán <strong>${deletable.length}</strong> documento${deletable.length === 1 ? '' : 's'} (${names}${more}) y su historial.`
+      + (childNote ? `<br/><br/>${childNote} asociado${childNote === 1 ? '' : 's'} quedarán sin documento rector.` : '')
+      + (skipped ? `<br/><br/><span class="muted">${skipped} sin permiso se omitirán.</span>` : '');
+    if (!await confirmDialog({ title: '¿Eliminar documentos seleccionados?', text, ok: 'Eliminar', danger: true })) return;
+    const ids = new Set(deletable.map(d => d.id));
+    // Quitar vínculos de hijos que no se eliminan
+    (S.docs || []).forEach(k => {
+      if (k.rectorId && ids.has(k.rectorId) && !ids.has(k.id)) k.rectorId = null;
+    });
+    for (const d of deletable) {
+      try { await purgeDocFiles(d); } catch (e) { console.warn(e); }
+    }
+    S.docs = (S.docs || []).filter(x => !ids.has(x.id));
+    log('documento', `Eliminó ${deletable.length} documento(s) en lote`);
+    if (ui.folderSelected) ui.folderSelected.clear();
+    ui.folderSelectMode = false;
+    if (ui.matrixSelected) ui.matrixSelected.clear();
+    ui.matrixSelectMode = false;
+    save();
+    render();
+    toast(`${deletable.length} documento${deletable.length === 1 ? '' : 's'} eliminado${deletable.length === 1 ? '' : 's'}`);
+  }
+
   const nextVersion = (v) => String(parseInt(intVersion(v), 10) + 1);
 
   /* ---------------- Visor / editor ---------------- */
@@ -5378,6 +5488,198 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   function docsOfFolder(folderId) {
     return (S.docs || []).filter(d => d.folderId === folderId);
   }
+
+  /** Mover o copiar uno o varios documentos a otra carpeta (cualquier unidad/área/departamento). */
+  function moveDocsModal(docs) {
+    const list = (Array.isArray(docs) ? docs : [docs]).filter(Boolean);
+    if (!list.length) return toast('No hay documentos para procesar', 'err');
+    const movable = list.filter(d => {
+      const lv = areaAccess(d.areaId).level;
+      return lv === 'editar' && can('upload');
+    });
+    if (!movable.length) return toast('No tienes permiso para mover o copiar estos documentos', 'err');
+
+    const units = (S.units || []).slice().sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    const opt = (v, l, sel) => `<option value="${esc(v)}" ${String(v) === String(sel) ? 'selected' : ''}>${esc(l)}</option>`;
+
+    openModal({
+      title: movable.length === 1 ? 'Mover o copiar documento' : `Mover o copiar ${movable.length} documentos`,
+      sub: movable.length === 1
+        ? `${esc(movable[0].nomenclatura)} · ${esc(movable[0].nombre)}`
+        : 'Elige la acción y la carpeta de destino (puede ser otra empresa, área o departamento).',
+      size: 'md',
+      icon: ic('folder-input'),
+      body: `
+        <div class="field"><label>Acción</label>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
+            <label class="chip" style="cursor:pointer;gap:8px"><input type="radio" name="mvMode" value="move" checked style="accent-color:var(--accent)"/> <span><strong>Mover</strong> — solo se ve en el destino (desaparece del origen). Si buscas el 1.er o 2.º nivel, salen los dos aunque estén en carpetas distintas.</span></label>
+            <label class="chip" style="cursor:pointer;gap:8px"><input type="radio" name="mvMode" value="copy" style="accent-color:var(--accent)"/> <span><strong>Copiar</strong> — el 1.er y 2.º nivel siguen en el origen; en el destino queda la copia. En búsqueda ves origen, copia y relacionados (cada uno una vez).</span></label>
+          </div>
+        </div>
+        <div class="field"><label>Unidad de negocio / Empresa</label>
+          <select class="select" id="mvUnit">${opt('', 'Selecciona…', '') + units.map(u => opt(u.id, u.name, '')).join('')}</select>
+        </div>
+        <div class="field"><label>Área</label>
+          <select class="select" id="mvArea" disabled>${opt('', 'Primero elige unidad', '')}</select>
+        </div>
+        <div class="field"><label>Departamento / Carpeta</label>
+          <select class="select" id="mvFolder" disabled>${opt('', 'Primero elige área', '')}</select>
+        </div>
+        <p class="muted tiny" id="mvHint">Selecciona destino y confirma.</p>
+      `,
+      foot: `<button class="btn btn-ghost" data-close>Cancelar</button>
+             <button class="btn btn-primary" id="mvGo" disabled>${ic('folder-input')}Confirmar</button>`,
+      onMount: (c) => {
+        const uSel = c.$('#mvUnit');
+        const aSel = c.$('#mvArea');
+        const fSel = c.$('#mvFolder');
+        const btnGo = c.$('#mvGo');
+        const hint = c.$('#mvHint');
+        const modeOf = () => (c.$('input[name="mvMode"]:checked')?.value === 'copy' ? 'copy' : 'move');
+        const updateHint = () => {
+          const m = modeOf();
+          const n = movable.length;
+          hint.textContent = m === 'copy'
+            ? `El original sigue en su carpeta (relación visible). Se crea ${n === 1 ? 'una copia' : n + ' copias'} en el destino.`
+            : `Dejará de aparecer en la carpeta actual. En búsqueda seguirá relacionado con rector y asociados (${n} doc.).`;
+          btnGo.innerHTML = m === 'copy' ? `${ic('copy')}Copiar aquí` : `${ic('folder-input')}Mover aquí`;
+          icons();
+        };
+        c.$$('input[name="mvMode"]').forEach(r => r.addEventListener('change', updateHint));
+        updateHint();
+        const fillAreas = () => {
+          const unitId = uSel.value;
+          const areas = (S.areas || []).filter(a => a.unitId === unitId).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+          aSel.innerHTML = opt('', areas.length ? 'Selecciona área…' : 'Sin áreas', '') + areas.map(a => opt(a.id, a.name, '')).join('');
+          aSel.disabled = !areas.length;
+          fSel.innerHTML = opt('', 'Primero elige área', '');
+          fSel.disabled = true;
+          btnGo.disabled = true;
+        };
+        const fillFolders = () => {
+          const aid = aSel.value;
+          const folders = (S.folders || []).filter(f => f.areaId === aid).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+          fSel.innerHTML = opt('', folders.length ? 'Selecciona carpeta…' : 'Sin carpetas', '') + folders.map(f => opt(f.id, `${f.code ? f.code + ' · ' : ''}${f.name}`, '')).join('');
+          fSel.disabled = !folders.length;
+          btnGo.disabled = true;
+        };
+        uSel.addEventListener('change', fillAreas);
+        aSel.addEventListener('change', fillFolders);
+        fSel.addEventListener('change', () => { btnGo.disabled = !fSel.value; });
+        btnGo.addEventListener('click', async () => {
+          const folderId = fSel.value;
+          const folder = folderById(folderId);
+          if (!folder) return toast('Carpeta no válida', 'err');
+          const destAreaId = folder.areaId;
+          const destAcc = areaAccess(destAreaId);
+          if (destAcc.level !== 'editar' || !can('upload')) {
+            return toast('No tienes permiso de edición en el destino', 'err');
+          }
+          const mode = modeOf();
+          btnGo.disabled = true;
+          let n = 0;
+          try {
+            for (const d of movable) {
+              const prevF = folderById(d.folderId);
+              const prevA = areaById(d.areaId);
+              const destLabel = `${areaById(destAreaId)?.name || '—'} / ${folder.name}`;
+              const srcLabel = `${prevA?.name || '—'} / ${prevF?.name || '—'}`;
+              if (mode === 'move') {
+                // Un solo registro: cambia carpeta/área. No se duplica.
+                // Deja de listarse en origen (filtro folderId). La relación rectorId se mantiene para búsqueda.
+                const live = S.docs.find(x => x.id === d.id) || d;
+                const keepRector = live.rectorId;
+                live.folderId = folderId;
+                live.areaId = destAreaId;
+                live.rectorId = keepRector;
+                live.updatedAt = Date.now();
+                n++;
+                log('mover', `Movió ${live.nomenclatura} de ${srcLabel} → ${destLabel} (sin duplicar; relaciones para búsqueda)`);
+              } else {
+                // Copia: original permanece; nuevo registro en destino
+                const src = S.docs.find(x => x.id === d.id) || d;
+                const newId = (Repo.uid || uid)('d_');
+                const clone = {
+                  id: newId,
+                  areaId: destAreaId,
+                  folderId: folderId,
+                  nomenclatura: src.nomenclatura,
+                  nombre: src.nombre,
+                  version: src.version,
+                  fechaActualizacion: src.fechaActualizacion,
+                  tipo: src.tipo,
+                  categoria: src.categoria,
+                  clasificacion: src.clasificacion,
+                  macroproceso: src.macroproceso || '',
+                  fechaEmision: src.fechaEmision || '',
+                  fechaAutorizacion: src.fechaAutorizacion || '',
+                  fechaDifusion: src.fechaDifusion || '',
+                  rectorId: src.rectorId || null,
+                  fileName: src.fileName || '',
+                  ext: src.ext || '',
+                  editable: !!src.editable,
+                  url: '',
+                  history: [],
+                  copiedFrom: src.copiedFrom || src.id,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now(),
+                  createdBy: me?.id || src.createdBy || null,
+                };
+                // Archivos: no abortar el lote si falla uno
+                try {
+                  let blob = null;
+                  if (typeof fetchDocBlob === 'function') {
+                    const got = await fetchDocBlob(src);
+                    if (got && got.blob) blob = got.blob;
+                    if (got && got.fname && !clone.fileName) clone.fileName = got.fname;
+                  }
+                  if (!blob) {
+                    const orig = await Files.get('orig:' + src.id);
+                    if (orig instanceof Blob || orig instanceof File) blob = orig;
+                  }
+                  if (blob) await Files.put('orig:' + newId, blob);
+                } catch (fe) { console.warn('copy orig', src.id, fe); }
+                try {
+                  const html = await Files.get('html:' + src.id);
+                  if (typeof html === 'string' && html) await Files.put('html:' + newId, html);
+                  else if (html instanceof Blob || html instanceof File) await Files.put('html:' + newId, html);
+                } catch (fe) { console.warn('copy html', src.id, fe); }
+                try {
+                  if (typeof Files.publicUrl === 'function') {
+                    const pub = Files.publicUrl('orig:' + newId);
+                    clone.url = (pub && !String(pub).startsWith('local://')) ? pub
+                      : (typeof localDocUrl === 'function' ? localDocUrl(newId) : ('local://docs/' + newId));
+                  } else {
+                    clone.url = typeof localDocUrl === 'function' ? localDocUrl(newId) : ('local://docs/' + newId);
+                  }
+                } catch (fe) {
+                  clone.url = typeof localDocUrl === 'function' ? localDocUrl(newId) : ('local://docs/' + newId);
+                }
+                S.docs.push(clone);
+                n++;
+                log('copiar', `Copió ${src.nomenclatura} de ${srcLabel} → ${destLabel} (nuevo id ${newId})`);
+              }
+            }
+            save();
+            if (ui.folderSelected) ui.folderSelected.clear();
+            ui.folderSelectMode = false;
+            if (ui.matrixSelected) ui.matrixSelected.clear();
+            ui.matrixSelectMode = false;
+            c.close();
+            toast(mode === 'copy'
+              ? `${n} documento${n === 1 ? '' : 's'} copiado${n === 1 ? '' : 's'}`
+              : `${n} documento${n === 1 ? '' : 's'} movido${n === 1 ? '' : 's'}`);
+            render();
+          } catch (e) {
+            console.error(e);
+            toast('No se pudo completar: ' + (e && e.message ? e.message : 'error desconocido'), 'err');
+            btnGo.disabled = false;
+          }
+        });
+      },
+    });
+  }
+
   async function fetchDocBlob(d) {
     // 1) Storage vía Files
     let blob = await Files.get('orig:' + d.id);
