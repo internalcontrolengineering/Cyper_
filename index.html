@@ -1522,20 +1522,52 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 .chip.ver { min-width: 28px; justify-content: center; font-variant-numeric: tabular-nums; }
 .rector-field { padding: 14px 16px; border-radius: 14px; background: rgba(48, 209, 88, .08); border: 1px solid rgba(48, 209, 88, .25); animation: rise .35s var(--ease) both; }
 .rector-field select.invalid, .rector-field .rector-combo.invalid [data-rector-search] { border-color: var(--danger); }
-.rector-combo { position: relative; }
+.rector-combo { position: relative; z-index: 5; }
 .rector-combo [data-rector-search] { width: 100%; }
 .rector-list {
-  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 60;
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 200;
   max-height: 240px; overflow-y: auto; padding: 6px;
-  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px;
-  box-shadow: var(--shadow-md);
+  background: #ffffff;
+  background-color: #ffffff;
+  border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.18);
+  opacity: 1;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  isolation: isolate;
+}
+[data-theme="dark"] .rector-list {
+  background: #1c1c1e;
+  background-color: #1c1c1e;
+  box-shadow: 0 8px 28px rgba(0,0,0,.55);
 }
 .rector-list.hidden { display: none; }
 .rector-list button {
   display: block; width: 100%; text-align: left; padding: 8px 10px; border-radius: 8px;
-  font-size: 13px; color: var(--text); border: 0; background: transparent; cursor: pointer;
+  font-size: 13px; color: var(--text); border: 0;
+  background: #ffffff;
+  background-color: #ffffff;
+  cursor: pointer;
 }
-.rector-list button:hover, .rector-list button.on { background: var(--accent-soft); }
+[data-theme="dark"] .rector-list button {
+  background: #1c1c1e;
+  background-color: #1c1c1e;
+  color: var(--text);
+}
+.rector-list button:hover, .rector-list button.on {
+  background: var(--accent-soft);
+  background-color: var(--accent-soft);
+}
+.rector-list .rl-group,
+.rector-list .rl-empty {
+  background: #ffffff;
+  background-color: #ffffff;
+}
+[data-theme="dark"] .rector-list .rl-group,
+[data-theme="dark"] .rector-list .rl-empty {
+  background: #1c1c1e;
+  background-color: #1c1c1e;
+}
 .rector-list button .mono { font-weight: 600; }
 .rector-list .rl-group {
   padding: 8px 10px 4px; font-size: 11px; font-weight: 600; color: var(--text-3);
@@ -3823,7 +3855,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       : copySrc ? `Copia de ${esc(copySrc.nomenclatura)}${copySrc.folderId !== d.folderId ? ` · ${esc(folderById(copySrc.folderId)?.name || '')}` : ''}`
       : (t.orphan || (t.depth && r && r.folderId !== d.folderId)) && r ? `Rector: ${esc(r.nomenclatura)}${r.folderId !== d.folderId ? ` · ${esc(folderById(r.folderId)?.name || '')}` : ''}`
       : (!t.depth && nk && !info) ? `${nk} ${nk === 1 ? 'documento asociado' : 'documentos asociados'}`
-      : esc(d.fileName);
+      : (() => {
+          // No mostrar el nombre de archivo original debajo: suele conservar la nomenclatura antigua
+          // y confunde tras renombrar. Solo se muestra si es claramente distinto de nomenclatura/nombre.
+          const fn = (d.fileName || '').trim();
+          if (!fn) return '';
+          const base = fn.replace(/\.[a-zA-Z0-9]+$/, '').trim();
+          const nom = (d.nomenclatura || '').trim();
+          const nombre = (d.nombre || '').trim();
+          const b = base.toLowerCase();
+          if (nom && b.includes(nom.toLowerCase())) return '';
+          if (nombre && (b === nombre.toLowerCase() || b.includes(nombre.toLowerCase()))) return '';
+          if (nom && nombre && b === `${nom} ${nombre}`.toLowerCase()) return '';
+          return esc(fn);
+        })();
     const depth = t.depth || 0;
     const del = st === 'eliminado';
     const url = d.url || localDocUrl(d.id);
@@ -4641,8 +4686,54 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             `<button type="button" data-rid="${d.id}" class="${d.id === hidden.value ? 'on' : ''}"><strong class="mono">${esc(d.nomenclatura)}</strong> · ${esc(d.nombre)} <span class="tiny">(${esc(d.tipo)} · ${esc(CAT_LEVEL[d.categoria] || '')})</span></button>`
           ).join('')).join('');
       }
-      if (open) list.classList.remove('hidden');
+      if (open) {
+        // Sacar el listado del modal (transform del modal rompe position:fixed)
+        if (list.parentElement !== document.body) {
+          document.body.appendChild(list);
+        }
+        list.classList.remove('hidden');
+        combo.classList.add('is-open');
+        const place = () => {
+          const r = search.getBoundingClientRect();
+          const width = Math.max(r.width, 280);
+          let left = r.left;
+          if (left + width > window.innerWidth - 8) left = Math.max(8, window.innerWidth - width - 8);
+          let top = r.bottom + 4;
+          const maxH = Math.min(280, window.innerHeight * 0.4);
+          list.style.maxHeight = maxH + 'px';
+          if (top + Math.min(maxH, 160) > window.innerHeight) {
+            top = Math.max(8, r.top - maxH - 4);
+          }
+          const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+          Object.assign(list.style, {
+            position: 'fixed',
+            left: left + 'px',
+            top: top + 'px',
+            width: width + 'px',
+            right: 'auto',
+            zIndex: '10050',
+            background: dark ? '#1c1c1e' : '#ffffff',
+            backgroundColor: dark ? '#1c1c1e' : '#ffffff',
+            display: 'block',
+            opacity: '1',
+            visibility: 'visible',
+          });
+        };
+        place();
+        requestAnimationFrame(place);
+      } else {
+        list.classList.add('hidden');
+        combo.classList.remove('is-open');
+        if (list.parentElement === document.body && combo) {
+          combo.appendChild(list);
+        }
+      }
       icons();
+    };
+    const closeRectorList = () => {
+      list.classList.add('hidden');
+      combo.classList.remove('is-open');
+      if (list.parentElement === document.body) combo.appendChild(list);
     };
     // Permite refrescar candidatos cuando cambia el tipo o tras publicar otro de la cola
     b._refreshRector = () => {
@@ -4668,12 +4759,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         const d = S.docs.find(x => x.id === id);
         search.value = d ? `${d.nomenclatura} · ${d.nombre}` : '';
       }
-      list.classList.add('hidden');
+      closeRectorList();
       combo.classList.remove('invalid');
       hidden.dispatchEvent(new Event('change', { bubbles: true }));
     });
     document.addEventListener('click', (e) => {
-      if (!combo.contains(e.target)) list.classList.add('hidden');
+      if (!combo.contains(e.target) && !list.contains(e.target)) closeRectorList();
     });
   }
   function bindTipoBlock(root) {
