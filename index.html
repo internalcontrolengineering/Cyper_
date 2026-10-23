@@ -451,6 +451,9 @@ a.url-ver:hover, button.url-ver:hover { text-decoration: underline; }
 .matrix-tbl { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 13px; }
 .matrix-tbl th, .matrix-tbl td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; vertical-align: middle; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
 .matrix-tbl th { font-size: 11.5px; font-weight: 500; color: var(--text-3); position: sticky; top: 0; background: var(--bg-elev); z-index: 5; }
+.th-sort { cursor: pointer; user-select: none; }
+.th-sort:hover { color: var(--accent); }
+th.col-sorted .th-label { color: var(--accent); font-weight: 600; }
 .matrix-tbl th .th-label, .doc-tbl th .th-label { margin-right: 4px; }
 .matrix-tbl th .col-filter-btn, .doc-tbl th .col-filter-btn {
   display: inline-flex; align-items: center; justify-content: center;
@@ -2548,7 +2551,17 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     { view: 'home', unitId: null, areaId: null, folderId: null, tab: 'general', q: '' },
     _savedRoute || {}
   );
-  const ui = { docView: 'list', sort: 'recent', filter: '', matrixFilter: '', colWidths: {}, matrixSelectMode: false, matrixSelected: new Set(), folderSelectMode: false, folderSelected: new Set(), lastSearchDocs: [] };
+  const ui = { docView: 'list', sort: 'recent', filter: '', matrixFilter: '', colWidths: {}, matrixSelectMode: false, matrixSelected: new Set(), folderSelectMode: false, folderSelected: new Set(), lastSearchDocs: [], matrixColSort: { col: null, dir: 'asc' }, folderColSort: { col: null, dir: 'asc' } };
+  try {
+    const store = window.LocalStore || localStorage;
+    const raw = store.getItem('cyper_col_sort');
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p && p.matrixColSort && typeof p.matrixColSort === 'object') ui.matrixColSort = { col: p.matrixColSort.col ?? null, dir: p.matrixColSort.dir === 'desc' ? 'desc' : 'asc' };
+      if (p && p.folderColSort && typeof p.folderColSort === 'object') ui.folderColSort = { col: p.folderColSort.col ?? null, dir: p.folderColSort.dir === 'desc' ? 'desc' : 'asc' };
+    }
+  } catch (e) {}
+  ui.colSortMark = null;
 
   function resolvedTheme() {
     let t = S?.settings?.theme || 'auto';
@@ -3133,6 +3146,83 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
 
   /* ---------------- Pestaña Dashboard ---------------- */
+  function toggleTableColSort(which, col) {
+    const key = which === 'folder' ? 'folderColSort' : 'matrixColSort';
+    if (!ui[key]) ui[key] = { col: null, dir: 'asc' };
+    if (ui[key].col === col) ui[key].dir = ui[key].dir === 'asc' ? 'desc' : 'asc';
+    else ui[key] = { col, dir: 'asc' };
+    ui.colSortMark = which;
+    try {
+      const store = window.LocalStore || localStorage;
+      store.setItem('cyper_col_sort', JSON.stringify({
+        matrixColSort: ui.matrixColSort || { col: null, dir: 'asc' },
+        folderColSort: ui.folderColSort || { col: null, dir: 'asc' },
+      }));
+    } catch (e) {}
+  }
+  function cmpColSort(va, vb, dir) {
+    const mul = dir === 'desc' ? -1 : 1;
+    if (va == null || va === '' || (typeof va === 'number' && isNaN(va))) {
+      if (vb == null || vb === '' || (typeof vb === 'number' && isNaN(vb))) return 0;
+      return 1;
+    }
+    if (vb == null || vb === '' || (typeof vb === 'number' && isNaN(vb))) return -1;
+    if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * mul;
+    return String(va).localeCompare(String(vb), 'es', { numeric: true, sensitivity: 'base' }) * mul;
+  }
+  function matrixColValue(d, col) {
+    const a = areaById(d.areaId), f = folderById(d.folderId), u = unitById(a?.unitId);
+    switch (col) {
+      case 0: return u?.name || '';
+      case 1: return d.nomenclatura || '';
+      case 2: return d.nombre || '';
+      case 3: return d.macroproceso || '';
+      case 4: return a?.name || '';
+      case 5: return f?.name || '';
+      case 6: return d.tipo || '';
+      case 7: return d.categoria || '';
+      case 8: return d.clasificacion || '';
+      case 9: { const n = parseFloat(String(d.version ?? '').replace(/[^0-9.-]/g, '')); return isNaN(n) ? null : n; }
+      case 10: return d.fechaEmision ? Date.parse(d.fechaEmision) : null;
+      case 11: return d.updatedAt || (d.fechaActualizacion ? Date.parse(d.fechaActualizacion) : null);
+      case 12: return d.fechaAutorizacion ? Date.parse(d.fechaAutorizacion) : null;
+      case 13: return d.fechaDifusion ? Date.parse(d.fechaDifusion) : null;
+      case 14: return d.url || '';
+      case 15: return d.rectorId ? (docById(d.rectorId)?.nomenclatura || '') : '';
+      case 16: return (typeof estadoLabel === 'function' ? estadoLabel(computeEstado(d)) : computeEstado(d)) || '';
+      default: return '';
+    }
+  }
+  function folderColValue(d, col) {
+    const a = areaById(d.areaId), f = folderById(d.folderId);
+    switch (col) {
+      case 0: return (d.ext || '').toLowerCase();
+      case 1: return `${d.nomenclatura || ''} ${d.nombre || ''}`;
+      case 2: return d.nomenclatura || '';
+      case 3: return d.nombre || '';
+      case 4: return d.macroproceso || '';
+      case 5: return a?.name || '';
+      case 6: return f?.name || '';
+      case 7: return d.tipo || '';
+      case 8: return d.categoria || '';
+      case 9: return d.clasificacion || '';
+      case 10: { const n = parseFloat(String(d.version ?? '').replace(/[^0-9.-]/g, '')); return isNaN(n) ? null : n; }
+      case 11: return d.fechaEmision ? Date.parse(d.fechaEmision) : null;
+      case 12: return d.updatedAt || (d.fechaActualizacion ? Date.parse(d.fechaActualizacion) : null);
+      case 13: return d.fechaAutorizacion ? Date.parse(d.fechaAutorizacion) : null;
+      case 14: return d.fechaDifusion ? Date.parse(d.fechaDifusion) : null;
+      case 15: return (typeof estadoLabel === 'function' ? estadoLabel(computeEstado(d)) : computeEstado(d)) || '';
+      default: return '';
+    }
+  }
+  function sortDocsByCol(docs, which) {
+    const st = which === 'folder' ? ui.folderColSort : ui.matrixColSort;
+    if (!st || st.col == null) return docs;
+    const getter = which === 'folder' ? folderColValue : matrixColValue;
+    const col = st.col, dir = st.dir || 'asc';
+    return docs.slice().sort((a, b) => cmpColSort(getter(a, col), getter(b, col), dir));
+  }
+
   function matrixView() {
     if (!ui.matrixSelected) ui.matrixSelected = new Set();
     const selMode = !!ui.matrixSelectMode;
@@ -3199,6 +3289,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const cats = [...CATEGORIAS, 'Sin categoría'].filter(c => docs.some(d => (d.categoria || 'Sin categoría') === c));
     const tipos = [...new Set(docs.map(d => d.tipo || 'Sin tipo'))].sort((a,b)=>a.localeCompare(b,'es'));
     const opt = (v, l, sel) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(l)}</option>`;
+    // Ordenar por columna si aplica
+    filtered = sortDocsByCol(filtered, 'matrix');
     // Rebuild rows from filtered
     const rowsF = filtered.map(d => {
       const a = areaById(d.areaId), f = folderById(d.folderId), u = unitById(a?.unitId);
@@ -3235,7 +3327,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       </tr>`;
     }).join('');
     const colLabels = ['Unidad de negocio','Nomenclatura','Nombre','Macroproceso','Área','Departamento','Tipo de Documento','Categoría','Clasificación','Versión','Fecha de emisión','Fecha de última actualización','Fecha de autorización','Fecha de difusión','URL','Documento Rector','Estado'];
-    const ths = (selMode ? `<th class="matrix-sel-td" title="Seleccionar" style="width:44px;min-width:44px;max-width:44px;text-align:center">${ic('check-square')}</th>` : '') + colLabels.map((lab, i) => `<th data-col="${i}"><span class="th-label">${lab}</span><button type="button" class="col-filter-btn" data-col-filter="${i}" title="Filtrar columna" aria-label="Filtrar ${esc(lab)}">${ic('chevrons-up-down')}</button></th>`).join('');
+    const ms = ui.matrixColSort || { col: null, dir: 'asc' };
+    const showMark = ui.colSortMark === 'matrix';
+    const ths = (selMode ? `<th class="matrix-sel-td" title="Seleccionar" style="width:44px;min-width:44px;max-width:44px;text-align:center">${ic('check-square')}</th>` : '') + colLabels.map((lab, i) => {
+      const on = showMark && ms.col === i;
+      const arrow = on ? (ms.dir === 'asc' ? ' ↑' : ' ↓') : '';
+      const tip = (ms.col === i) ? (ms.dir === 'asc' ? 'Orden ascendente (clic para invertir)' : 'Orden descendente (clic para invertir)') : 'Ordenar columna';
+      return `<th data-col="${i}" class="${on ? 'col-sorted col-sorted-' + ms.dir : ''}"><span class="th-label th-sort" data-sort-col="${i}" title="${tip}" role="button" tabindex="0">${lab}${arrow}</span><button type="button" class="col-filter-btn" data-col-filter="${i}" title="Filtrar columna" aria-label="Filtrar ${esc(lab)}">${ic('chevrons-up-down')}</button></th>`;
+    }).join('');
     return `<section class="hero hero-sm"><div class="eyebrow">Matriz Documental</div>
       <h1>Listado maestro de documentos.</h1>
       <p>Matriz consolidada de documentos</p></section>
@@ -3261,6 +3360,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
   function bindMatrix() {
     const refresh = () => { $('#view').innerHTML = matrixView(); icons(); bindMatrix();  };
+    $$('#matrixTbl .th-sort[data-sort-col]').forEach(el => {
+      if (el.dataset.sortBound) return;
+      el.dataset.sortBound = '1';
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        toggleTableColSort('matrix', +el.dataset.sortCol);
+        refresh();
+      });
+    });
     // (acts globales via document click)
     const rebindClick = () => {
       $$('#view [data-act]').forEach(el => {
@@ -3597,6 +3706,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const sorters = { recent: (x, y) => y.updatedAt - x.updatedAt, code: (x, y) => x.nomenclatura.localeCompare(y.nomenclatura, 'es', { numeric: true }), name: (x, y) => x.nombre.localeCompare(y.nombre, 'es') };
     docs.sort(sorters[ui.sort]);
     docs.sort((a, b) => (computeEstado(a) === 'eliminado' ? 1 : 0) - (computeEstado(b) === 'eliminado' ? 1 : 0));
+    if (ui.folderColSort && ui.folderColSort.col != null) docs = sortDocsByCol(docs, 'folder');
     const up = canUploadIn(a.id);
     const u = unitById(a.unitId);
     return `${crumbs([...(u ? [{ label: u.name, act: 'openUnit', id: u.id }] : []), { label: a.name, act: 'openArea', id: a.id }, { label: f.name }])}
@@ -3630,9 +3740,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const badge = (ext) => `<div class="file-badge" style="background:${EXT_COLOR[ext] || '#8e8e93'}">${esc((ext || 'doc').toUpperCase().slice(0, 4))}</div>`;
   const fmtDocDate = (d) => d && d.fechaActualizacion ? fmtDate(d.fechaActualizacion) : '—';
   const FOLDER_COL_LABELS = ['', 'Documento', 'Nomenclatura', 'Nombre', 'Macroproceso', 'Área', 'Departamento', 'Tipo de Documento', 'Categoría', 'Clasificación', 'Versión', 'Fecha de emisión', 'Fecha de última actualización', 'Fecha de autorización', 'Fecha de difusión', 'Estado', 'URL', ''];
-  const folderColTh = (lab, i, filterable = true) => filterable && lab
-    ? `<th data-col="${i}"><span class="th-label">${lab}</span><button type="button" class="col-filter-btn" data-folder-col-filter="${i}" title="Filtrar columna" aria-label="Filtrar ${lab}">${ic('chevrons-up-down')}</button></th>`
-    : `<th${lab ? '' : ' style="width:44px"'}>${lab || ''}</th>`;
+  const folderColTh = (lab, i, filterable = true) => {
+    if (!(filterable && lab)) return `<th${lab ? '' : ' style="width:44px"'}>${lab || ''}</th>`;
+    const fs = ui.folderColSort || { col: null, dir: 'asc' };
+    const on = ui.colSortMark === 'folder' && fs.col === i;
+    const arrow = on ? (fs.dir === 'asc' ? ' ↑' : ' ↓') : '';
+    const tip = (fs.col === i) ? (fs.dir === 'asc' ? 'Orden ascendente (clic para invertir)' : 'Orden descendente (clic para invertir)') : 'Ordenar columna';
+    return `<th data-col="${i}" class="${on ? 'col-sorted col-sorted-' + fs.dir : ''}"><span class="th-label th-sort" data-folder-sort-col="${i}" title="${tip}" role="button" tabindex="0">${lab}${arrow}</span><button type="button" class="col-filter-btn" data-folder-col-filter="${i}" title="Filtrar columna" aria-label="Filtrar ${lab}">${ic('chevrons-up-down')}</button></th>`;
+  };
   const docHeader = () => {
     const selMode = !!ui.folderSelectMode;
     return `<thead><tr>
@@ -4071,6 +4186,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         tr.style.display = ok ? '' : 'none';
       });
     };
+    tbl.querySelectorAll('[data-folder-sort-col]').forEach(el => {
+      if (el.dataset.sortBound) return;
+      el.dataset.sortBound = '1';
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        toggleTableColSort('folder', +el.dataset.folderSortCol);
+        render();
+      });
+    });
     tbl.querySelectorAll('[data-folder-col-filter]').forEach(btn => {
       if (btn.dataset.boundColFilter) return;
       btn.dataset.boundColFilter = '1';
