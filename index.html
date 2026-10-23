@@ -1730,6 +1730,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     ['Instrucciones de Operación', 'Soporte', 'IDO'],
     ['Hojas de Verificación', 'Soporte', 'HOV'],
     ['Ayuda Visual', 'Soporte', 'AVI'],
+    ['Comunicado', 'Soporte', 'COM'],
+    ['Registro', 'Soporte', 'REG'],
   ].map(([name, cat, code]) => ({ name, cat, code }));
 
   const defaultSettings = () => ({
@@ -2237,6 +2239,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       'guía operativa': 'Guía Operativa', 'guia operativa': 'Guía Operativa',
       'instructivo de llenado': 'Instructivo de Llenado', 'ayuda visual': 'Ayuda Visual',
       'formato': 'Formato', 'plan': 'Plan',
+      'comunicado': 'Comunicado', 'registro': 'Registro',
     };
     S.catalogs.tipos = S.catalogs.tipos.map(t => {
       const key = (t.name || '').toLowerCase();
@@ -2418,10 +2421,49 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     return `<span class="chip ${cls}">${esc(r.name)}</span>`;
   }
   function tipoCode(tipoName) {
-    const t = (S.catalogs.tipos || []).find(x => x.name === tipoName);
-    if (t && t.code) return t.code;
-    return (tipoName || 'DOC').normalize('NFD').replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase() || 'DOC';
+    if (!tipoName) return '';
+    const list = (S && S.catalogs && Array.isArray(S.catalogs.tipos)) ? S.catalogs.tipos : [];
+    let t = list.find(x => x && x.name === tipoName);
+    if (!t) t = list.find(x => x && String(x.name || '').toLowerCase() === String(tipoName).toLowerCase());
+    if (t && t.code) return String(t.code).toUpperCase();
+    // Códigos oficiales de respaldo (3er nivel y demás)
+    const OFF = {
+      'anexos': 'ANE', 'anexo': 'ANE',
+      'formato': 'FOR',
+      'instructivo de llenado': 'IDY',
+      'bitácoras': 'BIT', 'bitacoras': 'BIT', 'bitácora': 'BIT', 'bitacora': 'BIT',
+      'listados': 'LIS', 'listado': 'LIS',
+      'catalogo': 'CAT', 'catálogo': 'CAT',
+      'instrucciones de operación': 'IDO', 'instrucciones de operacion': 'IDO',
+      'hojas de verificación': 'HOV', 'hojas de verificacion': 'HOV', 'hoja de verificación': 'HOV', 'hoja de verificacion': 'HOV',
+      'ayuda visual': 'AVI',
+      'comunicado': 'COM',
+      'registro': 'REG',
+      'manual pylg': 'PLG',
+      'procedimiento': 'POP',
+      'políticas': 'POL', 'politicas': 'POL',
+      'guía operativa': 'GOP', 'guia operativa': 'GOP',
+      'plan': 'PLN',
+      'manual técnico': 'MAN', 'manual tecnico': 'MAN',
+    };
+    const key = String(tipoName).toLowerCase().normalize('NFD').replace(/́/g, '');
+    const key2 = String(tipoName).toLowerCase();
+    if (OFF[key2]) return OFF[key2];
+    if (OFF[key]) return OFF[key];
+    // Último recurso: iniciales del nombre (no forzar ANE)
+    return (tipoName || 'DOC').normalize('NFD').replace(/[^A-Za-z0-9]/g, '').slice(0, 3).toUpperCase() || 'DOC';
   }
+    /** Sustituye solo el código de tipo (2º segmento) en una nomenclatura existente. */
+  function swapTipoInNomenclatura(nomen, tipo) {
+    const tCode = tipoCode(tipo);
+    if (!tCode || !nomen || !String(nomen).trim()) return '';
+    const parts = String(nomen).trim().split('-');
+    if (parts.length < 2) return '';
+    // Formato habitual: UNIDAD-TIPO-CARPETA-##...
+    parts[1] = tCode;
+    return parts.join('-');
+  }
+
   function suggestNomenclatura(folder, tipo) {
     if (!tipo) return ''; // Esperar a que se elija el tipo de documento
     const area = areaById(folder.areaId);
@@ -4501,11 +4543,24 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const nom = form.querySelector('[name=nomenclatura]');
       if (nom && !nom.readOnly && b.dataset.folder) {
         const folder = folderById(b.dataset.folder);
-        if (folder && (nom.dataset.suggested === '1' || !nom.value.trim())) {
-          const s = suggestNomenclatura(folder, sel.value);
-          nom.value = s;
-          nom.dataset.suggested = s ? '1' : '1';
-          nom.dispatchEvent(new Event('input'));
+        if (folder) {
+          const cur = (nom.value || '').trim();
+          let s = '';
+          if (cur) {
+            // Respetar lo escrito: solo cambia el código de tipo (ANE, FOR, COM…)
+            s = swapTipoInNomenclatura(cur, sel.value) || suggestNomenclatura(folder, sel.value);
+          } else {
+            s = suggestNomenclatura(folder, sel.value);
+          }
+          nom.dataset.autoUpdating = '1';
+          nom.value = s || '';
+          nom.dataset.suggested = cur ? (nom.dataset.suggested || '0') : '1';
+          nom.dispatchEvent(new Event('input', { bubbles: true }));
+          if (!cur) {
+            nom.dataset.suggested = '1';
+            nom.dataset.manual = '0';
+          }
+          delete nom.dataset.autoUpdating;
         }
       }
     });
@@ -4767,7 +4822,18 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const fileDate = new Date(file.lastModified || now());
     const version = intVersion(draft?.version || Q.shared?.version || p.version || S.settings.versionInicial);
     const fecha = draft?.fecha || Q.shared?.fecha || toLocalInput(fileDate).slice(0, 10);
-    const nomenclatura = draft?.nomenclatura ?? p.nomenclatura;
+    // Nomenclatura: si el archivo trae una válida se respeta; si no, se propone para CADA archivo (individual o cola)
+    const fromFile = !!(p.nomenclatura && !p.suggested);
+    let nomenclatura = '';
+    if (Q.replaceDoc) {
+      nomenclatura = p.nomenclatura || '';
+    } else if (draft && draft.autoNomen === false && String(draft.nomenclatura || '').trim()) {
+      nomenclatura = draft.nomenclatura;
+    } else if (fromFile) {
+      nomenclatura = p.nomenclatura;
+    } else {
+      nomenclatura = tipo ? (suggestNomenclatura(Q.folder, tipo) || '') : (p.nomenclatura || '');
+    }
     const nombreDoc = draft?.nombre ?? p.nombre;
     const ext = extOf(file.name);
     openModal({
@@ -4789,7 +4855,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <div class="file-preview-card">${badge(ext)}<div class="doc-name"><strong>${esc(file.name)}</strong><span>${fmtSize(file.size)} · modificado ${fmtDate(fileDate)}</span></div></div>
         <form id="uf" novalidate>
         <div class="row">
-          <div class="field"><label for="uNom">Nomenclatura</label><input class="input mono" id="uNom" name="nomenclatura" value="${esc(nomenclatura)}" required ${Q.replaceDoc ? 'readonly' : ''} data-suggested="${draft || !p.suggested ? '0' : '1'}"/>
+          <div class="field"><label for="uNom">Nomenclatura</label><input class="input mono" id="uNom" name="nomenclatura" value="${esc(nomenclatura)}" required ${Q.replaceDoc ? 'readonly' : ''} data-suggested="${Q.replaceDoc || fromFile ? '0' : '1'}"/>
             <div class="hint">${Q.replaceDoc ? 'Se conserva la nomenclatura del documento' : p.suggested && !draft ? 'Se generará al elegir el tipo de documento · editable' : 'Extraída del nombre del archivo · editable'}</div><div class="err hidden" id="dupWarn"></div></div>
           <div class="field"><label for="uNombre">Nombre del documento</label><input class="input" id="uNombre" name="nombre" value="${esc(nombreDoc)}" required/><div class="hint">Extraído del nombre del archivo · editable</div></div>
         </div>
@@ -4845,7 +4911,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             f.fechaEmision.value = fecha;
           }
         };
-        f.nomenclatura.addEventListener('input', () => { f.nomenclatura.dataset.suggested = '0'; checkDup(); });
+        f.nomenclatura.addEventListener('input', () => {
+          if (f.nomenclatura.dataset.autoUpdating === '1') { checkDup(); return; }
+          f.nomenclatura.dataset.suggested = '0';
+          f.nomenclatura.dataset.manual = f.nomenclatura.value.trim() ? '1' : '0';
+          checkDup();
+        });
         checkDup();
         f.version?.addEventListener('input', syncEstadoUI);
         f.version?.addEventListener('change', syncEstadoUI);
@@ -4863,9 +4934,13 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         });
         bindCatalogFields(f); bindTipoBlock(f);
         syncEstadoUI();
+        f.nomenclatura?.addEventListener('input', () => {
+          if (f.nomenclatura.dataset && f.nomenclatura.dataset.autoUpdating !== '1') { f.nomenclatura.dataset.suggested = '0'; f.nomenclatura.dataset.manual = f.nomenclatura.value.trim() ? '1' : '0'; }
+        });
         const saveDraft = () => {
           Q.drafts[Q.i] = {
             nomenclatura: f.nomenclatura?.value || '',
+            autoNomen: f.nomenclatura?.dataset?.suggested === '1',
             nombre: f.nombre?.value || '',
             version: f.version?.value || '',
             fecha: f.fecha?.value || '',
