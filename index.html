@@ -4684,7 +4684,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   async function deleteUnit(u) {
     const na = S.areas.filter(a => a.unitId === u.id).length;
     if (na) return toast(`Hay ${na} áreas en esta unidad; muévelas o elimínalas primero`, 'err');
-    if (!await confirmDialog({ title: `¿Eliminar unidad ${esc(u.name)}?`, text: 'Esta acción no se puede deshacer.', ok: 'Eliminar', danger: true })) return;
+    if (!await confirmDestructive(`¿Eliminar ${esc(u.name)}?`, 'Esta acción no se puede deshacer.')) return;
     S.units = S.units.filter(x => x.id !== u.id);
     log('área', `Eliminó la unidad ${u.name}`); save(); go('home'); toast('Unidad eliminada');
   }
@@ -5262,7 +5262,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   async function deleteDoc(d) {
     const kids = childrenOf(d.id);
-    if (!await confirmDialog({ title: '¿Eliminar documento?', text: `${esc(d.nomenclatura)} · ${esc(d.nombre)} y todo su historial de versiones.${kids.length ? `<br/><br/>Es rector de ${kids.length} ${kids.length === 1 ? 'documento' : 'documentos'} (${kids.slice(0, 3).map(k => esc(k.nomenclatura)).join(', ')}${kids.length > 3 ? '…' : ''}), que quedarán sin documento rector.` : ''}`, ok: 'Eliminar', danger: true })) return;
+    if (!await confirmDestructive('¿Eliminar documento?', `${esc(d.nomenclatura)} · ${esc(d.nombre)} y todo su historial de versiones.${kids.length ? `<br/><br/>Es rector de ${kids.length} ${kids.length === 1 ? 'documento' : 'documentos'} (${kids.slice(0, 3).map(k => esc(k.nomenclatura)).join(', ')}${kids.length > 3 ? '…' : ''}), que quedarán sin documento rector.` : ''}`)) return;
     kids.forEach(k => k.rectorId = null);
     await purgeDocFiles(d);
     S.docs = S.docs.filter(x => x.id !== d.id);
@@ -5283,7 +5283,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const text = `Se eliminarán <strong>${deletable.length}</strong> documento${deletable.length === 1 ? '' : 's'} (${names}${more}) y su historial.`
       + (childNote ? `<br/><br/>${childNote} asociado${childNote === 1 ? '' : 's'} quedarán sin documento rector.` : '')
       + (skipped ? `<br/><br/><span class="muted">${skipped} sin permiso se omitirán.</span>` : '');
-    if (!await confirmDialog({ title: '¿Eliminar documentos seleccionados?', text, ok: 'Eliminar', danger: true })) return;
+    if (!await confirmDestructive('¿Eliminar documentos seleccionados?', text)) return;
     const ids = new Set(deletable.map(d => d.id));
     // Quitar vínculos de hijos que no se eliminan
     (S.docs || []).forEach(k => {
@@ -6685,8 +6685,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     $('#auditDelSel')?.addEventListener('click', async () => {
       const ids = $$('#auditList .audit-check:checked').map(b => b.value);
       if (!ids.length) return;
-      if (!(await askActionPassword('Eliminar registros seleccionados de la bitácora'))) return;
-      if (!await confirmDialog({ title: '¿Eliminar seleccionados?', text: `Se eliminarán ${ids.length} registro${ids.length === 1 ? '' : 's'} de la bitácora.`, ok: 'Eliminar', danger: true })) return;
+      if (!await confirmDestructive('¿Eliminar seleccionados?', `Se eliminarán ${ids.length} registro${ids.length === 1 ? '' : 's'} de la bitácora.`)) return;
       const set = new Set(ids);
       S.audit = S.audit.filter(a => !set.has(a.id));
       save(); log('sistema', `Eliminó ${ids.length} registro(s) de la bitácora`); save();
@@ -6694,8 +6693,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     });
     $('#auditDelAll')?.addEventListener('click', async () => {
       if (!S.audit.length) return;
-      if (!(await askActionPassword('Eliminar todos los registros de la bitácora'))) return;
-      if (!await confirmDialog({ title: '¿Eliminar toda la bitácora?', text: `Se eliminarán ${S.audit.length} registros. Esta acción no se puede deshacer.`, ok: 'Eliminar todos', danger: true })) return;
+      if (!await confirmDestructive('¿Eliminar toda la bitácora?', `Se eliminarán ${S.audit.length} registros. Esta acción no se puede deshacer.`)) return;
       S.audit = [];
       save(); log('sistema', 'Se eliminó toda la bitácora'); save();
       render(); toast('Bitácora vaciada');
