@@ -3724,6 +3724,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <button type="button" class="btn btn-secondary btn-sm" id="folderSelBtn">${(ui.folderSelected && ui.folderSelected.size) ? `${ic('download')}Descargar (${ui.folderSelected.size})` : (ui.folderSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`)}</button>
           ${ui.folderSelectMode ? `<button type="button" class="btn btn-secondary btn-sm" id="folderMoveBtn" ${!(ui.folderSelected && ui.folderSelected.size) ? 'disabled' : ''}>${ic('folder-input')}Mover o copiar${ui.folderSelected && ui.folderSelected.size ? ` (${ui.folderSelected.size})` : ''}</button>` : ''}
           ${ui.folderSelectMode && can('deleteDocs') ? `<button type="button" class="btn btn-danger btn-sm" id="folderDelBtn" ${!(ui.folderSelected && ui.folderSelected.size) ? 'disabled' : ''}>${ic('trash-2')}Eliminar${ui.folderSelected && ui.folderSelected.size ? ` (${ui.folderSelected.size})` : ''}</button>` : ''}
+          
+          <button type="button" class="btn btn-ghost btn-sm" id="folderClearFilters">${ic('rotate-ccw')}Limpiar</button>
           <label class="search" style="width:220px">${ic('filter')}<input id="docFilter" placeholder="Filtrar en carpeta" value="${esc(ui.filter)}" /></label>
         </div>
         ${up ? `<button class="btn btn-primary" data-act="pick">${ic('upload')}Subir documentos</button>` : ''}
@@ -4316,6 +4318,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       if (!ui.folderSelected || !ui.folderSelected.size) return;
       const docs = [...ui.folderSelected].map(id => docById(id)).filter(Boolean);
       await deleteDocsBulk(docs);
+    });
+    $('#folderClearFilters')?.addEventListener('click', () => {
+      ui.folderColFilters = {};
+      ui.filter = '';
+      render();
+      toast('Filtros limpiados');
     });
     $('#folderDocTbl')?.addEventListener('change', (e) => {
       const cb = e.target.closest('.folder-sel');
