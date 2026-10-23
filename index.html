@@ -358,14 +358,43 @@ svg.lucide { width: 18px; height: 18px; stroke-width: 1.8; flex-shrink: 0; }
 .dropzone.drag { border-color: var(--accent); background: var(--accent-soft); transform: scale(1.01); }
 .dropzone.drag .dz-icon { transform: translateY(-6px) scale(1.1); }
 
-.doc-list { background: var(--bg-elev); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
-.doc-scroll { overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; }
+.doc-list { background: var(--bg-elev); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); overflow: visible; }
+.doc-scroll,
+.matrix-wrap {
+  display: block;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  max-height: min(62vh, 560px);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-elev);
+}
+.doc-scroll .doc-tbl,
+.matrix-wrap .matrix-tbl {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+/* Encabezados fijos al hacer scroll vertical */
+.doc-scroll .doc-tbl thead th,
+.matrix-wrap .matrix-tbl thead th,
+.doc-tbl thead th,
+.matrix-tbl thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
+  background: var(--bg-elev) !important;
+  box-shadow: 0 1px 0 var(--line);
+}
 .doc-list .doc-row > * { min-width: 0; }
 .doc-list .col-resizer:hover { background: var(--accent-soft); }
 
 .doc-list .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.doc-tbl { width: max-content; min-width: 100%; border-collapse: collapse; }
-.doc-tbl thead th { position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--bg); font-size: 12px; color: var(--text-3); font-weight: 500; padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+.doc-tbl { width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; }
+.doc-tbl thead th { position: sticky; top: 0; z-index: 5; white-space: nowrap; overflow: visible; text-overflow: ellipsis; background: var(--bg-elev); font-size: 12px; color: var(--text-3); font-weight: 500; padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; }
 .doc-tbl tbody td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 12px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 13px; max-width: 280px; }
 .doc-tbl tbody tr:hover { background: var(--bg); }
 .doc-tbl tbody tr.doc-tr.lvl-1 { box-shadow: inset 4px 0 0 rgba(var(--l1), .55); background: rgba(var(--l1), .055); }
@@ -421,7 +450,7 @@ a.url-ver:hover, button.url-ver:hover { text-decoration: underline; }
 .matrix-wrap { overflow-x: auto; background: var(--bg-elev); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); }
 .matrix-tbl { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 13px; }
 .matrix-tbl th, .matrix-tbl td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; vertical-align: middle; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
-.matrix-tbl th { font-size: 11.5px; font-weight: 500; color: var(--text-3); position: sticky; top: 0; background: var(--bg-elev); z-index: 1; }
+.matrix-tbl th { font-size: 11.5px; font-weight: 500; color: var(--text-3); position: sticky; top: 0; background: var(--bg-elev); z-index: 5; }
 .matrix-tbl th .th-label, .doc-tbl th .th-label { margin-right: 4px; }
 .matrix-tbl th .col-filter-btn, .doc-tbl th .col-filter-btn {
   display: inline-flex; align-items: center; justify-content: center;
@@ -1224,8 +1253,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     border-radius: 0;
   }
   .doc-scroll, .table-wrap {
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
+    overflow: auto; -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .doc-scroll, .matrix-wrap {
+    max-height: min(55vh, 480px);
   }
   .doc-tbl, .tbl.matrix, #matrixTbl {
     font-size: 12px;
@@ -3224,7 +3256,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         ${ui.matrixSelectMode && can('deleteDocs') ? `<button type="button" class="btn btn-danger btn-sm" id="matrixDelBtn" ${!(ui.matrixSelected && ui.matrixSelected.size) ? 'disabled' : ''}>${ic('trash-2')}Eliminar${ui.matrixSelected && ui.matrixSelected.size ? ` (${ui.matrixSelected.size})` : ''}</button>` : ''}
         <button class="btn btn-ghost btn-sm" id="mfClear">${ic('rotate-ccw')}Limpiar</button>
       </div>
-      ${docs.length ? `<div class="matrix-wrap" style="overflow-x:auto"><table class="matrix-tbl resizable-cols" id="matrixTbl"><thead><tr>${ths}</tr></thead><tbody id="matrixBody">${rowsF}</tbody></table></div>` : emptyState('table', 'Sin documentos', 'Aún no hay documentos en las áreas a las que tienes acceso.')}`;
+      ${docs.length ? `<div class="matrix-wrap"><table class="matrix-tbl resizable-cols" id="matrixTbl"><thead><tr>${ths}</tr></thead><tbody id="matrixBody">${rowsF}</tbody></table></div>` : emptyState('table', 'Sin documentos', 'Aún no hay documentos en las áreas a las que tienes acceso.')}`;
   }
 
   function bindMatrix() {
@@ -3428,7 +3460,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (!table) return;
     const key = table.id || sel;
     const wrap = table.closest('.table-wrap') || table.parentElement;
-    if (wrap) wrap.style.overflowX = 'auto';
+    if (wrap) { wrap.style.overflowX = 'auto'; wrap.style.overflowY = 'auto'; }
     table.style.width = 'max-content';
     table.style.minWidth = '100%';
     const ths = $$('thead th', table);
