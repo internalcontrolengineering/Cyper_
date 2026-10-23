@@ -1735,6 +1735,13 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const defaultSettings = () => ({
     orgName: '',
     appName: 'Cyper',
+    // Etiquetas del repositorio (3 niveles)
+    repoUnitLabel: 'Nivel A',
+    repoUnitCreate: 'Crear Nivel A',
+    repoAreaLabel: 'Nivel B',
+    repoAreaCreate: 'Crear Nivel B',
+    repoDeptLabel: 'Nivel C',
+    repoDeptCreate: 'Crear Nivel C',
     domains: [],               // dominios de correo permitidos (Configuración → General)
     theme: 'auto',
     nomenRegex: '^([A-Z]{2,}[0-9]*(?:[-_.][A-Z0-9]+)+)(?=[\\s_-]|$)',
@@ -2948,6 +2955,18 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
 
   /* ---------------- Inicio ---------------- */
+  function repoLabels() {
+    const st = (S && S.settings) || {};
+    return {
+      unit: st.repoUnitLabel || 'Nivel A',
+      unitCreate: st.repoUnitCreate || 'Crear Nivel A',
+      area: st.repoAreaLabel || 'Nivel B',
+      areaCreate: st.repoAreaCreate || 'Crear Nivel B',
+      dept: st.repoDeptLabel || 'Nivel C',
+      deptCreate: st.repoDeptCreate || 'Crear Nivel C',
+    };
+  }
+
   function homeView() {
     const units = S.units || [];
     const areas = visibleAreas();
@@ -2961,18 +2980,18 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       <section class="hero">
         <div class="eyebrow">Hola ${esc(me.name)}, ${greet}</div>
         <h1>Todos tus archivos.<br/>En un solo lugar.</h1>
-        <p>Documentos organizados por unidad de negocio, área y departamento.</p>
+        <p>Documentos organizados por ${esc(repoLabels().unit.toLowerCase())}, ${esc(repoLabels().area.toLowerCase())} y ${esc(repoLabels().dept.toLowerCase())}.</p>
         <div class="hero-stats">
-          <div class="stat"><strong>${units.length}</strong><span>Unidades</span></div>
-          <div class="stat"><strong>${accessible.length}</strong><span>Áreas con acceso</span></div>
+          <div class="stat"><strong>${units.length}</strong><span>${esc(repoLabels().unit)}</span></div>
+          <div class="stat"><strong>${accessible.length}</strong><span>${esc(repoLabels().area)} con acceso</span></div>
           <div class="stat"><strong>${docs.length}</strong><span>Documentos</span></div>
         </div>
       </section>
-      <div class="section-head"><h2>Unidades de negocio</h2></div>
+      <div class="section-head"><h2>${esc(repoLabels().unit)}</h2></div>
       ${units.length || canU ? `<div class="grid">
         ${units.map((u, i) => unitCard(u, i)).join('')}
-        ${canU ? `<button class="add-card" data-act="newUnit" style="animation-delay:${units.length * 60}ms"><span class="plus">${ic('plus')}</span>Crear Unidad de Negocio</button>` : ''}
-      </div>` : emptyState('building-2', 'Sin unidades de negocio', 'Solicita a un administrador que configure las unidades.')}
+        ${canU ? `<button class="add-card" data-act="newUnit" style="animation-delay:${units.length * 60}ms"><span class="plus">${ic('plus')}</span>${esc(repoLabels().unitCreate)}</button>` : ''}
+      </div>` : emptyState('building-2', `Sin ${repoLabels().unit.toLowerCase()}`, 'Solicita a un administrador que configure las unidades.')}
 `;
   }
 
@@ -2999,14 +3018,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     return `${crumbs([{ label: u.name }])}
       <div class="page-title" style="${cssVars(u.color || 'blue')}"><div class="glyph" style="background:linear-gradient(135deg,var(--c1),var(--c2))">${ic(u.icon || 'building-2')}</div>
         <div><h1>${esc(u.name)}</h1></div></div>
-      <p class="page-sub">${esc(u.desc || 'Unidad de negocio')}</p>
+      <p class="page-sub">${esc(u.desc || repoLabels().unit)}</p>
       <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><span class="chip">${ic('hash')}${esc(u.code)}</span></div>
-      <div class="section-head"><h2>Áreas</h2>
+      <div class="section-head"><h2>${esc(repoLabels().area)}</h2>
         <div class="actions"></div></div>
       ${areas.length || canU ? `<div class="grid">
         ${areas.map((a, i) => areaCard(a, i)).join('')}
-        ${canU ? `<button class="add-card" data-act="newArea" data-unit="${u.id}" style="animation-delay:${areas.length * 60}ms"><span class="plus">${ic('plus')}</span>Crear área</button>` : ''}
-      </div>` : emptyState('layout-grid', 'Sin áreas', 'Esta unidad aún no tiene áreas.')}
+        ${canU ? `<button class="add-card" data-act="newArea" data-unit="${u.id}" style="animation-delay:${areas.length * 60}ms"><span class="plus">${ic('plus')}</span>${esc(repoLabels().areaCreate)}</button>` : ''}
+      </div>` : emptyState('layout-grid', `Sin ${repoLabels().area.toLowerCase()}`, `Esta ${repoLabels().unit.toLowerCase().replace(/s$/,'')} aún no tiene ${repoLabels().area.toLowerCase()}.`)}
 `;
   }
 
@@ -3443,8 +3462,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <div><h1>${esc(a.name)}</h1></div></div>
       <p class="page-sub">${esc(a.desc || '')}</p>
       <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">${accessChip(acc)}<span class="chip">${ic('hash')}${esc(a.code)}</span></div>
-      <div class="section-head"><h2>Departamentos</h2>
-        <div class="actions">${can('managePerms') ? `<button class="btn btn-ghost btn-sm" data-act="grant" data-area="${a.id}">${ic('user-plus')}Compartir área</button>` : ''}</div></div>
+      <div class="section-head"><h2>${esc(repoLabels().dept)}</h2>
+        <div class="actions">${can('managePerms') ? `<button class="btn btn-ghost btn-sm" data-act="grant" data-area="${a.id}">${ic('user-plus')}Compartir ${esc(repoLabels().area.toLowerCase().replace(/s$/,''))}</button>` : ''}</div></div>
       ${folders.length || canF ? `<div class="folders">
         ${folders.map((f, i) => {
           const n = S.docs.filter(d => d.folderId === f.id).length;
@@ -3455,7 +3474,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             <h4>${esc(f.name)}</h4><span class="tiny">${esc(f.code)} · ${n} ${n === 1 ? 'documento' : 'documentos'}</span>
             ${f.desc ? `<span class="tiny" style="display:block;margin-top:4px;color:var(--text-2)">${esc(f.desc)}</span>` : ''}</div>`;
         }).join('')}
-        ${canF ? `<button class="add-card add-folder" data-act="newFolder"><span class="plus">${ic('plus')}</span>Crear carpeta</button>` : ''}
+        ${canF ? `<button class="add-card add-folder" data-act="newFolder"><span class="plus">${ic('plus')}</span>${esc(repoLabels().deptCreate)}</button>` : ''}
       </div>` : emptyState('folder', 'Sin departamentos', 'Esta área aún no tiene carpetas.')}
       `;
   }
@@ -4152,8 +4171,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const areaIds = (S.areas || []).filter(a => a.unitId === u.id).map(a => a.id);
       openMenu(el, [
         { icon: 'pencil', label: 'Editar unidad', run: () => unitModal(u) },
-        { icon: 'plus', label: 'Nueva área', run: () => areaModal(null, u.id) },
-        { icon: 'building-2', label: 'Nueva unidad de negocio', run: () => unitModal() },
+        { icon: 'plus', label: repoLabels().areaCreate, run: () => areaModal(null, u.id) },
+        { icon: 'building-2', label: repoLabels().unitCreate, run: () => unitModal() },
         { icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfUnit(u.id), 'unidad-' + (u.code || u.name || 'docs')) },
         ...(can('managePerms') ? [{ icon: 'user-plus', label: 'Compartir unidad', run: () => grantModal(null, areaIds) }] : []),
         '-',
@@ -4170,7 +4189,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const a = areaById(el.dataset.id);
       openMenu(el, [
         { icon: 'pencil', label: 'Editar área', run: () => areaModal(a) },
-        { icon: 'folder-plus', label: 'Nueva carpeta', run: () => folderModal(null, a.id) },
+        { icon: 'folder-plus', label: repoLabels().deptCreate, run: () => folderModal(null, a.id) },
         { icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfArea(a.id), 'area-' + (a.code || a.name || 'docs')) },
         ...(can('managePerms') ? [{ icon: 'user-plus', label: 'Compartir área', run: () => grantModal(null, [a.id]) }] : []),
         '-',
@@ -4519,7 +4538,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const isNew = !u;
     u = u || { name: '', code: '', desc: '', color: 'blue', icon: 'building-2' };
     openModal({
-      title: isNew ? 'Nueva unidad de negocio' : 'Editar unidad de negocio',
+      title: isNew ? repoLabels().unitCreate : `Editar ${repoLabels().unit.replace(/s$/i, '')}`,
       sub: 'Las unidades agrupan áreas. Crea al menos una antes de agregar áreas.',
       body: `<form id="ufu">
         <div class="row"><div class="field"><label>Nombre</label><input class="input" name="name" value="${esc(u.name)}" placeholder="Unidad de Negocio" required maxlength="60"/></div>
@@ -4560,7 +4579,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const units = S.units || [];
     a = a || { name: '', code: '', desc: '', color: 'blue', icon: 'briefcase', unitId: unitId || (units[0] && units[0].id) || '' };
     openModal({
-      title: isNew ? 'Nueva área' : 'Editar área', sub: 'Las áreas pertenecen a una unidad de negocio y agrupan departamentos.',
+      title: isNew ? repoLabels().areaCreate : `Editar ${repoLabels().area.replace(/s$/i, '')}`, sub: 'Las áreas pertenecen a una unidad de negocio y agrupan departamentos.',
       body: `<form id="af">
         <div class="field"><label>Unidad de negocio</label><select class="select" name="unitId" required>
           <option value="">Selecciona…</option>
@@ -4572,7 +4591,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <div class="field"><span class="label">Color</span><div class="swatches">${Object.entries(COLORS).map(([k, [c1, c2]]) => `<label class="swatch" style="background:linear-gradient(135deg,${c1},${c2})" title="${k}"><input type="radio" name="color" value="${k}" ${a.color === k ? 'checked' : ''}/></label>`).join('')}</div></div>
         <div class="field"><span class="label">Icono</span><div class="icon-picks">${AREA_ICONS.map(n => `<label class="icon-pick"><input type="radio" name="icon" value="${n}" ${a.icon === n ? 'checked' : ''}/>${ic(n)}</label>`).join('')}</div></div>
       </form>`,
-      foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>${isNew ? 'Crear área' : 'Guardar'}</button>`,
+      foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>${isNew ? repoLabels().areaCreate : 'Guardar'}</button>`,
       onMount: (c) => {
         const f = c.$('#af');
         c.$('[data-save]').addEventListener('click', () => {
@@ -4602,7 +4621,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const isNew = !f; const a = areaById(areaId);
     f = f || { name: '', code: '', desc: '', color: a?.color || 'blue', icon: 'folder' };
     openModal({
-      title: isNew ? 'Nueva carpeta' : 'Editar carpeta', sub: `Departamento dentro de ${esc(a.name)}`,
+      title: isNew ? repoLabels().deptCreate : `Editar ${repoLabels().dept}`, sub: `${repoLabels().dept} dentro de ${esc(a.name)}`,
       body: `<form id="ff">
         <div class="row"><div class="field"><label>Nombre del departamento</label><input class="input" name="name" value="${esc(f.name)}" placeholder="Departamento" maxlength="40"/></div>
         <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(f.code)}" placeholder="Código de Departamento" maxlength="6" style="text-transform:uppercase" required/><div class="hint">Obligatorio · sin valor por defecto. Solo referencia del departamento.</div></div></div>
@@ -4610,7 +4629,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <div class="field"><span class="label">Color</span><div class="swatches">${Object.entries(COLORS).map(([k, [c1, c2]]) => `<label class="swatch" style="background:linear-gradient(135deg,${c1},${c2})" title="${k}"><input type="radio" name="color" value="${k}" ${(f.color || a?.color || 'blue') === k ? 'checked' : ''}/></label>`).join('')}</div></div>
         <div class="field"><span class="label">Icono</span><div class="icon-picks">${AREA_ICONS.map(n => `<label class="icon-pick"><input type="radio" name="icon" value="${n}" ${(f.icon || 'folder') === n ? 'checked' : ''}/>${ic(n)}</label>`).join('')}</div></div>
       </form>`,
-      foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>${isNew ? 'Crear carpeta' : 'Guardar'}</button>`,
+      foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>${isNew ? repoLabels().deptCreate : 'Guardar'}</button>`,
       onMount: (c) => {
         const fm = c.$('#ff');
         fm.addEventListener('submit', e => e.preventDefault());
@@ -6018,6 +6037,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const TABS = [
     ['general', 'settings-2', 'General', 'settings'],
     ['docs', 'file-cog', 'Documentos', 'settings'],
+    ['repo', 'folders', 'Repositorio', 'settings'],
     ['security', 'shield', 'Seguridad y descargas', 'settings'],
     ['users', 'users', 'Usuarios y permisos', 'managePerms'],
     ['roles', 'id-card', 'Perfiles', 'settings'],
@@ -6114,6 +6134,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         </div>
         <p class="tiny" style="margin-top:10px">Lógica base: v1 y &lt;años máx de Nuevo → Nuevo; v≥2 y &lt;años máx de Actualizado → Actualizado; ≥años mín de Pendiente → Pendiente; Ratificado solo manual entre sus años mín–máx; ≥años máx de Ratificado fuerza Pendiente; Eliminado siempre manual y marca la fila en rojo al final de la lista.</p>
       </div>`;
+    if (tab === 'repo') {
+      return `<div class="panel"><h3>Repositorio</h3>
+        <p class="muted">Nombres de los tres niveles de organización y de los botones para crear cada uno. Se actualizan en toda la aplicación.</p>
+        <h3 style="margin-top:18px">Nivel 1</h3>
+        ${srow('Título del nivel', 'Ej. Unidades de Negocio, Secciones, Empresas…', `<input class="input" data-set="repoUnitLabel" value="${esc(st.repoUnitLabel || 'Nivel A')}"/>`)}
+        ${srow('Botón crear', 'Texto del botón para agregar un elemento de este nivel', `<input class="input" data-set="repoUnitCreate" value="${esc(st.repoUnitCreate || 'Crear Nivel A')}"/>`)}
+        <h3 style="margin-top:18px">Nivel 2</h3>
+        ${srow('Título del nivel', 'Ej. Áreas, Gerencias, Divisiones…', `<input class="input" data-set="repoAreaLabel" value="${esc(st.repoAreaLabel || 'Nivel B')}"/>`)}
+        ${srow('Botón crear', 'Texto del botón para agregar', `<input class="input" data-set="repoAreaCreate" value="${esc(st.repoAreaCreate || 'Crear Nivel B')}"/>`)}
+        <h3 style="margin-top:18px">Nivel 3</h3>
+        ${srow('Título del nivel', 'Ej. Departamento, Carpetas, Procesos…', `<input class="input" data-set="repoDeptLabel" value="${esc(st.repoDeptLabel || 'Nivel C')}"/>`)}
+        ${srow('Botón crear', 'Texto del botón para agregar', `<input class="input" data-set="repoDeptCreate" value="${esc(st.repoDeptCreate || 'Crear Nivel C')}"/>`)}
+      </div>`;
+    }
     if (tab === 'security') return `<div class="panel"><h3>Sesión</h3><p class="muted">Cierre automático por inactividad. El contador se muestra en el encabezado entre el buscador y los permisos.</p>
       ${srow('Minutos de inactividad', 'Tras este tiempo sin actividad se cierra la sesión. Usa 0 para desactivar el cierre automático.', `<input class="input" type="number" min="0" max="480" step="1" data-set="sessionTimeoutMinutes" value="${st.sessionTimeoutMinutes ?? 15}" style="width:100px"/>`)}
       </div>
@@ -6206,7 +6240,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       S.settings[k] = v;
       if (['logoSize', 'titleSize', 'orgSize'].includes(k)) applyBrandSizes();
       clearTimeout(saveT);
-      saveT = setTimeout(() => { save(); log('configuración', `Cambió “${k}”`); save(); toast('Configuración guardada'); if (k === 'theme') { applyTheme(); render(); } if (['appName', 'orgName', 'logoSize', 'titleSize', 'orgSize'].includes(k)) { const a = document.activeElement; const was = a?.dataset?.set; render(); if (was) { const el2 = $(`[data-set="${was}"]`); if (el2) { el2.focus(); if (el2.type !== 'range' && el2.setSelectionRange) el2.setSelectionRange(el2.value.length, el2.value.length); } } } }, 600);
+      saveT = setTimeout(() => { save(); log('configuración', `Cambió “${k}”`); save(); toast('Configuración guardada'); if (k === 'theme') { applyTheme(); render(); } if (['appName', 'orgName', 'logoSize', 'titleSize', 'orgSize', 'repoUnitLabel', 'repoUnitCreate', 'repoAreaLabel', 'repoAreaCreate', 'repoDeptLabel', 'repoDeptCreate'].includes(k)) { const a = document.activeElement; const was = a?.dataset?.set; render(); if (was) { const el2 = $(`[data-set="${was}"]`); if (el2) { el2.focus(); if (el2.type !== 'range' && el2.setSelectionRange) el2.setSelectionRange(el2.value.length, el2.value.length); } } } }, 600);
       if (k === 'nomenRegex') rxTest();
     }));
     // Logo upload
