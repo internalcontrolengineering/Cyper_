@@ -2824,7 +2824,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <h1>${esc(st.appName)}</h1>
         </div>
         <div class="login-fade">
-          <p>Repositorio documental${st.orgName ? ' de ' + esc(st.orgName) : ''}</p>
+          <p>${st.orgName ? esc(st.orgName) : ''}</p>
           <div class="field"><label for="lEmail">Correo corporativo</label>
             <input class="input" id="lEmail" type="email" autocomplete="username" placeholder="nombre@${esc(st.domains[0] || 'empresa.com')}" required /></div>
           <div class="field"><label for="lPass">Contraseña</label>
@@ -4568,10 +4568,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     u = u || { name: '', code: '', desc: '', color: 'blue', icon: 'building-2' };
     openModal({
       title: isNew ? repoLabels().unitCreate : `Editar ${repoLabels().unit.replace(/s$/i, '')}`,
-      sub: 'Las unidades agrupan áreas. Crea al menos una antes de agregar áreas.',
+      sub: `Las ${repoLabels().unit.toLowerCase()} agrupan ${repoLabels().area.toLowerCase()}. Crea al menos una antes de agregar ${repoLabels().area.toLowerCase()}.`,
       body: `<form id="ufu">
-        <div class="row"><div class="field"><label>Nombre</label><input class="input" name="name" value="${esc(u.name)}" placeholder="Unidad de Negocio" required maxlength="60"/></div>
-        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(u.code)}" placeholder="Código de la U.N." required maxlength="6" style="text-transform:uppercase"/><div class="hint">Obligatorio · sin valor por defecto</div></div></div>
+        <div class="row"><div class="field"><label>Nombre</label><input class="input" name="name" value="${esc(u.name)}" placeholder="${esc(repoLabels().unit)}" required maxlength="60"/></div>
+        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(u.code)}" placeholder="Código de ${esc(repoLabels().unit)}" required maxlength="6" style="text-transform:uppercase"/><div class="hint">Obligatorio · sin valor por defecto</div></div></div>
         <div class="field"><label>Descripción</label><textarea class="textarea" name="desc" maxlength="160">${esc(u.desc || '')}</textarea></div>
         <div class="field"><span class="label">Color</span><div class="swatches">${Object.entries(COLORS).map(([k, [c1, c2]]) => `<label class="swatch" style="background:linear-gradient(135deg,${c1},${c2})" title="${k}"><input type="radio" name="color" value="${k}" ${(u.color || 'blue') === k ? 'checked' : ''}/></label>`).join('')}</div></div>
         <div class="field"><span class="label">Icono</span><div class="icon-picks">${AREA_ICONS.map(n => `<label class="icon-pick"><input type="radio" name="icon" value="${n}" ${(u.icon || 'building-2') === n ? 'checked' : ''}/>${ic(n)}</label>`).join('')}</div></div>
@@ -4608,14 +4608,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const units = S.units || [];
     a = a || { name: '', code: '', desc: '', color: 'blue', icon: 'briefcase', unitId: unitId || (units[0] && units[0].id) || '' };
     openModal({
-      title: isNew ? repoLabels().areaCreate : `Editar ${repoLabels().area.replace(/s$/i, '')}`, sub: 'Las áreas pertenecen a una unidad de negocio y agrupan departamentos.',
+      title: isNew ? repoLabels().areaCreate : `Editar ${repoLabels().area.replace(/s$/i, '')}`, sub: `Las ${repoLabels().area.toLowerCase()} pertenecen a ${repoLabels().unit.toLowerCase()} y agrupan ${repoLabels().dept.toLowerCase()}.`,
       body: `<form id="af">
-        <div class="field"><label>Unidad de negocio</label><select class="select" name="unitId" required>
+        <div class="field"><label>${esc(repoLabels().unit)}</label><select class="select" name="unitId" required>
           <option value="">Selecciona…</option>
           ${units.map(u => `<option value="${u.id}" ${a.unitId === u.id ? 'selected' : ''}>${esc(u.code)} · ${esc(u.name)}</option>`).join('')}
         </select></div>
-        <div class="row"><div class="field"><label>Nombre del área</label><input class="input" name="name" value="${esc(a.name)}" placeholder="Área" required maxlength="40"/></div>
-        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(a.code)}" placeholder="Código de Área" required maxlength="6" style="text-transform:uppercase"/><div class="hint">Obligatorio · sin valor por defecto</div></div></div>
+        <div class="row"><div class="field"><label>Nombre</label><input class="input" name="name" value="${esc(a.name)}" placeholder="${esc(repoLabels().area)}" required maxlength="40"/></div>
+        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(a.code)}" placeholder="Código de ${esc(repoLabels().area)}" required maxlength="6" style="text-transform:uppercase"/><div class="hint">Obligatorio · sin valor por defecto</div></div></div>
         <div class="field"><label>Descripción</label><textarea class="textarea" name="desc" maxlength="160" placeholder="¿Qué documentos resguarda esta área?">${esc(a.desc)}</textarea></div>
         <div class="field"><span class="label">Color</span><div class="swatches">${Object.entries(COLORS).map(([k, [c1, c2]]) => `<label class="swatch" style="background:linear-gradient(135deg,${c1},${c2})" title="${k}"><input type="radio" name="color" value="${k}" ${a.color === k ? 'checked' : ''}/></label>`).join('')}</div></div>
         <div class="field"><span class="label">Icono</span><div class="icon-picks">${AREA_ICONS.map(n => `<label class="icon-pick"><input type="radio" name="icon" value="${n}" ${a.icon === n ? 'checked' : ''}/>${ic(n)}</label>`).join('')}</div></div>
@@ -4652,8 +4652,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     openModal({
       title: isNew ? repoLabels().deptCreate : `Editar ${repoLabels().dept}`, sub: `${repoLabels().dept} dentro de ${esc(a.name)}`,
       body: `<form id="ff">
-        <div class="row"><div class="field"><label>Nombre del departamento</label><input class="input" name="name" value="${esc(f.name)}" placeholder="Departamento" maxlength="40"/></div>
-        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(f.code)}" placeholder="Código de Departamento" maxlength="6" style="text-transform:uppercase" required/><div class="hint">Obligatorio · sin valor por defecto. Solo referencia del departamento.</div></div></div>
+        <div class="row"><div class="field"><label>Nombre</label><input class="input" name="name" value="${esc(f.name)}" placeholder="${esc(repoLabels().dept)}" maxlength="40"/></div>
+        <div class="field"><label>Código</label><input class="input mono" name="code" value="${esc(f.code)}" placeholder="Código de ${esc(repoLabels().dept)}" maxlength="6" style="text-transform:uppercase" required/><div class="hint">Obligatorio · sin valor por defecto. Solo referencia del ${esc(repoLabels().dept.toLowerCase())}.</div></div></div>
         <div class="field"><label>Descripción</label><textarea class="textarea" name="desc" maxlength="160">${esc(f.desc || '')}</textarea></div>
         <div class="field"><span class="label">Color</span><div class="swatches">${Object.entries(COLORS).map(([k, [c1, c2]]) => `<label class="swatch" style="background:linear-gradient(135deg,${c1},${c2})" title="${k}"><input type="radio" name="color" value="${k}" ${(f.color || a?.color || 'blue') === k ? 'checked' : ''}/></label>`).join('')}</div></div>
         <div class="field"><span class="label">Icono</span><div class="icon-picks">${AREA_ICONS.map(n => `<label class="icon-pick"><input type="radio" name="icon" value="${n}" ${(f.icon || 'folder') === n ? 'checked' : ''}/>${ic(n)}</label>`).join('')}</div></div>
