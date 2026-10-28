@@ -1662,6 +1662,63 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 }
 /* (reglas search 480px unificadas arriba) */
 
+
+/* ---------- AI Chat (RAG) ---------- */
+.ai-fab {
+  position: fixed; right: 22px; bottom: 22px; z-index: 80;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #fff; border: 0;
+  box-shadow: var(--shadow-md); display: grid; place-items: center;
+  cursor: pointer; transition: transform .25s var(--ease), box-shadow .25s;
+}
+.ai-fab:hover { transform: scale(1.06); box-shadow: var(--shadow-lg); }
+.ai-fab svg.lucide { width: 24px; height: 24px; }
+.ai-panel {
+  position: fixed; right: 18px; bottom: 90px; z-index: 85;
+  width: min(420px, calc(100vw - 24px)); height: min(640px, calc(100dvh - 120px));
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden;
+  transform-origin: bottom right; animation: pop .28s var(--spring);
+}
+.ai-panel.hidden { display: none !important; }
+.ai-head {
+  display: flex; align-items: center; gap: 10px; padding: 14px 16px;
+  border-bottom: 1px solid var(--line); background: var(--glass);
+  backdrop-filter: blur(12px);
+}
+.ai-head strong { font-size: 15px; font-weight: 600; }
+.ai-head .tiny { display: block; margin-top: 1px; }
+.ai-msgs {
+  flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;
+  background: var(--bg);
+}
+.ai-msg {
+  max-width: 92%; padding: 10px 12px; border-radius: 14px; font-size: 13.5px; line-height: 1.45;
+  white-space: pre-wrap; word-break: break-word;
+}
+.ai-msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.ai-msg.bot { align-self: flex-start; background: var(--bg-elev); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.ai-msg.bot .cites { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.ai-msg.bot .cite {
+  font-size: 12px; padding: 7px 9px; border-radius: 10px; background: var(--bg-sunk);
+  color: var(--text-2); cursor: pointer; border: 0; text-align: left; width: 100%;
+}
+.ai-msg.bot .cite:hover { background: var(--accent-soft); color: var(--accent); }
+.ai-msg.err { background: var(--danger-soft); color: var(--danger); }
+.ai-foot {
+  border-top: 1px solid var(--line); padding: 10px 12px; display: flex; gap: 8px; align-items: flex-end;
+  background: var(--bg-elev);
+}
+.ai-foot textarea {
+  flex: 1; min-height: 40px; max-height: 120px; resize: none; border-radius: 12px;
+  border: 1px solid var(--line-2); background: var(--bg); padding: 10px 12px; font-size: 14px;
+  outline: 0; line-height: 1.35;
+}
+.ai-foot textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.ai-typing { font-size: 12px; color: var(--text-3); padding: 0 16px 8px; }
+.ai-empty { text-align: center; color: var(--text-3); padding: 28px 12px; font-size: 13px; }
+.ai-empty strong { display: block; color: var(--text); margin-bottom: 6px; font-size: 14px; }
+
 /* ---------- Responsive: tableta y laptops pequeñas ---------- */
 @media (min-width: 761px) and (max-width: 1180px) {
   .doc-row { grid-template-columns: 40px minmax(220px, 2.4fr) 124px 100px 104px 56px 104px 32px; min-width: 0; }
@@ -1685,11 +1742,36 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   <div id="app"></div>
   <div id="modals"></div>
   <div class="toasts" id="toasts" aria-live="polite"></div>
+  <button type="button" class="ai-fab hidden" id="aiFab" title="Asistente IA" aria-label="Asistente IA de documentos">
+    <i data-lucide="sparkles"></i>
+  </button>
+  <div class="ai-panel hidden" id="aiPanel" role="dialog" aria-label="Chat IA">
+    <div class="ai-head">
+      <div style="flex:1;min-width:0">
+        <strong>Asistente documental</strong>
+        <span class="tiny">OCR + IA</span>
+      </div>
+      <button type="button" class="icon-btn" id="aiReindex" title="Reindexar documentos" aria-label="Reindexar"><i data-lucide="database"></i></button>
+      <button type="button" class="icon-btn" id="aiClear" title="Nueva conversación" aria-label="Nueva conversación"><i data-lucide="rotate-ccw"></i></button>
+      <button type="button" class="icon-btn" id="aiClose" title="Cerrar" aria-label="Cerrar"><i data-lucide="x"></i></button>
+    </div>
+    <div class="ai-msgs" id="aiMsgs">
+      <div class="ai-empty" id="aiEmpty"><strong>Búsqueda Inteligente en tu Repositorio</strong>Plantea tu duda con tus propias palabras. Olvídate de recordar títulos o términos exactos: solo pregunta y listo.</div>
+    </div>
+    <div class="ai-typing hidden" id="aiTyping">Analizando documentos…</div>
+    <div class="ai-foot">
+      <textarea id="aiInput" rows="1" placeholder="Escribe aquí tu consulta" maxlength="2000"></textarea>
+      <button type="button" class="btn btn-primary" id="aiSend" style="height:40px;padding:0 14px"><i data-lucide="send"></i></button>
+    </div>
+  </div>
+
 
   <!-- Librerías (CDN) -->
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
 
@@ -1825,7 +1907,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     expiredBehavior: 'bloquear', // bloquear | ver
     defaultTempHours: 72,
     minPassword: 8,
-    sessionTimeoutMinutes: 15,
+    sessionTimeoutMinutes: 120,
     adminActionPasswordHash: null,
     estadoRules: [
       { id: 'nuevo', name: 'Nuevo', color: 'ok', auto: true, cond: 'v1_lt1y', minYears: 0, maxYears: 1, minVersion: 1, maxVersion: 1 },
@@ -1847,7 +1929,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const sb = (window.supabase && window.supabase.createClient)
     ? window.supabase.createClient(SB_URL, SB_ANON)
     : null;
-  window.CyperSB = { client: sb, url: SB_URL, bucket: SB_BUCKET };
+  window.CyperSB = { client: sb, url: SB_URL, bucket: SB_BUCKET, anon: SB_ANON };
 
   const filePath = (key) => String(key).replace(/[^a-zA-Z0-9._-]+/g, '_');
 
@@ -2033,7 +2115,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
     async _push(db) {
       if (!sb || !db) return;
-      this._ignoreRealtimeUntil = Date.now() + 1500;
+      this._ignoreRealtimeUntil = Date.now() + 4000;
       const { error } = await sb.from('app_state').upsert({
         id: 'main',
         data: db,
@@ -2106,10 +2188,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           if (Date.now() < this._ignoreRealtimeUntil) return;
           const ev = payload.eventType || payload.event || '';
           const next = payload.new && payload.new.data;
-          if (ev === 'DELETE' || !next || !this._isValidDb(next)) {
+          // Solo borrar estado local ante DELETE real o tombstone __wiped
+          if (ev === 'DELETE' || (next && next.__wiped)) {
             this.db = null;
             try { LS.store.removeItem(KEY); } catch (e) {}
             if (typeof onRemote === 'function') onRemote(null);
+            return;
+          }
+          // Payload incompleto: no tocar sesión ni caché local
+          if (!next || !this._isValidDb(next)) {
+            console.warn('realtime: payload incompleto ignorado', ev);
             return;
           }
           try {
@@ -2231,18 +2319,40 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   // Tiempo real: reflejar cambios de otros dispositivos sin recargar
   Repo.startRealtime((next) => {
-    if (!next || !(Array.isArray(next.users) && Array.isArray(next.roles))) {
-      S = null; me = null;
-      try { SessionStore.removeItem(SESSION); } catch (e) {}
-      try { if (typeof render === 'function') render(); } catch (e) {}
+    // No destruir sesión ni datos locales por un payload vacío/parcial de realtime
+    if (!next || typeof next !== 'object' || next.__wiped) {
+      console.warn('realtime: evento ignorado (vacío o wiped)');
       return;
     }
+    if (!(Array.isArray(next.users) && Array.isArray(next.roles) && next.users.length && next.roles.length)) {
+      console.warn('realtime: estado incompleto ignorado');
+      return;
+    }
+    // Conservar sesión: si el remoto no trae al usuario actual, mantener me local
+    const sid = SessionStore.getItem(SESSION);
+    const remoteMe = sid ? (next.users || []).find(u => u.id === sid) : null;
     S = next;
+    Repo.db = next;
     window.S = S;
     try {
-      const sid = SessionStore.getItem(SESSION);
-      me = sid ? (S.users || []).find(u => u.id === sid) : null;
-      if (sid && !me) { SessionStore.removeItem(SESSION); }
+      if (sid && remoteMe) {
+        me = remoteMe;
+      } else if (sid && me && me.id === sid) {
+        // Remoto sin este usuario todavía: no cerrar sesión
+        if (!S.users.find(u => u.id === sid) && me) {
+          S.users = [...S.users, me];
+        } else {
+          me = S.users.find(u => u.id === sid) || me;
+        }
+      } else if (sid && !remoteMe) {
+        // Solo cerrar si el usuario ya no existe de verdad en remoto y no hay me local válido
+        const still = (S.users || []).find(u => u.id === sid);
+        if (still) me = still;
+        else if (!me || me.id !== sid) {
+          me = null;
+          try { SessionStore.removeItem(SESSION); } catch (e) {}
+        }
+      }
       migrate();
       if (typeof applyTheme === 'function') applyTheme();
       if (typeof applyBrandSizes === 'function') applyBrandSizes();
@@ -2286,7 +2396,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     delete S.settings.domain;
     S.settings.versionInicial = intVersion(S.settings.versionInicial);
     if (!Array.isArray(S.settings.estadoRules) || !S.settings.estadoRules.length) S.settings.estadoRules = defaultSettings().estadoRules;
-    if (S.settings.sessionTimeoutMinutes == null) S.settings.sessionTimeoutMinutes = 15;
+    if (S.settings.sessionTimeoutMinutes == null) S.settings.sessionTimeoutMinutes = 120;
     S.catalogs = S.catalogs || { tipos: [], clasificaciones: [], macroprocesos: [] };
     if (!Array.isArray(S.catalogs.tipos) || !S.catalogs.tipos.length || S.catalogs.tipos.some(t => typeof t !== 'object')) S.catalogs.tipos = DEFAULT_TIPOS();
     // Sincronizar códigos oficiales de tipos; conservar tipos personalizados
@@ -3047,6 +3157,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       if (!u.active) return err('Esta cuenta está desactivada. Contacta al administrador.');
       me = u; SessionStore.setItem(SESSION, u.id);
       u.lastLogin = now(); log('acceso', `Inicio de sesión`); save();
+      try { touchSessionActivity(); startSessionWatch(); } catch (e) {}
       const nombre = (u.name || '').trim() || 'usuario';
       const h = new Date().getHours();
       const saludo = h < 12 ? 'buenos días' : h < 19 ? 'buenas tardes' : 'buenas noches';
@@ -4413,6 +4524,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (route.view === 'settings') bindSettings();
     if (route.view === 'dashboard' && $('#dash')) bindDashboard();
     if (route.view === 'matrix') bindMatrix();
+    if (window.CyperAI) CyperAI.syncFab();
   }
 
   const ACT = {
@@ -5391,6 +5503,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       log('documento', `Publicó ${meta.nomenclatura} · ${meta.nombre} en ${folder.name}`);
     }
     save();
+    try {
+      const d = replaceDoc || S.docs.find(x => x.nomenclatura === meta.nomenclatura && x.folderId === folder.id);
+      if (d && window.CyperAI) CyperAI.indexDoc(d, { html, file });
+    } catch (e) { console.warn('AI index', e); }
   }
 
   function newVersionUpload(d) {
@@ -6422,6 +6538,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       ${srow('Organización', 'Nombre de la empresa; se muestra junto al logo', `<input class="input" data-set="orgName" value="${esc(st.orgName)}" placeholder="Ej. Control Interno"/>`)}
       ${srow('Apariencia', 'Automático: claro de día (6:00–18:00) y oscuro de noche', `<select class="select" data-set="theme"><option value="auto" ${st.theme === 'auto' ? 'selected' : ''}>Automático (día/noche)</option><option value="light" ${st.theme === 'light' ? 'selected' : ''}>Claro</option><option value="dark" ${st.theme === 'dark' ? 'selected' : ''}>Oscuro</option></select>`)}
       </div>
+      <div class="panel"><h3>Asistente IA (gratuito)</h3>
+        <p class="muted">La búsqueda y el OCR funcionan sin API. Opcional: pega una API key de <b>Google Gemini</b> (capa gratuita en AI Studio) para respuestas en lenguaje natural.</p>
+        ${srow('API key Gemini', 'Se guarda en este navegador / estado de la app. Déjala vacía para solo búsqueda local.', `<input class="input mono" data-set="geminiApiKey" type="password" value="${esc(st.geminiApiKey || '')}" placeholder="AIza… (opcional)" autocomplete="off"/>`)}
+        ${srow('Modelo Gemini', 'Ej. gemini-3.5-flash-lite (recomendado free) o gemini-3.5-flash', `<input class="input mono" data-set="geminiModel" value="${esc(st.geminiModel || 'gemini-3.5-flash-lite')}"/>`)}
+      </div>
       <div class="panel"><h3>Logo y tipografía del encabezado</h3><p class="muted">Puedes subir un logo para modo claro y otro para modo oscuro. Si solo hay uno, se usa en ambos. El encabezado crece con el tamaño del logo.</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:16px">
           <div class="logo-upload-row">
@@ -7141,7 +7262,398 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     });
   }
 
+
+
+  /* ---------------- Asistente IA GRATUITO (OCR local + búsqueda) ----------------
+     - Sin OpenAI de pago. OCR con Tesseract.js, PDF con pdf.js, DOCX/XLSX ya existentes.
+     - Índice de texto en cada documento (campo aiText) + persistencia Repo.
+     - Chat: búsqueda por palabras clave en docs con acceso.
+     - Opcional: Gemini gratis (pegar API key en Configuración → Asistente IA).
+     ------------------------------------------------------------------------------- */
+  const CyperAI = {
+    history: [],
+    busy: false,
+    _tess: null,
+
+    getGeminiKey() {
+      return (S?.settings?.geminiApiKey || '').trim();
+    },
+
+    accessibleAreaIds() {
+      if (!me || !S) return [];
+      if (can('allAreas')) return S.areas.map(a => a.id);
+      return S.areas.filter(a => {
+        const ax = areaAccess(a.id);
+        return ax && ax.level && ax.status === 'vigente';
+      }).map(a => a.id);
+    },
+
+    accessibleDocs() {
+      const ids = new Set(this.accessibleAreaIds());
+      return (S.docs || []).filter(d => ids.has(d.areaId));
+    },
+
+    htmlToText(html) {
+      if (!html) return '';
+      const d = document.createElement('div');
+      d.innerHTML = String(html);
+      return (d.innerText || d.textContent || '').replace(/\s+/g, ' ').trim();
+    },
+
+    async extractPdfText(fileOrBlob) {
+      if (!window.pdfjsLib) return '';
+      try {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+        const buf = await fileOrBlob.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        const parts = [];
+        const maxPages = Math.min(pdf.numPages, 40);
+        for (let i = 1; i <= maxPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          parts.push(content.items.map(it => it.str).join(' '));
+        }
+        return parts.join('\n').replace(/\s+/g, ' ').trim();
+      } catch (e) {
+        console.warn('pdf extract', e);
+        return '';
+      }
+    },
+
+    async extractOcr(fileOrBlob) {
+      if (!window.Tesseract) return '';
+      try {
+        toast('OCR en curso (puede tardar unos segundos)…', 'info');
+        const { data } = await Tesseract.recognize(fileOrBlob, 'spa+eng', {
+          logger: () => {},
+        });
+        return (data?.text || '').replace(/\s+/g, ' ').trim();
+      } catch (e) {
+        console.warn('ocr', e);
+        return '';
+      }
+    },
+
+    async extractText(d, opts = {}) {
+      let text = '';
+      let html = opts.html;
+      try {
+        if (!html) {
+          const h = await Files.get('html:' + d.id);
+          if (typeof h === 'string') html = h;
+          else if (h instanceof Blob) html = await h.text();
+        }
+      } catch (e) {}
+      if (html) text = this.htmlToText(html);
+      if (text && text.length > 40) return { text, source: 'html' };
+
+      let file = opts.file;
+      if (!file) {
+        try {
+          const b = await Files.get('orig:' + d.id);
+          if (b instanceof Blob || b instanceof File) file = b;
+        } catch (e) {}
+      }
+      if (!file) return { text: text || '', source: 'empty' };
+
+      const name = (d.fileName || file.name || '').toLowerCase();
+      const mime = (file.type || d.mime || '').toLowerCase();
+
+      if (mime.includes('pdf') || name.endsWith('.pdf')) {
+        text = await this.extractPdfText(file);
+        if (text && text.length > 40) return { text, source: 'pdf' };
+        // PDF escaneado: OCR de las primeras páginas como imagen no es trivial sin canvas;
+        // intentar OCR del blob completo no aplica. Devolver lo que haya.
+        return { text: text || '', source: 'pdf' };
+      }
+      if (mime.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp|tiff?)$/i.test(name)) {
+        text = await this.extractOcr(file);
+        return { text, source: 'ocr' };
+      }
+      if (mime.startsWith('text/') || name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.csv')) {
+        text = await file.text();
+        return { text: text.replace(/\s+/g, ' ').trim(), source: 'text' };
+      }
+      // DOCX ya suele venir como html vía convertToHtml
+      return { text: text || '', source: 'other' };
+    },
+
+    async indexDoc(d, opts = {}) {
+      if (!d) return;
+      try {
+        const { text, source } = await this.extractText(d, opts);
+        d.aiText = text || '';
+        d.aiSource = source;
+        d.aiIndexedAt = Date.now();
+        save();
+        if (text && text.length > 20) {
+          console.info('Indexado (gratis)', d.nomenclatura || d.id, source, text.length, 'chars');
+        } else {
+          console.warn('Sin texto indexable', d.nomenclatura || d.id, source);
+        }
+      } catch (e) {
+        console.warn('indexDoc free', e);
+      }
+    },
+
+    tokenize(s) {
+      return String(s || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .split(/[^a-z0-9áéíóúñü]+/i)
+        .filter(w => w.length > 2);
+    },
+
+    scoreDoc(d, terms) {
+      const hay = (d.aiText || '') + ' ' + (d.nombre || '') + ' ' + (d.nomenclatura || '') + ' ' + (d.tipo || '');
+      const low = hay.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (!low.trim()) return { score: 0, excerpts: [] };
+      let score = 0;
+      const excerpts = [];
+      for (const t of terms) {
+        if (!t) continue;
+        let idx = 0, hits = 0;
+        while ((idx = low.indexOf(t, idx)) !== -1) {
+          hits++;
+          idx += t.length;
+        }
+        if (hits) {
+          score += hits * (t.length > 5 ? 2 : 1);
+          const pos = low.indexOf(t);
+          if (pos >= 0) {
+            const start = Math.max(0, pos - 80);
+            const end = Math.min(hay.length, pos + t.length + 120);
+            excerpts.push(hay.slice(start, end).trim());
+          }
+        }
+      }
+      // bonus si coincide nomenclatura/nombre
+      const title = ((d.nomenclatura || '') + ' ' + (d.nombre || '')).toLowerCase();
+      for (const t of terms) if (title.includes(t)) score += 5;
+      return { score, excerpts: [...new Set(excerpts)].slice(0, 3) };
+    },
+
+    search(question, limit = 8) {
+      const terms = this.tokenize(question);
+      if (!terms.length) return [];
+      const results = [];
+      for (const d of this.accessibleDocs()) {
+        const { score, excerpts } = this.scoreDoc(d, terms);
+        if (score > 0) {
+          results.push({
+            doc: d,
+            score,
+            excerpts,
+            nomenclatura: d.nomenclatura,
+            nombre: d.nombre,
+            file_name: d.fileName,
+            doc_id: d.id,
+            similarity: Math.min(0.99, score / (terms.length * 6)),
+          });
+        }
+      }
+      results.sort((a, b) => b.score - a.score);
+      return results.slice(0, limit);
+    },
+
+    buildLocalAnswer(question, hits) {
+      if (!hits.length) {
+        return 'No encontré coincidencias en los documentos a los que tienes acceso.\n\nSugerencias:\n• Indexa los documentos (súbelos de nuevo o usa “Reindexar” en el asistente).\n• Prueba con otras palabras clave de la política.';
+      }
+      const lines = [
+        `Encontré ${hits.length} documento(s) relevantes para: “${question}”.\n`,
+      ];
+      hits.forEach((h, i) => {
+        const label = [h.nomenclatura, h.nombre || h.file_name].filter(Boolean).join(' · ') || h.doc_id;
+        lines.push(`${i + 1}. ${label}`);
+        if (h.excerpts?.length) {
+          h.excerpts.forEach(ex => lines.push(`   «…${ex}…»`));
+        }
+        lines.push('');
+      });
+      lines.push('Pulsa una cita para abrir el documento.');
+      return lines.join('\n');
+    },
+
+    async answerWithGemini(question, hits) {
+      const key = this.getGeminiKey();
+      if (!key) return null;
+      const context = hits
+        .map((h, i) => {
+          const label = [h.nomenclatura, h.nombre].filter(Boolean).join(' ') || h.doc_id;
+          const ex = (h.excerpts || []).join('\n');
+          const body = ex || (h.doc.aiText || '').slice(0, 1200);
+          return `[#${i + 1}] ${label}\n${body}`;
+        })
+        .join('\n\n---\n\n');
+      const prompt =
+        'Eres el asistente del repositorio documental Cyper. Responde en español solo con el contexto. ' +
+        'Si no está en el contexto, dilo. Cita con [#n] y nomenclatura.\n\n' +
+        (context ? `Contexto:\n${context}\n\n` : 'Sin contexto recuperado.\n\n') +
+        `Pregunta: ${question}`;
+      // Modelo lite con cupo gratuito generoso (revisar límites en AI Studio)
+      const model = (S.settings.geminiModel || 'gemini-3.5-flash-lite').trim();
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 1024 },
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error?.message || 'Error Gemini');
+      const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+      return text.trim() || null;
+    },
+
+    open() {
+      const p = $('#aiPanel');
+      if (!p) return;
+      p.classList.remove('hidden');
+      icons();
+      setTimeout(() => $('#aiInput')?.focus(), 50);
+    },
+    close() {
+      $('#aiPanel')?.classList.add('hidden');
+    },
+    toggle() {
+      const p = $('#aiPanel');
+      if (!p) return;
+      if (p.classList.contains('hidden')) this.open();
+      else this.close();
+    },
+    clear() {
+      this.history = [];
+      const box = $('#aiMsgs');
+      if (box) {
+        box.innerHTML =
+          `<div class="ai-empty" id="aiEmpty"><strong>Búsqueda Inteligente en tu Repositorio</strong>Plantea tu duda con tus propias palabras. Olvídate de recordar títulos o términos exactos: solo pregunta y listo.</div>`;
+      }
+    },
+    appendMsg(role, text, citations) {
+      const box = $('#aiMsgs');
+      if (!box) return;
+      $('#aiEmpty')?.remove();
+      const el = document.createElement('div');
+      el.className = 'ai-msg ' + (role === 'user' ? 'user' : role === 'err' ? 'err' : 'bot');
+      el.textContent = text;
+      if (citations && citations.length) {
+        const cites = document.createElement('div');
+        cites.className = 'cites';
+        citations.forEach((c, i) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'cite';
+          const label =
+            [c.nomenclatura, c.nombre || c.file_name].filter(Boolean).join(' · ') || c.doc_id;
+          b.textContent = `#${i + 1} ${label}`;
+          b.title = (c.excerpts && c.excerpts[0]) || '';
+          b.addEventListener('click', () => {
+            const d = S.docs.find(x => x.id === c.doc_id);
+            if (d) openViewer(d);
+          });
+          cites.appendChild(b);
+        });
+        el.appendChild(cites);
+      }
+      box.appendChild(el);
+      box.scrollTop = box.scrollHeight;
+    },
+
+    async reindexAll() {
+      const docs = this.accessibleDocs();
+      if (!docs.length) return toast('No hay documentos accesibles', 'info');
+      toast(`Indexando ${docs.length} documento(s)…`, 'info');
+      let n = 0;
+      for (const d of docs) {
+        await this.indexDoc(d);
+        n++;
+      }
+      toast(`Indexados ${n} documento(s)`, 'ok');
+    },
+
+    async send() {
+      if (this.busy) return;
+      const input = $('#aiInput');
+      const q = (input?.value || '').trim();
+      if (!q) return;
+      if (!me) return toast('Inicia sesión para usar el asistente', 'err');
+      input.value = '';
+      this.appendMsg('user', q);
+      this.busy = true;
+      $('#aiTyping')?.classList.remove('hidden');
+      $('#aiSend')?.setAttribute('disabled', 'true');
+      try {
+        // Indexar al vuelo los que no tengan texto
+        const need = this.accessibleDocs().filter(d => !d.aiText);
+        if (need.length && need.length <= 15) {
+          for (const d of need) await this.indexDoc(d);
+        }
+        const hits = this.search(q, 8);
+        let answer = null;
+        if (this.getGeminiKey()) {
+          try {
+            answer = await this.answerWithGemini(q, hits);
+          } catch (e) {
+            console.warn(e);
+            answer = null;
+            this.appendMsg('err', 'Gemini no disponible: ' + (e.message || e) + '. Uso respuesta local.');
+          }
+        }
+        if (!answer) answer = this.buildLocalAnswer(q, hits);
+        this.appendMsg('bot', answer, hits);
+        try {
+          log('consulta', `IA local: ${q.slice(0, 80)}`);
+          save();
+        } catch (e) {}
+      } catch (e) {
+        this.appendMsg('err', String(e.message || e));
+      } finally {
+        this.busy = false;
+        $('#aiTyping')?.classList.add('hidden');
+        $('#aiSend')?.removeAttribute('disabled');
+        icons();
+      }
+    },
+
+    bind() {
+      const fab = $('#aiFab');
+      if (!fab || fab.dataset.bound) return;
+      fab.dataset.bound = '1';
+      fab.addEventListener('click', () => this.toggle());
+      $('#aiClose')?.addEventListener('click', () => this.close());
+      $('#aiClear')?.addEventListener('click', () => this.clear());
+      $('#aiSend')?.addEventListener('click', () => this.send());
+      $('#aiInput')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          this.send();
+        }
+      });
+      // botón reindexar si existe
+      document.getElementById('aiReindex')?.addEventListener('click', () => this.reindexAll());
+    },
+    syncFab() {
+      const fab = $('#aiFab');
+      if (!fab) return;
+      if (me && S) fab.classList.remove('hidden');
+      else {
+        fab.classList.add('hidden');
+        this.close();
+      }
+      this.bind();
+      icons();
+    },
+  };
+  window.CyperAI = CyperAI;
+
+
   /* ---------------- Arranque ---------------- */
+
   const sid = SessionStore.getItem(SESSION);
   if (sid && S) { const u = userById(sid); if (u && u.active) me = u; }
   // Si la ruta guardada apunta a algo inexistente, volver a home
@@ -7156,6 +7668,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   touchSessionActivity();
   startSessionWatch();
   render();
+  CyperAI.syncFab();
 
   // Revalidar accesos temporales cada 30 s (sin perder scroll ni ruta)
   setInterval(() => {
