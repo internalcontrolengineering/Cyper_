@@ -1772,6 +1772,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
 
@@ -7335,6 +7336,61 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       }
     },
 
+    async extractDocx(fileOrBlob) {
+      if (!window.mammoth) return '';
+      try {
+        const buf = await fileOrBlob.arrayBuffer();
+        const res = await mammoth.extractRawText({ arrayBuffer: buf });
+        return (res && res.value ? res.value : '').replace(/\s+/g, ' ').trim();
+      } catch (e) {
+        console.warn('docx', e);
+        return '';
+      }
+    },
+
+    async extractXlsx(fileOrBlob) {
+      if (!window.XLSX) return '';
+      try {
+        const buf = await fileOrBlob.arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array' });
+        const parts = [];
+        (wb.SheetNames || []).forEach(name => {
+          const sheet = wb.Sheets[name];
+          if (!sheet) return;
+          parts.push('Hoja: ' + name);
+          parts.push(XLSX.utils.sheet_to_csv(sheet));
+        });
+        return parts.join('\n').replace(/\s+/g, ' ').trim();
+      } catch (e) {
+        console.warn('xlsx', e);
+        return '';
+      }
+    },
+
+    async extractPptx(fileOrBlob) {
+      if (!window.JSZip) return '';
+      try {
+        const buf = await fileOrBlob.arrayBuffer();
+        const zip = await JSZip.loadAsync(buf);
+        const texts = [];
+        const files = Object.keys(zip.files || {}).filter(n => /ppt\/slides\/slide\d+\.xml$/i.test(n)).sort();
+        for (const name of files.slice(0, 40)) {
+          const xml = await zip.files[name].async('string');
+          const re = /<a:t[^>]*>([^<]*)<\/a:t>/g;
+          let m;
+          const slide = [];
+          while ((m = re.exec(xml))) {
+            if (m[1] && m[1].trim()) slide.push(m[1].trim());
+          }
+          if (slide.length) texts.push(slide.join(' '));
+        }
+        return texts.join('\n').replace(/\s+/g, ' ').trim();
+      } catch (e) {
+        console.warn('pptx', e);
+        return '';
+      }
+    },
+
     async extractText(d, opts = {}) {
       let text = '';
       let html = opts.html;
@@ -7355,6 +7411,15 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           if (b instanceof Blob || b instanceof File) file = b;
         } catch (e) {}
       }
+      // URL externa / Matriz (hospedaje)
+      if (!file && d.externalUrl && /^https?:\/\//i.test(d.externalUrl)) {
+        try {
+          const res = await fetch(d.externalUrl, { mode: 'cors' });
+          if (res.ok) file = await res.blob();
+        } catch (e) {
+          console.warn('externalUrl fetch', e);
+        }
+      }
       if (!file) return { text: text || '', source: 'empty' };
 
       const name = (d.fileName || file.name || '').toLowerCase();
@@ -7363,19 +7428,33 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       if (mime.includes('pdf') || name.endsWith('.pdf')) {
         text = await this.extractPdfText(file);
         if (text && text.length > 40) return { text, source: 'pdf' };
-        // PDF escaneado: OCR de las primeras páginas como imagen no es trivial sin canvas;
-        // intentar OCR del blob completo no aplica. Devolver lo que haya.
         return { text: text || '', source: 'pdf' };
       }
       if (mime.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp|tiff?)$/i.test(name)) {
         text = await this.extractOcr(file);
         return { text, source: 'ocr' };
       }
-      if (mime.startsWith('text/') || name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.csv')) {
-        text = await file.text();
-        return { text: text.replace(/\s+/g, ' ').trim(), source: 'text' };
+      if (name.endsWith('.docx') || mime.includes('wordprocessingml')) {
+        text = await this.extractDocx(file);
+        return { text, source: 'docx' };
       }
-      // DOCX ya suele venir como html vía convertToHtml
+      if (name.endsWith('.xlsx') || name.endsWith('.xls') || mime.includes('spreadsheet') || mime.includes('excel')) {
+        text = await this.extractXlsx(file);
+        return { text, source: 'xlsx' };
+      }
+      if (name.endsWith('.csv')) {
+        text = await file.text();
+        return { text: text.replace(/\s+/g, ' ').trim(), source: 'csv' };
+      }
+      if (name.endsWith('.pptx') || mime.includes('presentationml')) {
+        text = await this.extractPptx(file);
+        return { text, source: 'pptx' };
+      }
+      if (mime.startsWith('text/') || name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.html') || name.endsWith('.htm')) {
+        const raw = await file.text();
+        text = name.endsWith('.html') || name.endsWith('.htm') ? this.htmlToText(raw) : raw.replace(/\s+/g, ' ').trim();
+        return { text, source: 'text' };
+      }
       return { text: text || '', source: 'other' };
     },
 
@@ -7388,50 +7467,115 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         d.aiIndexedAt = Date.now();
         save();
         if (text && text.length > 20) {
-          console.info('Indexado (gratis)', d.nomenclatura || d.id, source, text.length, 'chars');
+          console.info('Indexado', d.nomenclatura || d.id, source, text.length, 'chars');
         } else {
           console.warn('Sin texto indexable', d.nomenclatura || d.id, source);
         }
       } catch (e) {
-        console.warn('indexDoc free', e);
+        console.warn('indexDoc', e);
       }
     },
 
-    tokenize(s) {
+    normalize(s) {
       return String(s || '')
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
-        .split(/[^a-z0-9áéíóúñü]+/i)
-        .filter(w => w.length > 2);
+        .replace(/[^\w\sáéíóúñü]/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    },
+
+    _stopSet() {
+      if (this._STOP) return this._STOP;
+      this._STOP = new Set(('a al algo algunas algunos ante aquel aquella aquellas aquellos aqui aun aunque bajo bien cada casi como con contra cual cuales cuando de del desde donde dos el ella ellas ellos en entre es esa ese eso esta este esto etc fue fueron ha haber hace hacer hasta hay la las le les lo los luego mas me mi mis mucho muchos muy nada ni no nos o otra otras otro otros para pero poco por porque que se ser si sin sobre son su sus tal tambien tan te tiene un una unas uno unos y ya yo documento documentos habla alguna algunos').split(/\s+/));
+      return this._STOP;
+    },
+
+    SYN: {
+      despido: ['desincorporacion', 'rescision', 'rescindir', 'terminacion', 'baja', 'finiquito', 'liquidacion', 'separacion', 'cese', 'renuncia', 'laboral'],
+      despidos: ['desincorporacion', 'rescision', 'bajas', 'finiquitos', 'terminacion'],
+      rescision: ['despido', 'desincorporacion', 'terminacion', 'finiquito', 'laboral'],
+      resicion: ['rescision', 'despido', 'desincorporacion', 'finiquito'],
+      desincorporacion: ['despido', 'rescision', 'baja', 'finiquito', 'terminacion', 'personal'],
+      personal: ['colaborador', 'empleado', 'trabajador', 'recursos humanos'],
+      archivar: ['archivo', 'resguardo', 'custodia', 'bodega', 'almacen', 'expediente'],
+      archivo: ['archivos', 'resguardo', 'bodega', 'almacen', 'archivo general', 'archivo muerto'],
+      bodega: ['archivo', 'almacen', 'resguardo', 'archivo muerto'],
+      resguardo: ['archivo', 'custodia', 'almacenaje', 'bodega'],
+      prestamo: ['devolucion', 'expediente'],
+      vacaciones: ['descanso', 'permiso', 'ausencia'],
+      nomina: ['sueldo', 'salario', 'pago', 'recibo'],
+      politica: ['politicas', 'lineamientos', 'norma', 'normativa', 'procedimiento'],
+      procedimiento: ['proceso', 'instructivo', 'politica', 'lineamientos'],
+      compra: ['adquisicion', 'proveedor', 'suministro'],
+      inventario: ['existencias', 'stock', 'conteo'],
+      confidencial: ['reservado', 'interno', 'privacidad'],
+      capacitacion: ['entrenamiento', 'formacion', 'curso', 'induccion']
+    },
+
+    tokenize(s) {
+      const norm = this.normalize(s);
+      const raw = norm.split(/\s+/).filter(Boolean);
+      const stop = this._stopSet();
+      const terms = [];
+      const add = (w) => {
+        if (!w || w.length < 3 || stop.has(w) || /^\d+$/.test(w)) return;
+        terms.push(w);
+        const syns = this.SYN[w];
+        if (syns) {
+          syns.forEach(x => {
+            const n = this.normalize(x);
+            n.split(/\s+/).forEach(p => { if (p.length >= 3 && !stop.has(p)) terms.push(p); });
+            if (n.includes(' ')) terms.push(n);
+          });
+        }
+      };
+      raw.forEach(add);
+      for (let i = 0; i < raw.length - 1; i++) {
+        const a = raw[i], b = raw[i + 1];
+        if (stop.has(a) || stop.has(b) || a.length < 3 || b.length < 3) continue;
+        terms.push(a + ' ' + b);
+      }
+      return [...new Set(terms)];
     },
 
     scoreDoc(d, terms) {
-      const hay = (d.aiText || '') + ' ' + (d.nombre || '') + ' ' + (d.nomenclatura || '') + ' ' + (d.tipo || '');
-      const low = hay.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      if (!low.trim()) return { score: 0, excerpts: [] };
+      const hay = (d.aiText || '') + ' ' + (d.nombre || '') + ' ' + (d.nomenclatura || '') + ' ' + (d.tipo || '') + ' ' + (d.descripcion || '');
+      const low = this.normalize(hay);
+      const title = this.normalize((d.nomenclatura || '') + ' ' + (d.nombre || '') + ' ' + (d.tipo || ''));
+      if (!low.trim() && !title.trim()) return { score: 0, excerpts: [] };
       let score = 0;
       const excerpts = [];
+      const found = new Set();
       for (const t of terms) {
         if (!t) continue;
-        let idx = 0, hits = 0;
+        const isPhrase = t.includes(' ');
+        const weight = isPhrase ? 6 : (t.length > 7 ? 3 : t.length > 4 ? 2 : 1);
+        let hits = 0, idx = 0;
         while ((idx = low.indexOf(t, idx)) !== -1) {
           hits++;
           idx += t.length;
-        }
-        if (hits) {
-          score += hits * (t.length > 5 ? 2 : 1);
-          const pos = low.indexOf(t);
-          if (pos >= 0) {
-            const start = Math.max(0, pos - 80);
-            const end = Math.min(hay.length, pos + t.length + 120);
-            excerpts.push(hay.slice(start, end).trim());
+          if (hits === 1) {
+            const pos = low.indexOf(t);
+            const ratio = hay.length / Math.max(low.length, 1);
+            const start = Math.max(0, Math.floor(pos * ratio) - 80);
+            const end = Math.min(hay.length, Math.floor((pos + t.length) * ratio) + 120);
+            const ex = hay.slice(start, end).trim();
+            if (ex.length > 30) excerpts.push(ex);
           }
+          if (hits >= 8) break;
+        }
+        let titleHits = 0;
+        idx = 0;
+        while ((idx = title.indexOf(t, idx)) !== -1) { titleHits++; idx += t.length; }
+        if (hits || titleHits) {
+          found.add(t);
+          score += hits * weight + titleHits * weight * 4;
         }
       }
-      // bonus si coincide nomenclatura/nombre
-      const title = ((d.nomenclatura || '') + ' ' + (d.nombre || '')).toLowerCase();
-      for (const t of terms) if (title.includes(t)) score += 5;
+      const coverage = found.size / Math.max(terms.length, 1);
+      score *= (0.35 + 0.65 * Math.min(1, coverage * 1.4));
       return { score, excerpts: [...new Set(excerpts)].slice(0, 3) };
     },
 
@@ -7441,7 +7585,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const results = [];
       for (const d of this.accessibleDocs()) {
         const { score, excerpts } = this.scoreDoc(d, terms);
-        if (score > 0) {
+        if (score >= 0.8) {
           results.push({
             doc: d,
             score,
@@ -7455,15 +7599,60 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         }
       }
       results.sort((a, b) => b.score - a.score);
+      if (!results.length) {
+        // fallback: cualquier score > 0
+        for (const d of this.accessibleDocs()) {
+          const { score, excerpts } = this.scoreDoc(d, terms);
+          if (score > 0) {
+            results.push({
+              doc: d, score, excerpts,
+              nomenclatura: d.nomenclatura, nombre: d.nombre, file_name: d.fileName, doc_id: d.id,
+              similarity: Math.min(0.99, score / (terms.length * 6)),
+            });
+          }
+        }
+        results.sort((a, b) => b.score - a.score);
+      }
       return results.slice(0, limit);
+    },
+
+    async expandQueryWithAI(question) {
+      const key = this.getGeminiKey();
+      if (!key) return question;
+      try {
+        const model = (S?.settings?.geminiModel || 'gemini-3.5-flash-lite').trim();
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+        const prompt = [
+          'Eres experto en documentación normativa y recursos humanos en empresas mexicanas.',
+          'Dada la pregunta, devuelve UNA línea con 12 a 20 palabras clave y sinónimos para buscar en políticas.',
+          'Incluye equivalencias (despido→desincorporación, rescisión, finiquito, baja de personal).',
+          'Solo palabras separadas por espacios, sin explicaciones.',
+          'Pregunta: ' + question
+        ].join('\n');
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 120 }
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return question;
+        const text = (data?.candidates?.[0]?.content?.parts?.map(p => p.text).join(' ') || '').trim();
+        return text ? (question + ' ' + text) : question;
+      } catch (e) {
+        console.warn('expandQuery', e);
+        return question;
+      }
     },
 
     buildLocalAnswer(question, hits) {
       if (!hits.length) {
-        return 'No encontré coincidencias en los documentos a los que tienes acceso.\n\nSugerencias:\n• Indexa los documentos (súbelos de nuevo o usa “Reindexar” en el asistente).\n• Prueba con otras palabras clave de la política.';
+        return 'No encontré documentos relacionados semánticamente con tu pregunta en el repositorio accesible.\n\nPrueba sinónimos (despido/desincorporación/rescisión) o configura Gemini en Configuración → Asistente IA.';
       }
       const lines = [
-        `Encontré ${hits.length} documento(s) relevantes para: “${question}”.\n`,
+        `Resultados por relevancia (sinónimos de dominio incluidos) para: “${question}”.\n`,
       ];
       hits.forEach((h, i) => {
         const label = [h.nomenclatura, h.nombre || h.file_name].filter(Boolean).join(' · ') || h.doc_id;
@@ -7484,16 +7673,22 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         .map((h, i) => {
           const label = [h.nomenclatura, h.nombre].filter(Boolean).join(' ') || h.doc_id;
           const ex = (h.excerpts || []).join('\n');
-          const body = ex || (h.doc.aiText || '').slice(0, 1200);
+          const body = ex || (h.doc.aiText || '').slice(0, 5500);
           return `[#${i + 1}] ${label}\n${body}`;
         })
         .join('\n\n---\n\n');
+      const catalog = this.accessibleDocs().slice(0, 80).map(d =>
+        `- ${d.nomenclatura || ''} | ${d.nombre || ''} | ${d.tipo || ''}`
+      ).join('\n');
       const prompt =
-        'Eres el asistente del repositorio documental Cyper. Responde en español solo con el contexto. ' +
-        'Si no está en el contexto, dilo. Cita con [#n] y nomenclatura.\n\n' +
-        (context ? `Contexto:\n${context}\n\n` : 'Sin contexto recuperado.\n\n') +
+        'Eres el asistente experto del repositorio documental Cyper.\n' +
+        'Responde en español como una IA que entiende CONTEXTO, no solo palabras exactas.\n' +
+        'Equivalencias: despido≈desincorporación≈rescisión≈finiquito≈baja; archivo≈resguardo≈bodega≈custodia.\n' +
+        'Indica nomenclatura y nombre, explica por qué aplica y cita 1–3 frases. Usa [#n].\n' +
+        'No inventes documentos. Si no hay evidencia, dilo.\n\n' +
+        (context ? `Contexto detallado:\n${context}\n\n` : 'Sin extractos de archivo.\n\n') +
+        `Catálogo (nomenclatura | nombre | tipo):\n${catalog}\n\n` +
         `Pregunta: ${question}`;
-      // Modelo lite con cupo gratuito generoso (revisar límites en AI Studio)
       const model = (S.settings.geminiModel || 'gemini-3.5-flash-lite').trim();
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
       const res = await fetch(url, {
@@ -7501,7 +7696,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 1024 },
+          generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -7509,6 +7704,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
       return text.trim() || null;
     },
+
 
     open() {
       const p = $('#aiPanel');
@@ -7588,26 +7784,35 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       $('#aiTyping')?.classList.remove('hidden');
       $('#aiSend')?.setAttribute('disabled', 'true');
       try {
-        // Indexar al vuelo los que no tengan texto
+        const hasKey = !!this.getGeminiKey();
+        // Indexar al vuelo los que no tengan texto (límite para no congelar)
         const need = this.accessibleDocs().filter(d => !d.aiText);
-        if (need.length && need.length <= 15) {
+        if (need.length && need.length <= 20) {
           for (const d of need) await this.indexDoc(d);
         }
-        const hits = this.search(q, 8);
+        let query = q;
+        if (hasKey) {
+          try { query = await this.expandQueryWithAI(q); } catch (e) { query = q; }
+        }
+        const hits = this.search(query, hasKey ? 10 : 8);
         let answer = null;
-        if (this.getGeminiKey()) {
+        if (hasKey) {
           try {
             answer = await this.answerWithGemini(q, hits);
           } catch (e) {
             console.warn(e);
-            answer = null;
-            this.appendMsg('err', 'Gemini no disponible: ' + (e.message || e) + '. Uso respuesta local.');
+            this.appendMsg('err', 'Gemini no disponible: ' + (e.message || e) + '. Uso respuesta local con sinónimos.');
           }
         }
-        if (!answer) answer = this.buildLocalAnswer(q, hits);
+        if (!answer) {
+          answer = this.buildLocalAnswer(q, hits);
+          if (!hasKey) {
+            answer += '\n\n⚠️ Sin API key de Gemini. Configuración → Asistente IA → pega AIza… para respuestas semánticas.';
+          }
+        }
         this.appendMsg('bot', answer, hits);
         try {
-          log('consulta', `IA local: ${q.slice(0, 80)}`);
+          log('consulta', `IA: ${q.slice(0, 80)}`);
           save();
         } catch (e) {}
       } catch (e) {
