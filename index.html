@@ -5892,6 +5892,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   const saveBlob = (blob, name) => { const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); };
   const safeName = (d) => `${d.nomenclatura} ${d.nombre} ${d.version}`.replace(/[\\/:*?"<>|]+/g, '-');
+  const registeredName = (d, ext = d?.ext) => `${d.nomenclatura} ${d.nombre}`.trim().replace(/[\\/:*?"<>|]+/g, '-') + (ext ? '.' + ext : '');
 
   async function downloadDoc(d, format = 'original', historyEntry = null) {
     const acc = areaAccess(d.areaId);
@@ -5907,7 +5908,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         const got = await fetchDocBlob(d);
         if (got?.blob) {
           log('descarga', `Descargó ${d.nomenclatura} (ORIGINAL)`); save();
-          return saveBlob(got.blob, got.fname || fname || (safeName(d) + (d.ext ? '.' + d.ext : '')));
+          return saveBlob(got.blob, registeredName(d, d.ext));
         }
         return toast('No se encontró el archivo original para descargar', 'err');
       }
@@ -5921,7 +5922,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     log('descarga', `Descargó ${d.nomenclatura} (${String(format).toUpperCase()})`); save();
 
     if (format === 'original') {
-      if (blob instanceof Blob || blob instanceof File) return saveBlob(blob, fname || (name + (ext ? '.' + ext : '')));
+      if (blob instanceof Blob || blob instanceof File) return saveBlob(blob, registeredName(d, ext));
       return toast('No se encontró el archivo original para descargar', 'err');
     }
     if (format === 'word') {
@@ -6179,7 +6180,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   async function fetchDocBlob(d) {
     // 1) Storage vía Files
     let blob = await Files.get('orig:' + d.id);
-    if (blob instanceof Blob || blob instanceof File) return { blob, fname: d.fileName || (safeName(d) + (d.ext ? '.' + d.ext : '')) };
+    if (blob instanceof Blob || blob instanceof File) return { blob, fname: registeredName(d, d.ext) };
     // 2) URL pública de Supabase / URL del documento
     const candidates = [];
     try { if (Files.publicUrl) candidates.push(Files.publicUrl('orig:' + d.id)); } catch (e) {}
@@ -6189,14 +6190,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         const r = await fetch(url, { mode: 'cors' });
         if (r.ok) {
           const b = await r.blob();
-          if (b && b.size > 0) return { blob: b, fname: d.fileName || (safeName(d) + (d.ext ? '.' + d.ext : '')) };
+          if (b && b.size > 0) return { blob: b, fname: registeredName(d, d.ext) };
         }
       } catch (e) {}
     }
     // 3) HTML editable
     let html = await Files.get('html:' + d.id);
     if (typeof html === 'string' && html) {
-      return { blob: new Blob([html], { type: 'text/html;charset=utf-8' }), fname: safeName(d) + '.html' };
+      return { blob: new Blob([html], { type: 'text/html;charset=utf-8' }), fname: registeredName(d, 'html') };
     }
     return null;
   }
