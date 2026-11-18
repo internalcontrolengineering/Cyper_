@@ -4464,7 +4464,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         return;
       }
       const docs = [...ui.folderSelected].map(id => docById(id)).filter(Boolean);
-      await downloadDocsBulk(docs, 'carpeta-seleccion');
+      await downloadDocsBulk(docs, 'Cyper-RepositorioCI');
     });
     $('#folderMoveBtn')?.addEventListener('click', () => {
       if (!ui.folderSelected || !ui.folderSelected.size) return;
