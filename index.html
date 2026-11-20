@@ -2642,8 +2642,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     return parts.join('-');
   }
 
-  function suggestNomenclatura(folder, tipo) {
-    if (!tipo) return ''; // Esperar a que se elija el tipo de documento
+  function suggestNomenclatura(folder, tipo, excludeDocId = null) {
+    if (!tipo || !folder) return ''; // Esperar a que se elija el tipo de documento
     const area = areaById(folder.areaId);
     const unit = unitById(area?.unitId);
     const uCode = (unit?.code || 'UN').toUpperCase();
@@ -2652,7 +2652,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const mid = (folder.code || area?.code || 'XX').toUpperCase();
     const prefix = `${uCode}-${tCode}-${mid}-`;
     let n = 1;
-    const used = new Set(S.docs.map(d => (d.nomenclatura || '').toUpperCase()));
+    const used = new Set(
+      (S.docs || [])
+        .filter(d => !excludeDocId || d.id !== excludeDocId)
+        .map(d => (d.nomenclatura || '').trim().toUpperCase())
+        .filter(Boolean)
+    );
     while (used.has(prefix + String(n).padStart(2, '0'))) n++;
     return prefix + String(n).padStart(2, '0');
   }
@@ -4913,22 +4918,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       if (nom && !nom.readOnly && b.dataset.folder) {
         const folder = folderById(b.dataset.folder);
         if (folder) {
-          const cur = (nom.value || '').trim();
-          let s = '';
-          if (cur) {
-            // Respetar lo escrito: solo cambia el código de tipo (ANE, FOR, COM…)
-            s = swapTipoInNomenclatura(cur, sel.value) || suggestNomenclatura(folder, sel.value);
-          } else {
-            s = suggestNomenclatura(folder, sel.value);
-          }
+          const excludeId = b.dataset.self || null;
+          // Siempre recalcular el consecutivo disponible para el tipo seleccionado
+          const s = suggestNomenclatura(folder, sel.value, excludeId);
           nom.dataset.autoUpdating = '1';
           nom.value = s || '';
-          nom.dataset.suggested = cur ? (nom.dataset.suggested || '0') : '1';
+          nom.dataset.suggested = s ? '1' : '0';
+          nom.dataset.manual = '0';
           nom.dispatchEvent(new Event('input', { bubbles: true }));
-          if (!cur) {
-            nom.dataset.suggested = '1';
-            nom.dataset.manual = '0';
-          }
           delete nom.dataset.autoUpdating;
         }
       }
