@@ -759,13 +759,21 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .file-preview-card .doc-name { min-width: 0; }
 
 /* ---------- Viewer ---------- */
-.viewer-head { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.viewer-head { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; flex-shrink: 0; }
 .viewer-head .doc-name { min-width: 0; flex: 1; }
 .viewer-head .doc-name strong { font-size: 17px; font-weight: 600; }
 .viewer-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.viewer-body { flex: 1; display: grid; grid-template-columns: 1fr 300px; min-height: 0; }
+.viewer-body { flex: 1; display: grid; grid-template-columns: 1fr 300px; min-height: 0; transition: grid-template-columns .3s var(--ease); }
+.modal.full.side-collapsed .viewer-body { grid-template-columns: 1fr 0; }
+.modal.full.side-collapsed .viewer-side {
+  width: 0; padding: 0; border: 0; overflow: hidden; opacity: 0; pointer-events: none;
+}
+.modal-root.maximized { padding: 0; }
+.modal.full.maximized {
+  max-width: 100%; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0;
+}
 .viewer-stage { overflow: auto; background: var(--bg-sunk); padding: 32px; position: relative; }
-.viewer-side { border-left: 1px solid var(--line); overflow-y: auto; padding: 20px; }
+.viewer-side { border-left: 1px solid var(--line); overflow-y: auto; padding: 20px; transition: opacity .25s, padding .25s, width .25s; }
 .viewer-side h5 { font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; margin: 18px 0 10px; }
 .viewer-side h5:first-child { margin-top: 0; }
 .kv { display: grid; grid-template-columns: 110px 1fr; gap: 8px 10px; font-size: 13px; }
@@ -1017,6 +1025,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 @media (max-width: 1000px) {
   .viewer-body { grid-template-columns: 1fr; }
   .viewer-side { border-left: 0; border-top: 1px solid var(--line); max-height: 260px; }
+  .modal.full.side-collapsed .viewer-side { max-height: 0; height: 0; padding: 0; border: 0; overflow: hidden; opacity: 0; }
 }
 @media (max-width: 760px) {
   /* Navegación */
@@ -1774,7 +1783,6 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
 
   <!-- App -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1837,7 +1845,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
 
 
-  /* ---------- Perfiles por defecto (configurables) ---------- */
+  /* ---------- Perfiles por defecto (solo 3 perfiles) ---------- */
   const CAPS = [
     { key: 'createArea', label: 'Crear y editar áreas' },
     { key: 'createFolder', label: 'Crear y editar carpetas' },
@@ -1846,20 +1854,15 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     { key: 'managePerms', label: 'Asignar permisos' },
     { key: 'settings', label: 'Acceder a configuración' },
     { key: 'allAreas', label: 'Acceso total a todas las áreas' },
-    { key: 'docVer', label: 'Ver (solo consulta, sin copiar ni imprimir)' },
-    { key: 'docDescargar', label: 'Descargar (ver y descargar en PDF)' },
-    { key: 'docEditar', label: 'Editar (ver, descargar y modificar en línea)' },
   ];
 
   const defaultRoles = () => ([
     { id: 'admin', name: 'Administrador', desc: 'Control total de la plataforma',
-      caps: { createArea: true, createFolder: true, upload: true, deleteDocs: true, managePerms: true, settings: true, allAreas: true, docVer: true, docDescargar: true, docEditar: true } },
-    { id: 'gestor', name: 'Responsable de Área', desc: 'Crea carpetas y gestiona documentos en sus áreas',
-      caps: { createArea: false, createFolder: true, upload: true, deleteDocs: true, managePerms: false, settings: false, allAreas: false, docVer: true, docDescargar: true, docEditar: true } },
-    { id: 'colaborador', name: 'Colaborador', desc: 'Sube documentos en las áreas asignadas',
-      caps: { createArea: false, createFolder: false, upload: true, deleteDocs: false, managePerms: false, settings: false, allAreas: false, docVer: false, docDescargar: true, docEditar: true } },
-    { id: 'consulta', name: 'Consultor', desc: 'Solo consulta según sus permisos',
-      caps: { createArea: false, createFolder: false, upload: false, deleteDocs: false, managePerms: false, settings: false, allAreas: false, docVer: true, docDescargar: false, docEditar: false } },
+      caps: { createArea: true, createFolder: true, upload: true, deleteDocs: true, managePerms: true, settings: true, allAreas: true } },
+    { id: 'gestor', name: 'Responsable de Área', desc: 'Sin capacidades habilitadas por defecto; se configuran por perfil o nivel de acceso',
+      caps: { createArea: false, createFolder: false, upload: false, deleteDocs: false, managePerms: false, settings: false, allAreas: false } },
+    { id: 'consulta', name: 'Consultor', desc: 'Sin capacidades habilitadas por defecto; se configura por nivel de acceso',
+      caps: { createArea: false, createFolder: false, upload: false, deleteDocs: false, managePerms: false, settings: false, allAreas: false } },
   ]);
 
   /* Tipos de documento por nivel (configurable desde Configuración → Documentos) */
@@ -1901,7 +1904,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     autoVersion: true,
     maxMB: 20,
     allowedExt: 'pdf,doc,docx,xls,xlsx,csv,txt,md,html,png,jpg,jpeg,webp,ppt,pptx',
-    downloadFormat: 'pdf',      // pdf | original
+    downloadFormat: 'original', // original
     watermark: true,
     blockPrint: true,
     showLockedAreas: true,
@@ -2116,7 +2119,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
     async _push(db) {
       if (!sb || !db) return;
-      this._ignoreRealtimeUntil = Date.now() + 4000;
+      this._ignoreRealtimeUntil = Date.now() + 2500;
       const { error } = await sb.from('app_state').upsert({
         id: 'main',
         data: db,
@@ -2124,6 +2127,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       });
       if (error) throw error;
       try { LS.store.setItem(KEY, JSON.stringify(db)); } catch (e) {}
+      try {
+        if (this._realtime) {
+          await this._realtime.send({ type: 'broadcast', event: 'state_updated', payload: { at: Date.now() } });
+        }
+      } catch (e) {}
     },
 
     save() {
@@ -2140,7 +2148,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           console.error(e);
           window.toast && toast('No se pudo sincronizar con Supabase', 'err');
         });
-      }, 350);
+      }, 60);
     },
 
     async init({ email, name, pass }) {
@@ -2210,6 +2218,21 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             if (typeof onRemote === 'function') onRemote(next);
           } catch (e) { console.warn('realtime apply', e); }
         })
+        .on('broadcast', { event: 'state_updated' }, async () => {
+          if (Date.now() < this._ignoreRealtimeUntil) return;
+          try {
+            const fresh = await this.loadAsync();
+            if (fresh && this._isValidDb(fresh)) {
+              const remoteStr = JSON.stringify(fresh);
+              const localStr = JSON.stringify(this.db);
+              if (remoteStr !== localStr) {
+                this.db = fresh;
+                try { LS.store.setItem(KEY, remoteStr); } catch (e) {}
+              }
+              if (typeof onRemote === 'function') onRemote(fresh);
+            }
+          } catch (e) { console.warn('broadcast sync', e); }
+        })
         .subscribe();
     },
   };
@@ -2250,19 +2273,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   const AREA_ICONS = ['badge-check', 'users', 'landmark', 'factory', 'cpu', 'scale', 'briefcase', 'shield-check', 'truck', 'heart-pulse', 'megaphone', 'wrench', 'graduation-cap', 'building-2', 'shopping-cart', 'leaf', 'folder-kanban', 'chart-pie',
     'building', 'warehouse', 'package', 'clipboard-list', 'file-check', 'files', 'folder', 'folders', 'hard-hat', 'hammer', 'settings', 'cog', 'database', 'server', 'network', 'globe', 'map-pin', 'handshake', 'award', 'target', 'trending-up', 'bar-chart-3', 'pie-chart', 'calculator', 'wallet', 'receipt', 'banknote', 'shield', 'lock', 'key-round', 'eye', 'search', 'book-open', 'notebook-pen', 'pen-line', 'stethoscope', 'flask-conical', 'microscope', 'plane', 'ship', 'car', 'bus', 'phone', 'mail', 'message-square', 'bell', 'calendar', 'clock', 'timer', 'user-cog', 'user-check', 'contact', 'id-card'];
   const EXT_COLOR = { pdf: '#ff3b30', doc: '#0a84ff', docx: '#0a84ff', xls: '#30b158', xlsx: '#30b158', csv: '#30b158', ppt: '#ff9500', pptx: '#ff9500', png: '#bf5af2', jpg: '#bf5af2', jpeg: '#bf5af2', webp: '#bf5af2', txt: '#8e8e93', md: '#8e8e93', html: '#ff6b00' };
-  const LV = { ver: 1, descargar: 2, editar: 3 };
-  const LV_LABEL = { ver: 'Solo ver', descargar: 'Ver y descargar', editar: 'Edición en línea' };
-  const LV_ICON = { ver: 'eye', descargar: 'download', editar: 'pencil-line' };
-  /** Nivel efectivo por defecto del perfil (caps docVer / docDescargar / docEditar) */
+  const LV = { ver: 1, descargar: 2 };
+  const LV_LABEL = { ver: 'Ver', descargar: 'Ver y Descargar' };
+  const LV_ICON = { ver: 'eye', descargar: 'download' };
+  /** Nivel efectivo por defecto del perfil (caps docVer / docDescargar) */
   function roleDefaultLevel(role) {
     const c = role?.caps || {};
-    if (c.docEditar) return 'editar';
     if (c.docDescargar) return 'descargar';
-    if (c.docVer) return 'ver';
     return 'ver';
   }
   function highestLevel(list) {
-    if (list.includes('editar')) return 'editar';
     if (list.includes('descargar')) return 'descargar';
     if (list.includes('ver')) return 'ver';
     return null;
@@ -2329,35 +2349,49 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       console.warn('realtime: estado incompleto ignorado');
       return;
     }
-    // Conservar sesión: si el remoto no trae al usuario actual, mantener me local
-    const sid = SessionStore.getItem(SESSION);
-    const remoteMe = sid ? (next.users || []).find(u => u.id === sid) : null;
+    // Evaluar sesión del usuario actual frente al estado remoto
+    const sid = SessionStore.getItem(SESSION) || (me && me.id) || null;
+    const remoteUsers = Array.isArray(next.users) ? next.users : [];
+    const remoteMe = sid ? remoteUsers.find(u => u.id === sid) : null;
     S = next;
     Repo.db = next;
     window.S = S;
     try {
       if (sid && remoteMe) {
         me = remoteMe;
-      } else if (sid && me && me.id === sid) {
-        // Remoto sin este usuario todavía: no cerrar sesión
-        if (!S.users.find(u => u.id === sid) && me) {
-          S.users = [...S.users, me];
-        } else {
-          me = S.users.find(u => u.id === sid) || me;
+        if (!remoteMe.active) {
+          window.__activeViewerDocId = null;
+          window.__activeViewerState = null;
+          $$('.modal-root').forEach(r => r.remove());
+          document.body.classList.remove('no-print');
+          if (typeof logout === 'function') {
+            logout('Tu cuenta fue desactivada por un administrador.');
+            toast('Tu cuenta fue desactivada por un administrador.', 'err');
+          }
+          return;
         }
       } else if (sid && !remoteMe) {
-        // Solo cerrar si el usuario ya no existe de verdad en remoto y no hay me local válido
-        const still = (S.users || []).find(u => u.id === sid);
-        if (still) me = still;
-        else if (!me || me.id !== sid) {
+        window.__activeViewerDocId = null;
+        window.__activeViewerState = null;
+        $$('.modal-root').forEach(r => r.remove());
+        document.body.classList.remove('no-print');
+        if (typeof logout === 'function') {
+          logout('Tu cuenta fue eliminada por un administrador.');
+          toast('Tu cuenta fue eliminada por un administrador.', 'err');
+        } else {
           me = null;
           try { SessionStore.removeItem(SESSION); } catch (e) {}
+          try { SessionStore.removeItem(ROUTE_KEY); } catch (e) {}
+          if (typeof render === 'function') render();
+          toast('Tu cuenta fue eliminada por un administrador.', 'err');
         }
+        return;
       }
       migrate();
       if (typeof applyTheme === 'function') applyTheme();
       if (typeof applyBrandSizes === 'function') applyBrandSizes();
       if (typeof render === 'function') render();
+      if (typeof enforceLiveAccess === 'function') enforceLiveAccess();
     } catch (e) { console.warn('realtime render', e); }
   });
   const intVersion = (v) => String(Math.max(1, parseInt(String(v ?? '').replace(/[^0-9.]/g, ''), 10) || 1));
@@ -2374,23 +2408,44 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     S.audit = Array.isArray(S.audit) ? S.audit : [];
     S.settings = { ...defaultSettings(), ...(S.settings || {}) };
     if (S.settings.appName === 'Acervo' || S.settings.appName === 'FileHub') S.settings.appName = 'Cyper';
-    // Perfiles: nombres y niveles de acceso a documentos por defecto
+    S.settings.downloadFormat = 'original';
+    // Perfiles: solo 3 perfiles (Administrador, Responsable de Área y Consultor); solo admin tiene todo habilitado por defecto
     if (Array.isArray(S.roles)) {
+      S.roles = S.roles.filter(r => r.id !== 'colaborador');
       S.roles.forEach(r => {
         if (r.id === 'gestor') r.name = 'Responsable de Área';
         if (r.id === 'consulta') r.name = 'Consultor';
         r.caps = r.caps || {};
-        if (r.caps.docVer == null && r.caps.docDescargar == null && r.caps.docEditar == null) {
-          if (r.id === 'admin' || r.id === 'gestor') {
-            r.caps.docVer = true; r.caps.docDescargar = true; r.caps.docEditar = true;
-          } else if (r.id === 'colaborador') {
-            r.caps.docVer = false; r.caps.docDescargar = true; r.caps.docEditar = true;
-          } else if (r.id === 'consulta') {
-            r.caps.docVer = true; r.caps.docDescargar = false; r.caps.docEditar = false;
-          } else {
-            r.caps.docVer = true; r.caps.docDescargar = false; r.caps.docEditar = false;
-          }
+        delete r.caps.docEditar;
+        delete r.caps.docVer;
+        delete r.caps.docDescargar;
+        if (!r._customRole && r.id !== 'admin') {
+          r.caps.createArea = false;
+          r.caps.createFolder = false;
+          r.caps.upload = false;
+          r.caps.deleteDocs = false;
+          r.caps.managePerms = false;
+          r.caps.settings = false;
+          r.caps.allAreas = false;
         }
+      });
+    }
+    if (Array.isArray(S.users)) {
+      S.users.forEach(u => {
+        if (u.role === 'colaborador') u.role = 'consulta';
+        if (u.oneTimePin === undefined) u.oneTimePin = null;
+        if (u.passwordSetByUser === undefined) u.passwordSetByUser = !!u.pass;
+        if (u.userSecretEnc === undefined) u.userSecretEnc = null;
+      });
+    }
+    if (Array.isArray(S.grants)) {
+      S.grants = S.grants.filter(g => {
+        if (!g) return false;
+        if (g.level === 'editar') g.level = 'descargar';
+        // Eliminar permisos huérfanos sin área ni unidad válida
+        const hasArea = g.areaId && S.areas.some(a => a.id === g.areaId);
+        const hasUnit = g.unitId && S.units.some(u => u.id === g.unitId);
+        return !!(hasArea || hasUnit);
       });
     }
     if (!Array.isArray(S.settings.domains)) S.settings.domains = S.settings.domain ? [String(S.settings.domain).toLowerCase()] : [];
@@ -2777,6 +2832,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     sessionLastActivity = Date.now();
   }
   function updateSessionCountdown() {
+    if (me) enforceLiveAccess();
     const el = $('#sessionTimer');
     if (!el || !me) return;
     const limit = sessionTimeoutMs();
@@ -2811,6 +2867,219 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   const log = (action, text) => Repo.log(me?.id, action, text);
 
+
+  function folderExpiresAt(folderId, u = me) {
+    const f = folderById(folderId);
+    if (!f || !u || can('allAreas', u)) return null;
+    const gs = (S.grants || []).filter(g => g.userId === u.id && g.areaId === f.areaId && !g.revoked);
+    let bestExp = null;
+    for (const g of gs) {
+      if (!grantHasFolder(g, folderId)) continue;
+      if (g.folderExpiries && g.folderExpiries[folderId]) {
+        const fe = g.folderExpiries[folderId];
+        if (fe.type === 'permanente') return null;
+        if (fe.type === 'temporal' && fe.expiresAt) {
+          if (!bestExp || fe.expiresAt > bestExp) bestExp = fe.expiresAt;
+        }
+      } else {
+        if (g.type === 'permanente') return null;
+        if (g.type === 'temporal' && g.expiresAt) {
+          if (!bestExp || g.expiresAt > bestExp) bestExp = g.expiresAt;
+        }
+      }
+    }
+    return bestExp;
+  }
+
+  function enforceLiveAccess() {
+    if (!me || !S) return;
+    const freshUser = (S.users || []).find(u => u.id === me.id);
+    if (!freshUser) {
+      window.__activeViewerDocId = null;
+      window.__activeViewerState = null;
+      $$('.modal-root').forEach(r => r.remove());
+      document.body.classList.remove('no-print');
+      logout('Tu cuenta fue eliminada por un administrador.');
+      toast('Tu cuenta fue eliminada por un administrador.', 'err');
+      return;
+    }
+    if (!freshUser.active) {
+      window.__activeViewerDocId = null;
+      window.__activeViewerState = null;
+      $$('.modal-root').forEach(r => r.remove());
+      document.body.classList.remove('no-print');
+      logout('Tu cuenta fue desactivada por un administrador.');
+      toast('Tu cuenta fue desactivada por un administrador.', 'err');
+      return;
+    }
+    me = freshUser;
+
+    // Check active document viewer modal
+    const openDocId = window.__activeViewerDocId;
+    if (openDocId) {
+      const d = docById(openDocId);
+      const dAcc = d ? docAccess(d) : { level: null, status: 'sin' };
+      if (!d || !dAcc.level) {
+        window.__activeViewerDocId = null;
+        window.__activeViewerState = null;
+        $$('.modal-root').forEach(r => r.remove());
+        document.body.classList.remove('no-print');
+        const reason = dAcc.status === 'expirado'
+          ? 'Tu acceso temporal a esta carpeta/documento ya venció.'
+          : 'Tu acceso a esta carpeta/documento fue revocado o ya no está disponible.';
+        toast(reason, 'err');
+        if (route.view === 'folder' || route.view === 'area' || route.view === 'unit') {
+          go('home');
+        } else {
+          render();
+        }
+        return;
+      }
+      const fExp = d.folderId ? folderExpiresAt(d.folderId) : null;
+      const newExp = fExp || (dAcc.grant?.type === 'temporal' ? dAcc.grant.expiresAt : null);
+      const prev = window.__activeViewerState;
+      if (prev && prev.docId === d.id && (prev.level !== dAcc.level || prev.exp !== newExp)) {
+        const histEntry = prev.historyEntry || null;
+        window.__activeViewerDocId = null;
+        window.__activeViewerState = null;
+        $$('.modal-root').forEach(r => r.remove());
+        document.body.classList.remove('no-print');
+        toast(`Tus permisos en este documento cambiaron a: ${LV_LABEL[dAcc.level]}`, 'info');
+        if (typeof openViewer === 'function') openViewer(d, histEntry);
+        return;
+      }
+    }
+
+    // Check if user is currently inside a folder/area/unit whose access expired or was revoked
+    if (route.view === 'folder' && route.folderId) {
+      const fAcc = folderAccess(route.folderId);
+      if (!fAcc.ok) {
+        const reason = fAcc.status === 'expirado'
+          ? 'Tu acceso a esta carpeta ya venció.'
+          : 'Tu acceso a esta carpeta fue revocado.';
+        toast(reason, 'err');
+        go('home');
+        return;
+      }
+    }
+    if (route.view === 'area' && route.areaId) {
+      const aAcc = areaAccess(route.areaId);
+      if (!aAcc.level) {
+        const reason = aAcc.status === 'expirado'
+          ? 'Tu acceso a esta área ya venció.'
+          : 'Tu acceso a esta área fue revocado.';
+        toast(reason, 'err');
+        go('home');
+        return;
+      }
+    }
+    if (route.view === 'unit' && route.unitId) {
+      const uAcc = unitAccess(route.unitId);
+      if (!uAcc.ok) {
+        const reason = uAcc.status === 'expirado'
+          ? 'Tu acceso a esta unidad ya venció.'
+          : 'Tu acceso a esta unidad fue revocado.';
+        toast(reason, 'err');
+        go('home');
+        return;
+      }
+    }
+  }
+
+  function folderGrantStatus(g, folderId) {
+    if (!g || g.revoked) return 'revocado';
+    if (g.folderExpiries && typeof g.folderExpiries === 'object' && g.folderExpiries[folderId]) {
+      const fe = g.folderExpiries[folderId];
+      if (fe.type === 'temporal' && fe.expiresAt && fe.expiresAt <= now()) return 'expirado';
+      return 'vigente';
+    }
+    return grantStatus(g);
+  }
+
+  function grantHasFolder(g, folderId) {
+    if (!g) return false;
+    if (Array.isArray(g.allowedFolders)) {
+      return g.allowedFolders.includes(folderId);
+    }
+    return true;
+  }
+
+  function unitAccess(unitId, u = me) {
+    if (!u) return { ok: false, status: 'sin' };
+    if (can('allAreas', u)) return { ok: true, full: true, status: 'vigente' };
+    const unitAreas = (S.areas || []).filter(a => a.unitId === unitId);
+    const areaIds = new Set(unitAreas.map(a => a.id));
+    const gs = (S.grants || []).filter(g => g.userId === u.id && !g.revoked && (g.unitId === unitId || areaIds.has(g.areaId)));
+    let hasExp = false;
+    for (const g of gs) {
+      const st = grantStatus(g);
+      if (st === 'vigente') return { ok: true, status: 'vigente', grant: g };
+      if (st === 'expirado') hasExp = true;
+    }
+    if (hasExp) return { ok: false, status: 'expirado' };
+    return { ok: false, status: 'sin' };
+  }
+
+  function effectiveGrantLevelForFolder(g, folderId, u = me) {
+    if (!g) return 'ver';
+    if (g.folderLevels && typeof g.folderLevels === 'object' && g.folderLevels[folderId]) {
+      const fl = g.folderLevels[folderId];
+      const raw = fl.explicit ? fl.level : roleDefaultLevel(roleOf(u));
+      return (raw === 'descargar' || raw === 'editar') ? 'descargar' : 'ver';
+    }
+    const rawEff = g.levelOverride ? g.level : roleDefaultLevel(roleOf(u));
+    return (rawEff === 'descargar' || rawEff === 'editar') ? 'descargar' : 'ver';
+  }
+
+  function folderAccess(folderId, u = me) {
+    const f = folderById(folderId);
+    if (!f) return { ok: false, status: 'sin' };
+    const acc = areaAccess(f.areaId, u);
+    if (!acc.level) return { ok: false, status: acc.status || 'sin' };
+    if (acc.full) return { ok: true, full: true, status: 'vigente', level: acc.level };
+    const gs = (S.grants || []).filter(g => g.userId === u.id && g.areaId === f.areaId && !g.revoked);
+    if (!gs.length) return { ok: false, status: 'sin' };
+    let hasExp = false;
+    let bestLevel = null;
+    let bestGrant = null;
+    for (const g of gs) {
+      if (!grantHasFolder(g, folderId)) continue;
+      const fst = folderGrantStatus(g, folderId);
+      if (fst === 'vigente') {
+        const eff = effectiveGrantLevelForFolder(g, folderId, u);
+        if (!bestLevel || LV[eff] > LV[bestLevel]) {
+          bestLevel = eff;
+          bestGrant = g;
+        }
+      } else if (fst === 'expirado') {
+        hasExp = true;
+      }
+    }
+    if (bestLevel) return { ok: true, status: 'vigente', level: bestLevel, grant: bestGrant };
+    if (hasExp) return { ok: false, status: 'expirado' };
+    return { ok: false, status: 'sin' };
+  }
+
+  function docAccess(d, u = me) {
+    if (!d || !u) return { level: null, status: 'sin' };
+    const acc = areaAccess(d.areaId, u);
+    if (!acc.level) return acc;
+    if (acc.full) return acc;
+    if (d.folderId) {
+      const fAcc = folderAccess(d.folderId, u);
+      if (!fAcc.ok) return { level: null, status: fAcc.status || 'sin' };
+      return { level: fAcc.level, status: 'vigente', grant: fAcc.grant || acc.grant };
+    }
+    return acc;
+  }
+
+  function visibleUnits() {
+    const allUnits = S.units || [];
+    if (!me) return [];
+    if (can('allAreas') || can('managePerms')) return allUnits;
+    return allUnits.filter(u => unitAccess(u.id).ok);
+  }
+
   function grantStatus(g) {
     if (g.revoked) return 'revocado';
     if (g.type === 'temporal' && g.expiresAt && g.expiresAt <= now()) return 'expirado';
@@ -2818,14 +3087,15 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
   function areaAccess(areaId, u = me) {
     if (!u) return { level: null, status: 'sin' };
-    if (can('allAreas', u)) return { level: 'editar', status: 'vigente', full: true };
+    if (can('allAreas', u)) return { level: 'descargar', status: 'vigente', full: true };
     const gs = S.grants.filter(g => g.userId === u.id && g.areaId === areaId && !g.revoked);
     let best = null, expired = null;
     for (const g of gs) {
       const st = grantStatus(g);
       // levelOverride === true → nivel especial del grant; si no, nivel por defecto del perfil
-      const eff = g.levelOverride ? g.level : roleDefaultLevel(roleOf(u));
-      const g2 = { ...g, level: eff || g.level || 'ver' };
+      const rawEff = g.levelOverride ? g.level : roleDefaultLevel(roleOf(u));
+      const eff = (rawEff === 'descargar' || rawEff === 'editar') ? 'descargar' : 'ver';
+      const g2 = { ...g, level: eff };
       if (st === 'vigente') { if (!best || LV[g2.level] > LV[best.level]) best = g2; }
       else if (st === 'expirado') { if (!expired || g.expiresAt > expired.expiresAt) expired = g2; }
     }
@@ -2835,8 +3105,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       : { level: null, status: 'expirado', grant: expired };
     return { level: null, status: 'sin' };
   }
-  const canUploadIn = (areaId) => can('upload') && areaAccess(areaId).level === 'editar';
-  const canFolderIn = (areaId) => can('createFolder') && areaAccess(areaId).level === 'editar';
+  const canUploadIn = (areaId) => can('upload') && !!areaAccess(areaId).level;
+  const canFolderIn = (areaId) => can('createFolder') && !!areaAccess(areaId).level;
   const visibleAreas = () => S.areas
     .filter(a => areaAccess(a.id).level || (S.settings.showLockedAreas && areaAccess(a.id).status === 'expirado') || can('managePerms'))
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -3060,14 +3330,15 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         </div>
         <div class="login-fade">
           <p>${st.orgName ? esc(st.orgName) : ''}</p>
-          <div class="field"><label for="lEmail">Correo corporativo</label>
+          <div class="field"><label for="lEmail">Usuario (correo corporativo)</label>
             <input class="input" id="lEmail" type="email" autocomplete="username" placeholder="nombre@${esc(st.domains[0] || 'empresa.com')}" required /></div>
-          <div class="field"><label for="lPass">Contraseña</label>
-            <div class="input-icon"><input class="input" id="lPass" type="password" autocomplete="current-password" placeholder="••••••••" required />
-            <button type="button" class="icon-btn" data-toggle-pass aria-label="Mostrar contraseña">${ic('eye')}</button></div></div>
+          <div class="field"><label for="lPass">Contraseña o PIN de un solo uso</label>
+            <div class="input-icon"><input class="input" id="lPass" type="password" autocomplete="current-password" placeholder="Contraseña o PIN de 8 caracteres" required />
+            <button type="button" class="icon-btn" data-toggle-pass aria-label="Mostrar contraseña">${ic('eye')}</button></div>
+            <div class="hint">Si recibiste un PIN de un solo uso por correo, escríbelo aquí para crear tu contraseña.</div></div>
           <div class="err hidden" id="lErr" style="color:var(--danger);font-size:13px;margin:-4px 0 12px;text-align:left"></div>
           <button class="btn btn-primary btn-lg" type="submit">Iniciar sesión ${ic('arrow-right')}</button>
-          <div class="demo-users" style="text-align:center">¿Olvidaste tu contraseña? Solicita a un administrador que la restablezca.</div>
+          <div class="demo-users" style="text-align:center">¿Olvidaste tu contraseña? Solicita a un administrador que genere un nuevo PIN.</div>
         </div>
       </form></div>`;
   }
@@ -3143,6 +3414,71 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     });
   }
   const loginLock = { fails: 0, until: 0 };
+  function encodeUserSecret(plainPass, userId) {
+    try {
+      const k = 'cyper_sec_' + String(userId || 'u');
+      const out = [];
+      for (let i = 0; i < plainPass.length; i++) {
+        out.push(plainPass.charCodeAt(i) ^ k.charCodeAt(i % k.length));
+      }
+      return btoa(String.fromCharCode(...out));
+    } catch (e) { return null; }
+  }
+  function decodeUserSecret(enc, userId) {
+    if (!enc) return null;
+    try {
+      const k = 'cyper_sec_' + String(userId || 'u');
+      const raw = atob(enc);
+      const out = [];
+      for (let i = 0; i < raw.length; i++) {
+        out.push(String.fromCharCode(raw.charCodeAt(i) ^ k.charCodeAt(i % k.length)));
+      }
+      return out.join('');
+    } catch (e) { return null; }
+  }
+
+  async function applyAccountPassword(u, plainPass, { setBy = 'user' } = {}) {
+    u.pass = await Repo.hashPassword(plainPass);
+    u.userSecretEnc = encodeUserSecret(plainPass, u.id);
+    u.oneTimePin = null;
+    u.pinCreatedAt = null;
+    u.passwordSetByUser = setBy === 'user';
+    u.passwordSetBy = setBy;
+    u.passwordUpdatedAt = now();
+  }
+
+  function promptSetPasswordAfterPin(u) {
+    return new Promise((resolve) => {
+      const minLen = Math.max(8, S.settings.minPassword || 8);
+      openModal({
+        title: 'Crea tu contraseña personal',
+        sub: `${esc(u.email)} · PIN de un solo uso verificado`,
+        dismissable: false,
+        body: `<p class="muted" style="margin-bottom:14px">El PIN se ha consumido. Elige tu contraseña para guardarla en el repositorio y continuar.</p>
+          <div class="field"><label>Nueva contraseña ${passTipHtml()}</label>${passField('pinNewPass', `placeholder="Mínimo ${minLen} caracteres" autocomplete="new-password"`)}</div>
+          <div class="field"><label>Confirmar contraseña</label>${passField('pinNewPass2', `placeholder="Repite la contraseña" autocomplete="new-password"`)}</div>`,
+        foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Guardar contraseña</button>`,
+        onMount: (c) => {
+          bindPassToggles(c.el);
+          c.$('[data-close]').addEventListener('click', () => resolve(false));
+          c.$('[data-ok]').addEventListener('click', async () => {
+            const p1 = c.$('#pinNewPass').value;
+            const p2 = c.$('#pinNewPass2').value;
+            const polErr = passPolicyError(p1, minLen);
+            if (polErr) return toast(polErr, 'err');
+            if (p1 !== p2) return toast('Las contraseñas no coinciden', 'err');
+            await applyAccountPassword(u, p1, { setBy: 'user' });
+            log('usuario', `Configuró su contraseña personal mediante PIN de un solo uso (${u.email})`);
+            save();
+            c.close();
+            resolve(true);
+          });
+        },
+        onClose: () => resolve(false),
+      });
+    });
+  }
+
   function bindLogin() {
     const f = $('#loginForm');
     $('[data-toggle-pass]').addEventListener('click', (e) => togglePass(e.currentTarget, $('#lPass')));
@@ -3154,13 +3490,42 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       if (!EMAIL_RE.test(email)) return err('Escribe un correo válido');
       const u = S.users.find(x => x.email === email);
       if (loginLock.until > now()) return err(`Demasiados intentos. Espera ${Math.ceil((loginLock.until - now()) / 1000)} s.`);
-      if (!u || !(await Repo.verifyPassword(pass, u.pass))) {
+      if (!u) {
         loginLock.fails++;
         if (loginLock.fails >= 5) { loginLock.until = now() + 30000; loginLock.fails = 0; }
-        return err('Correo o contraseña incorrectos');
+        return err('Usuario o contraseña/PIN incorrectos');
       }
-      loginLock.fails = 0;
       if (!u.active) return err('Esta cuenta está desactivada. Contacta al administrador.');
+
+      // Check one-time PIN first: NO spaces allowed before, inside, or after the PIN
+      if (u.oneTimePin && /\s/.test(pass)) {
+        const hasLead = /^\s/.test(pass);
+        const hasTrail = /\s$/.test(pass);
+        const midTrimmed = pass.replace(/^\s+|\s+$/g, '');
+        const hasMid = /\s/.test(midTrimmed);
+        const pos = [];
+        if (hasLead) pos.push('antes');
+        if (hasMid) pos.push('en medio');
+        if (hasTrail) pos.push('después');
+        return err(`El PIN de un solo uso no debe contener espacios (se detectaron espacios ${pos.join(', ')} del PIN). Ingrésalo exacto sin espacios.`);
+      }
+
+      const exactPin = pass;
+      const validPin = !!(u.oneTimePin && exactPin && exactPin === String(u.oneTimePin));
+      const validExistingPass = !!(u.pass && (await Repo.verifyPassword(pass, u.pass)));
+
+      if (validPin) {
+        loginLock.fails = 0;
+        const setOk = await promptSetPasswordAfterPin(u);
+        if (!setOk) return err('Debes crear tu contraseña para completar el acceso.');
+      } else if (validExistingPass && u.passwordSetByUser !== false) {
+        loginLock.fails = 0;
+      } else {
+        loginLock.fails++;
+        if (loginLock.fails >= 5) { loginLock.until = now() + 30000; loginLock.fails = 0; }
+        return err(u.oneTimePin ? 'PIN o contraseña incorrectos (verifica mayúsculas y que no tenga espacios)' : 'Correo o contraseña incorrectos');
+      }
+
       me = u; SessionStore.setItem(SESSION, u.id);
       u.lastLogin = now(); log('acceso', `Inicio de sesión`); save();
       try { touchSessionActivity(); startSessionWatch(); } catch (e) {}
@@ -3233,7 +3598,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
 
   function homeView() {
-    const units = S.units || [];
+    const units = visibleUnits();
     const areas = visibleAreas();
     const accessible = areas.filter(a => areaAccess(a.id).level);
     const accIds = new Set(accessible.map(a => a.id));
@@ -3278,7 +3643,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   function unitView() {
     const u = unitById(route.unitId);
     if (!u) { route.view = 'home'; return homeView(); }
-    const areas = visibleAreas().filter(a => a.unitId === u.id);
+    const areas = visibleAreas().filter(a => a.unitId === u.id && areaAccess(a.id).level);
     const canU = can('createArea');
     return `${crumbs([{ label: u.name }])}
       <div class="page-title" style="${cssVars(u.color || 'blue')}"><div class="glyph" style="background:linear-gradient(135deg,var(--c1),var(--c2))">${ic(u.icon || 'building-2')}</div>
@@ -3375,7 +3740,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   function matrixView() {
     if (!ui.matrixSelected) ui.matrixSelected = new Set();
     const selMode = !!ui.matrixSelectMode;
-    let docs = S.docs.filter(d => areaAccess(d.areaId).level);
+    let docs = S.docs.filter(d => !!docAccess(d).level);
     // Eliminados al final
     docs = docs.sort((a, b) => {
       const ea = computeEstado(a) === 'eliminado' ? 1 : 0;
@@ -3781,8 +4146,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   }
 
   function dashboardView() {
-    const accIds = new Set(S.areas.filter(a => areaAccess(a.id).level).map(a => a.id));
-    const docs = S.docs.filter(d => accIds.has(d.areaId));
+    const docs = S.docs.filter(d => !!docAccess(d).level);
     return `<section class="hero hero-sm"><div class="eyebrow">Dashboard</div><h1>Actividad del repositorio.</h1>
         <p>Indicadores del acervo, solo de las áreas a las que tienes acceso.</p></section>
       ${docs.length ? dashboardShell() : emptyState('chart-no-axes-column', 'Sin información', 'Aún no hay documentos en las áreas a las que tienes acceso.')}`;
@@ -3814,7 +4178,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (!a) { route.view = 'home'; return homeView(); }
     const acc = areaAccess(a.id);
     if (!acc.level) return crumbs([{ label: a.name }]) + emptyState('lock', 'Acceso no disponible', acc.status === 'expirado' ? `Tu acceso temporal venció el ${fmtDateTime(acc.grant.expiresAt)}.` : 'No tienes permisos en esta área.');
-    const folders = S.folders.filter(f => f.areaId === a.id).sort((x, y) => (x.order ?? 0) - (y.order ?? 0));
+    const folders = S.folders.filter(f => f.areaId === a.id && folderAccess(f.id).ok).sort((x, y) => (x.order ?? 0) - (y.order ?? 0));
     const docs = S.docs.filter(d => d.areaId === a.id).sort((x, y) => y.updatedAt - x.updatedAt).slice(0, 5);
     const canF = canFolderIn(a.id);
     const u = unitById(a.unitId);
@@ -3833,7 +4197,17 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             ${canF ? `<button class="icon-btn more" data-act="folderMenu" data-id="${f.id}" aria-label="Opciones">${ic('ellipsis')}</button>` : ''}
             <div class="folder-icon"><div class="back"></div><div class="front"></div>${f.icon ? `<span class="folder-glyph">${ic(f.icon)}</span>` : ''}</div>
             <h4>${esc(f.name)}</h4><span class="tiny">${esc(f.code)} · ${n} ${n === 1 ? 'documento' : 'documentos'}</span>
-            ${f.desc ? `<span class="tiny" style="display:block;margin-top:4px;color:var(--text-2)">${esc(f.desc)}</span>` : ''}</div>`;
+            ${f.desc ? `<span class="tiny" style="display:block;margin-top:4px;color:var(--text-2)">${esc(f.desc)}</span>` : ''}
+            ${(() => {
+              if (acc.full) return `<div style="margin-top:8px"><span class="chip accent">${ic('shield-check')}Acceso total</span></div>`;
+              const fAccItem = folderAccess(f.id);
+              const fLvl = fAccItem?.ok ? (fAccItem.full ? 'descargar' : fAccItem.level) : effAcc.level;
+              const fExpAt = folderExpiresAt(f.id);
+              const expBadge = fExpAt
+                ? `<span class="chip ${fExpAt - now() < 864e5 ? 'warn' : 'ok'}">${ic('timer')}Expira en ${fmtLeft(fExpAt - now())}</span>`
+                : `<span class="chip ok">${ic('infinity')}Permanente</span>`;
+              return `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip">${ic(LV_ICON[fLvl])}${LV_LABEL[fLvl]}</span>${expBadge}</div>`;
+            })()}</div>`;
         }).join('')}
         ${canF ? `<button class="add-card add-folder" data-act="newFolder"><span class="plus">${ic('plus')}</span>${esc(repoLabels().deptCreate)}</button>` : ''}
       </div>` : emptyState('folder', 'Sin departamentos', 'Esta área aún no tiene carpetas.')}
@@ -3850,6 +4224,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (!f || !a) { route.view = 'home'; return homeView(); }
     const acc = areaAccess(a.id);
     if (!acc.level) { route.areaId = a.id; return areaView(); }
+    const fAcc = folderAccess(f.id);
+    if (!fAcc.ok) { route.areaId = a.id; return areaView(); }
+    const effAcc = fAcc.full ? acc : { ...acc, level: fAcc.level, grant: fAcc.grant || acc.grant };
     let docs = S.docs.filter(d => d.folderId === f.id);
     if (ui.filter) { const q = ui.filter.toLowerCase(); docs = docs.filter(d => (d.nomenclatura + ' ' + d.nombre + ' ' + d.fileName + ' ' + d.tipo + ' ' + d.clasificacion).toLowerCase().includes(q)); }
     const sorters = { recent: (x, y) => y.updatedAt - x.updatedAt, code: (x, y) => x.nomenclatura.localeCompare(y.nomenclatura, 'es', { numeric: true }), name: (x, y) => x.nombre.localeCompare(y.nombre, 'es') };
@@ -3862,7 +4239,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       <div class="page-title" style="${cssVars(a.color)}">
         <div class="folder-icon" style="${cssVars(f.color || a.color || 'blue')};width:64px;height:52px;margin:0"><div class="back"></div><div class="front" style="height:40px"></div>${f.icon ? `<span class="folder-glyph">${ic(f.icon)}</span>` : ''}</div>
         <div><h1>${esc(f.name)}</h1></div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${accessChip(acc)}<span class="chip">${ic('hash')}${esc(f.code)}</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${accessChip(effAcc)}<span class="chip">${ic('hash')}${esc(f.code)}</span></div>
       <div class="toolbar-row">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <div class="seg" role="tablist"><button class="${ui.docView === 'list' ? 'on' : ''}" data-act="docView" data-v="list">${ic('list')}Lista</button><button class="${ui.docView === 'grid' ? 'on' : ''}" data-act="docView" data-v="grid">${ic('layout-grid')}Cuadrícula</button></div>
@@ -3870,7 +4247,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             <option value="recent" ${ui.sort === 'recent' ? 'selected' : ''}>Más recientes</option>
             <option value="code" ${ui.sort === 'code' ? 'selected' : ''}>Por nomenclatura</option>
             <option value="name" ${ui.sort === 'name' ? 'selected' : ''}>Por nombre</option></select>
-          <button type="button" class="btn btn-secondary btn-sm" id="folderSelBtn">${(ui.folderSelected && ui.folderSelected.size) ? `${ic('download')}Descargar (${ui.folderSelected.size})` : (ui.folderSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`)}</button>
+          ${(effAcc.level === 'descargar' || can('upload') || can('deleteDocs')) ? `<button type="button" class="btn btn-secondary btn-sm" id="folderSelBtn">${(ui.folderSelected && ui.folderSelected.size) ? `${ic('download')}Descargar (${ui.folderSelected.size})` : (ui.folderSelectMode ? `${ic('x')}Cancelar selección` : `${ic('check-square')}Seleccionar`)}</button>` : ''}
           ${ui.folderSelectMode ? `<button type="button" class="btn btn-secondary btn-sm" id="folderMoveBtn" ${!(ui.folderSelected && ui.folderSelected.size) ? 'disabled' : ''}>${ic('folder-input')}Mover o copiar${ui.folderSelected && ui.folderSelected.size ? ` (${ui.folderSelected.size})` : ''}</button>` : ''}
           ${ui.folderSelectMode && can('deleteDocs') ? `<button type="button" class="btn btn-danger btn-sm" id="folderDelBtn" ${!(ui.folderSelected && ui.folderSelected.size) ? 'disabled' : ''}>${ic('trash-2')}Eliminar${ui.folderSelected && ui.folderSelected.size ? ` (${ui.folderSelected.size})` : ''}</button>` : ''}
           
@@ -4107,8 +4484,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
   function updateDashboard() {
     if (!window.Chart || !$('#dash')) return;
-    const accIds = new Set(S.areas.filter(a => areaAccess(a.id).level).map(a => a.id));
-    const all = S.docs.filter(d => accIds.has(d.areaId));
+    const all = S.docs.filter(d => !!docAccess(d).level);
     const f = ui.dash = Object.assign({ unit: '', area: '', year: '', cat: '', tipo: '' }, ui.dash || {});
     // Nivel 0: unidad de negocio
     const unitOf = (d) => areaById(d.areaId)?.unitId || '';
@@ -4312,7 +4688,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   /* ---------------- Búsqueda ---------------- */
   function searchView() {
     const q = route.q.trim().toLowerCase();
-    const ok = (d) => d && areaAccess(d.areaId).level;
+    const ok = (d) => d && !!docAccess(d).level;
     const res = S.docs.filter(d => ok(d) && (d.nomenclatura + ' ' + d.nombre + ' ' + d.fileName + ' ' + d.tipo + ' ' + (d.categoria || '') + ' ' + d.clasificacion).toLowerCase().includes(q));
     // Relacionados por rector/asociados/copias aunque estén en otras carpetas o áreas
     const hits = new Set(res.map(d => d.id));
@@ -4322,7 +4698,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     return `${crumbs([{ label: 'Búsqueda' }])}
       <div class="page-title"><h1>“${esc(route.q)}”</h1></div>
       <p class="page-sub">${res.length} ${res.length === 1 ? 'resultado' : 'resultados'}${rel ? ` + ${rel} ${rel === 1 ? 'documento relacionado' : 'documentos relacionados'} (rector, asociados o copias; cualquier carpeta)` : ''} en las áreas a las que tienes acceso</p>
-      ${list.length ? `<div style="margin:12px 0"><button type="button" class="btn btn-secondary btn-sm" id="searchDlAll">${ic('download')}Descargar resultados (${list.length})</button></div>` : ''}
+      ${(() => { const dlN = list.filter(d => docAccess(d).level === 'descargar').length; return dlN ? `<div style="margin:12px 0"><button type="button" class="btn btn-secondary btn-sm" id="searchDlAll">${ic('download')}Descargar resultados (${dlN})</button></div>` : ''; })()}
       <div style="margin-top:24px">${res.length ? docTable(treeOrder(list, { refs: false, hits })) : emptyState('search-x', 'Sin coincidencias', 'Prueba con otra nomenclatura o nombre.')}</div>`;
   }
 
@@ -4469,6 +4845,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         return;
       }
       const docs = [...ui.folderSelected].map(id => docById(id)).filter(Boolean);
+      const curFAcc = route.folderId ? folderAccess(route.folderId) : null;
+      const curEffLvl = curFAcc?.ok ? (curFAcc.full ? 'descargar' : curFAcc.level) : acc.level;
+      if (curEffLvl !== 'descargar') return toast('Tu nivel de acceso es solo Ver; no incluye descargas', 'err');
       await downloadDocsBulk(docs, 'Cyper-RepositorioCI');
     });
     $('#folderMoveBtn')?.addEventListener('click', () => {
@@ -4572,7 +4951,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         { icon: 'pencil', label: 'Editar unidad', run: () => unitModal(u) },
         { icon: 'plus', label: repoLabels().areaCreate, run: () => areaModal(null, u.id) },
         { icon: 'building-2', label: repoLabels().unitCreate, run: () => unitModal() },
-        { icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfUnit(u.id), 'unidad-' + (u.code || u.name || 'docs')) },
+        ...(docsOfUnit(u.id).some(d => areaAccess(d.areaId).level === 'descargar') ? [{ icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfUnit(u.id), 'unidad-' + (u.code || u.name || 'docs')) }] : []),
         ...(can('managePerms') ? [{ icon: 'user-plus', label: 'Compartir unidad', run: () => grantModal(null, areaIds) }] : []),
         '-',
         { icon: 'trash-2', label: 'Eliminar unidad', danger: true, run: () => deleteUnit(u) },
@@ -4589,7 +4968,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       openMenu(el, [
         { icon: 'pencil', label: 'Editar área', run: () => areaModal(a) },
         { icon: 'folder-plus', label: repoLabels().deptCreate, run: () => folderModal(null, a.id) },
-        { icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfArea(a.id), 'area-' + (a.code || a.name || 'docs')) },
+        ...(areaAccess(a.id).level === 'descargar' ? [{ icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfArea(a.id), 'area-' + (a.code || a.name || 'docs')) }] : []),
         ...(can('managePerms') ? [{ icon: 'user-plus', label: 'Compartir área', run: () => grantModal(null, [a.id]) }] : []),
         '-',
         { icon: 'trash-2', label: 'Eliminar área', danger: true, run: () => deleteArea(a) },
@@ -4601,7 +4980,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       const f = folderById(el.dataset.id);
       openMenu(el, [
         { icon: 'pencil', label: 'Renombrar carpeta', run: () => folderModal(f, f.areaId) },
-        { icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfFolder(f.id), 'depto-' + (f.code || f.name || 'docs')) },
+        ...(areaAccess(f.areaId).level === 'descargar' ? [{ icon: 'download', label: 'Descargar documentos', run: () => downloadDocsBulk(docsOfFolder(f.id), 'depto-' + (f.code || f.name || 'docs')) }] : []),
         ...(can('managePerms') ? [{ icon: 'user-plus', label: 'Compartir departamento', run: () => grantModal(null, [f.areaId]) }] : []),
         '-',
         { icon: 'trash-2', label: 'Eliminar carpeta', danger: true, run: () => deleteFolder(f) },
@@ -4612,13 +4991,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     openDoc: (el) => openViewer(S.docs.find(d => d.id === el.dataset.id)),
     docMenu: (el) => {
       const d = S.docs.find(x => x.id === el.dataset.id);
-      const lvl = areaAccess(d.areaId).level;
+      const lvl = docAccess(d).level;
+      const canManage = can('upload') && !!lvl;
       const items = [{ icon: 'eye', label: 'Abrir', run: () => openViewer(d) }];
-      if (LV[lvl] >= 2) items.push({ icon: 'download', label: 'Descargar original', run: () => downloadDoc(d, 'original') });
-      if (lvl === 'editar' && can('upload')) items.push({ icon: 'file-pen', label: 'Editar datos', run: () => metaModal(d) });
-      if (lvl === 'editar' && can('upload')) items.push({ icon: 'file-up', label: 'Subir nueva versión', run: () => newVersionUpload(d) });
-      if (lvl === 'editar' && can('upload')) items.push({ icon: 'folder-input', label: 'Mover o copiar…', run: () => moveDocsModal([d]) });
-      if (can('deleteDocs') && lvl === 'editar') items.push('-', { icon: 'trash-2', label: 'Eliminar', danger: true, run: () => deleteDoc(d) });
+      if (lvl === 'descargar') items.push({ icon: 'download', label: 'Descargar original', run: () => downloadDoc(d, 'original') });
+      if (canManage) items.push({ icon: 'file-pen', label: 'Editar datos', run: () => metaModal(d) });
+      if (canManage) items.push({ icon: 'file-up', label: 'Subir nueva versión', run: () => newVersionUpload(d) });
+      if (canManage) items.push({ icon: 'folder-input', label: 'Mover o copiar…', run: () => moveDocsModal([d]) });
+      if (can('deleteDocs') && !!lvl) items.push('-', { icon: 'trash-2', label: 'Eliminar', danger: true, run: () => deleteDoc(d) });
       openMenu(el, items);
     },
   };
@@ -5529,7 +5909,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         <div class="row"><div class="field"><label>Versión</label>${intInput(`name="version" value="${esc(d.version)}"`)}</div>
         <div class="field"><label>Fecha de última actualización</label><input class="input" type="date" name="fecha" value="${esc(d.fechaActualizacion)}"/></div></div>
         <div class="field"><label>URL / liga de hospedaje</label><input class="input" name="url" value="${esc(d.url || localDocUrl(d.id))}" readonly/><div class="hint">Asignada automáticamente (local mientras no haya Supabase).</div></div>
-        <div class="field"><label>Carpeta</label><select class="select" name="folder">${S.folders.filter(f => areaAccess(f.areaId).level === 'editar').map(f => `<option value="${f.id}" ${f.id === d.folderId ? 'selected' : ''}>${esc(areaById(f.areaId).name)} / ${esc(f.name)}</option>`).join('')}</select></div></form>`,
+        <div class="field"><label>Carpeta</label><select class="select" name="folder">${S.folders.filter(f => !!areaAccess(f.areaId).level).map(f => `<option value="${f.id}" ${f.id === d.folderId ? 'selected' : ''}>${esc(areaById(f.areaId).name)} / ${esc(f.name)}</option>`).join('')}</select></div></form>`,
       foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>Guardar</button>`,
       size: 'wide',
       onMount: (c) => {
@@ -5611,7 +5991,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const list = (docs || []).filter(Boolean);
     if (!list.length) return toast('No hay documentos seleccionados', 'err');
     if (!can('deleteDocs')) return toast('No tienes permiso para eliminar documentos', 'err');
-    const deletable = list.filter(d => areaAccess(d.areaId).level === 'editar');
+    const deletable = list.filter(d => !!areaAccess(d.areaId).level);
     if (!deletable.length) return toast('No tienes permiso de edición sobre los seleccionados', 'err');
     const skipped = list.length - deletable.length;
     const names = deletable.slice(0, 5).map(d => esc(d.nomenclatura)).join(', ');
@@ -5652,34 +6032,45 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
 
   async function openViewer(d, historyEntry = null) {
     if (!d) return;
-    const acc = areaAccess(d.areaId);
-    if (!acc.level) return toast('Tu acceso a este documento no está vigente', 'err');
+    const acc = docAccess(d);
+    if (!acc.level) return toast('Tu acceso a este documento no está vigente o no incluye esta carpeta', 'err');
     const lvl = acc.level;
-    const canEdit = lvl === 'editar' && d.editable && !historyEntry;
-    const canDl = LV[lvl] >= 2;
-    const a = areaById(d.areaId), f = folderById(d.folderId);
+    const canDl = lvl === 'descargar';
     const readonly = lvl === 'ver';
+    const a = areaById(d.areaId), f = folderById(d.folderId);
     log('consulta', `Abrió ${d.nomenclatura}${historyEntry ? ' (v' + historyEntry.v + ')' : ''}`); save();
 
-    let objUrl = null, timer = null, editing = false, original = '';
+    let objUrl = null, timer = null;
+    const fExpInit = d.folderId ? folderExpiresAt(d.folderId) : null;
+    const expInit = fExpInit || (acc.grant?.type === 'temporal' ? acc.grant.expiresAt : null);
+    window.__activeViewerDocId = d.id;
+    window.__activeViewerState = { docId: d.id, level: lvl, exp: expInit, historyEntry };
     const ctx = openModal({
       size: 'full', title: '',
       body: '',
-      onClose: () => { objUrl && URL.revokeObjectURL(objUrl); clearInterval(timer); document.body.classList.remove('no-print'); },
+      onClose: () => {
+        if (window.__activeViewerDocId === d.id) {
+          window.__activeViewerDocId = null;
+          window.__activeViewerState = null;
+        }
+        objUrl && URL.revokeObjectURL(objUrl);
+        clearInterval(timer);
+        document.body.classList.remove('no-print');
+      },
     });
     const m = ctx.el;
     m.querySelector('.modal-body').remove();
-    const exp = acc.grant?.type === 'temporal' ? acc.grant.expiresAt : null;
+    const fExp = d.folderId ? folderExpiresAt(d.folderId) : null;
+    const exp = fExp || (acc.grant?.type === 'temporal' ? acc.grant.expiresAt : null);
     m.insertAdjacentHTML('beforeend', `
       <div class="viewer-head">
         ${badge(d.ext)}
         <div class="doc-name"><strong>${esc(d.nombre)}</strong><span class="mono">${esc(d.nomenclatura)} · Versión ${esc(historyEntry ? historyEntry.v : d.version)}${historyEntry ? ' (versión anterior)' : ''}</span></div>
         <div class="viewer-actions">
           ${accessChip(acc)}
-          ${canEdit ? `<button class="btn btn-secondary" data-edit>${ic('pencil-line')}Editar</button>
-            <button class="btn btn-secondary hidden" data-cancel-edit>Descartar</button>
-            <button class="btn btn-primary hidden" data-save-edit>${ic('save')}Guardar cambios</button>` : ''}
           ${canDl ? `<button class="btn btn-secondary" data-dl>${ic('download')}Descargar</button>` : ''}
+          <button class="btn btn-secondary btn-sm" data-toggle-side title="Mostrar/ocultar detalles">${ic('panel-right')}<span>Ocultar detalles</span></button>
+          <button class="btn btn-secondary btn-sm" data-maximize title="Maximizar">${ic('maximize-2')}<span>Maximizar</span></button>
           <button class="icon-btn" data-x aria-label="Cerrar">${ic('x')}</button>
         </div>
       </div>
@@ -5697,7 +6088,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             <dt>Clasificación</dt><dd>${esc(d.clasificacion || '—')}</dd>
             <dt>Fecha de última actualización</dt><dd>${fmtDocDate(d)}</dd>
             <dt>Subido por</dt><dd>${esc(userName(d.subidoPor))}</dd>
-            <dt>Ubicación</dt><dd>${esc(a.name)} / ${esc(f?.name || '')}</dd>
+            <dt>Ubicación</dt><dd>${esc(a?.name || '')} / ${esc(f?.name || '')}</dd>
             <dt>Archivo</dt><dd>${esc(d.fileName)}</dd>
             <dt>Tamaño</dt><dd>${fmtSize(d.size)}</dd>
           </dl>
@@ -5705,19 +6096,35 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <h5>Tu acceso</h5>
           <dl class="kv"><dt>Nivel</dt><dd>${LV_LABEL[lvl]}</dd><dt>Vigencia</dt><dd id="vig">${acc.full ? 'Permanente (perfil)' : exp ? `Hasta ${fmtDateTime(exp)}` : 'Permanente · revocable'}</dd></dl>
           <h5>Historial de versiones</h5>
-          <ul class="history">${[...d.history].reverse().map((h, hi) => `<li><strong>Versión ${esc(h.v)}</strong> · ${fmtRel(h.at)}<br/><span class="tiny">${esc(userName(h.by))} — ${esc(h.note || '')}</span>
-            ${h.key ? `<br/><button data-hist="${esc(h.key)}">Ver</button> <button data-hist-dl="${esc(h.key)}">Descargar</button> ${lvl === 'editar' ? `<button data-hist-restore="${esc(h.key)}" data-hv="${esc(h.v)}">Restaurar</button>` : ''}` : '<br/><span class="tiny">Versión actual</span>'}</li>`).join('')}</ul>
+          <ul class="history">${[...d.history].reverse().map(h => `<li><strong>Versión ${esc(h.v)}</strong> · ${fmtRel(h.at)}<br/><span class="tiny">${esc(userName(h.by))} — ${esc(h.note || '')}</span>
+            ${h.key ? `<br/><button data-hist="${esc(h.key)}">Ver</button>${canDl ? ` <button data-hist-dl="${esc(h.key)}">Descargar</button>` : ''}` : '<br/><span class="tiny">Versión actual</span>'}</li>`).join('')}</ul>
         </aside>
       </div>`);
     icons();
-    m.querySelectorAll('[data-rel]').forEach(b => b.addEventListener('click', async () => {
-      if (editing && !await confirmDialog({ title: '¿Descartar cambios?', text: 'Hay cambios sin guardar en el documento.', ok: 'Descartar', danger: true })) return;
+
+    // Expandir / contraer panel lateral de detalles
+    const sideBtn = m.querySelector('[data-toggle-side]');
+    sideBtn?.addEventListener('click', () => {
+      const collapsed = m.classList.toggle('side-collapsed');
+      sideBtn.innerHTML = `${ic('panel-right')}<span>${collapsed ? 'Mostrar detalles' : 'Ocultar detalles'}</span>`;
+      icons();
+    });
+
+    // Maximizar / minimizar pantalla completa
+    const maxBtn = m.querySelector('[data-maximize]');
+    maxBtn?.addEventListener('click', () => {
+      const isMax = m.classList.toggle('maximized');
+      ctx.root.classList.toggle('maximized', isMax);
+      maxBtn.innerHTML = `${ic(isMax ? 'minimize-2' : 'maximize-2')}<span>${isMax ? 'Minimizar' : 'Maximizar'}</span>`;
+      maxBtn.title = isMax ? 'Minimizar' : 'Maximizar';
+      icons();
+    });
+
+    m.querySelectorAll('[data-rel]').forEach(b => b.addEventListener('click', () => {
       ctx.close(); setTimeout(() => openViewer(docById(b.dataset.rel)), 280);
     }));
-    m.querySelector('[data-x]').addEventListener('click', async () => {
-      if (editing && !await confirmDialog({ title: '¿Descartar cambios?', text: 'Hay cambios sin guardar en el documento.', ok: 'Descartar', danger: true })) return;
-      ctx.close();
-    });
+    m.querySelector('[data-x]').addEventListener('click', () => ctx.close());
+
     if (readonly) {
       if (S.settings.blockPrint) document.body.classList.add('no-print');
       m.addEventListener('contextmenu', e => e.preventDefault());
@@ -5734,7 +6141,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     }, 5000);
 
     const stage = m.querySelector('#stage');
-    const wm = S.settings.watermark && lvl !== 'editar' ? `<div class="watermark" style="--wm:${watermarkCss()}"></div>` : '';
+    const wm = S.settings.watermark && readonly ? `<div class="watermark" style="--wm:${watermarkCss()}"></div>` : '';
 
     // Cargar contenido
     let html = null, blob = null, ext = d.ext;
@@ -5756,206 +6163,80 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
       objUrl = URL.createObjectURL(blob);
       stage.innerHTML = `<div style="position:relative">${wm}<img class="stage-img" src="${objUrl}" alt="${esc(d.nombre)}" draggable="false"/></div>`;
     }
-    // 3) URL externa pública → visor de Office Online (conserva formato Word/Excel/PPT)
+    // 3) URL externa pública → visor de Office Online (bloquea ventanas emergentes en modo "Ver")
     else if (externalUrl && isOffice && /^https?:\/\//i.test(externalUrl) && !historyEntry) {
       const embed = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(externalUrl);
-      stage.innerHTML = `${banner('Vista con formato Office', 'Se muestra el archivo hospedado en la URL del documento mediante el visor de Microsoft. La edición en línea de esta app trabaja sobre una copia HTML aproximada; para cambios con formato completo edita el archivo original y súbelo como nueva versión.')}
-        <iframe class="office-frame" src="${embed}" title="${esc(d.nombre)}"></iframe>
-        ${html ? `<div style="margin-top:20px"><button class="btn btn-secondary btn-sm" id="showHtmlPrev">${ic('file-text')} Ver/editar copia HTML en la app</button></div><div id="htmlPrevBox" class="hidden" style="margin-top:12px"><div class="paper ${readonly ? 'readonly' : ''}" id="paper">${wm}${html}</div></div>` : ''}`;
-      original = html || '';
+      const sandboxAttr = readonly
+        ? 'sandbox="allow-scripts allow-same-origin allow-forms"'
+        : 'sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"';
+      stage.innerHTML = `${banner('Vista con formato Office', readonly ? 'Modo Ver: apertura de ventanas externas bloqueada y descarga deshabilitada.' : 'Modo Ver y Descargar: puedes consultar el documento y descargar el archivo en su formato original.')}
+        <iframe class="office-frame" ${sandboxAttr} src="${embed}" title="${esc(d.nombre)}"></iframe>
+        ${html ? `<div style="margin-top:20px"><button class="btn btn-secondary btn-sm" id="showHtmlPrev">${ic('file-text')} Ver vista HTML en la app</button></div><div id="htmlPrevBox" class="hidden" style="margin-top:12px"><div class="paper ${readonly ? 'readonly' : ''}" id="paper">${wm}${html}</div></div>` : ''}`;
       m.querySelector('#showHtmlPrev')?.addEventListener('click', () => {
         m.querySelector('#htmlPrevBox')?.classList.toggle('hidden');
       });
     }
-    // 4) Vista HTML convertida (docx/xlsx/txt…) — edición en la app se guarda aquí
+    // 4) Vista HTML convertida
     else if (html) {
-      const note = isOffice ? banner('Vista aproximada', `El archivo .${esc(ext)} se convirtió a HTML para previsualizar y editar en el navegador. <b>El formato no es idéntico al de Word/Excel/PowerPoint.</b> Los cambios que guardes aquí quedan en la aplicación (nueva versión). El archivo original se conserva al descargar “original”.${externalUrl ? ' Si el documento tiene URL pública, se puede ver con formato Office desde esa liga.' : ''}`) : '';
+      const note = isOffice ? banner('Vista previa en navegador', `El archivo .${esc(ext)} se muestra en vista HTML.${canDl ? ' Descárgalo para obtener el archivo en su formato original.' : ''}`) : '';
       stage.innerHTML = `${note}<div class="paper ${readonly ? 'readonly' : ''}" id="paper">${wm}${html}</div>`;
-      original = html;
     }
     // 5) Solo binario Office sin HTML
     else if (blob && isOffice) {
-      stage.innerHTML = emptyState('file-type', 'Vista previa limitada', `Los archivos .${esc(ext)} se almacenan en su formato original.${canDl ? ' Descárgalo para abrirlo en Word, Excel o PowerPoint.' : ''}${externalUrl ? ' También puedes usar la URL de hospedaje en la Matriz Documental.' : ' Al subir de nuevo un .docx/.xlsx se generará una vista HTML editable en la app.'}`);
+      stage.innerHTML = emptyState('file-type', 'Vista previa limitada', `Los archivos .${esc(ext)} se almacenan en su formato original.${canDl ? ' Descárgalo para abrirlo en Word, Excel o PowerPoint.' : ''}`);
     } else {
-      stage.innerHTML = emptyState('file-question', 'Vista previa no disponible', `Los archivos .${esc(ext)} no se pueden previsualizar en el navegador.${canDl ? ' Puedes descargarlo para consultarlo.' : ''}`);
+      stage.innerHTML = emptyState('file-question', 'Vista previa no disponible', `Los archivos .${esc(ext)} no se pueden previsualizar en el navegador.${canDl ? ' Puedes descargarlo en su formato original.' : ''}`);
     }
     icons();
 
     m.querySelectorAll('[data-hist]').forEach(b => b.addEventListener('click', () => {
       const h = d.history.find(x => x.key === b.dataset.hist); openViewer(d, h);
     }));
-    m.querySelectorAll('[data-hist-dl]').forEach(b => b.addEventListener('click', async () => {
-      const h = d.history.find(x => x.key === b.dataset.histDl);
-      if (!h) return;
-      const pack = await Files.get(h.key);
-      if (pack?.orig) saveBlob(pack.orig, `${d.nomenclatura}_v${h.v}.${pack.ext || d.ext}`);
-      else if (pack?.html) saveBlob(new Blob([pack.html], { type: 'text/html' }), `${d.nomenclatura}_v${h.v}.html`);
-      else toast('No hay archivo de esa versión', 'err');
-    }));
-    m.querySelectorAll('[data-hist-restore]').forEach(b => b.addEventListener('click', async () => {
-      const h = d.history.find(x => x.key === b.dataset.histRestore);
-      if (!h) return;
-      if (!await confirmDialog({ title: '¿Restaurar esta versión?', text: `Se creará una nueva versión a partir de la v${h.v}. La versión actual se conservará en el historial.`, ok: 'Restaurar' })) return;
-      const pack = await Files.get(h.key);
-      if (!pack) return toast('No se encontró el contenido de esa versión', 'err');
-      const prevKey = `hist:${d.id}:${d.history.length}`;
-      const prevHtml = await Files.get('html:' + d.id);
-      const prevOrig = await Files.get('orig:' + d.id);
-      await Files.put(prevKey, { html: prevHtml || null, orig: prevOrig || null, ext: d.ext, fileName: d.fileName });
-      d.history[d.history.length - 1].key = prevKey;
-      if (pack.html) await Files.put('html:' + d.id, pack.html); else await Files.del('html:' + d.id);
-      if (pack.orig) await Files.put('orig:' + d.id, pack.orig);
-      const nv = intVersion(nextVersion(d.version));
-      Object.assign(d, { version: nv, ext: pack.ext || d.ext, editable: !!pack.html, updatedAt: now(), updatedBy: me.id, fechaActualizacion: new Date().toISOString().slice(0, 10) });
-      d.history.push({ v: nv, at: now(), by: me.id, note: `Restaurada desde v${h.v}`, key: null });
-      log('documento', `Restauró ${d.nomenclatura} a partir de v${h.v} → v${nv}`);
-      save(); toast(`Restaurada como versión ${nv}`);
-      ctx.close(); setTimeout(() => openViewer(d), 280);
-    }));
-    m.querySelector('[data-dl]')?.addEventListener('click', (e) => downloadMenu(e.currentTarget, d, lvl, historyEntry));
-
-    if (!canEdit) return;
-    const bEdit = m.querySelector('[data-edit]'), bSave = m.querySelector('[data-save-edit]'), bCancel = m.querySelector('[data-cancel-edit]');
-    const paper = () => m.querySelector('#paper');
-    const toolbarHtml = `<div class="edit-toolbar" id="etb">
-      <select data-block aria-label="Estilo de párrafo"><option value="p">Párrafo</option><option value="h1">Título 1</option><option value="h2">Título 2</option><option value="h3">Título 3</option></select>
-      <span class="sep"></span>
-      ${[['bold', 'bold', 'Negrita'], ['italic', 'italic', 'Cursiva'], ['underline', 'underline', 'Subrayado'], ['strikeThrough', 'strikethrough', 'Tachado']].map(([c, i, t]) => `<button class="icon-btn" data-cmd="${c}" title="${t}" aria-label="${t}">${ic(i)}</button>`).join('')}
-      <span class="sep"></span>
-      ${[['insertUnorderedList', 'list', 'Viñetas'], ['insertOrderedList', 'list-ordered', 'Numeración'], ['justifyLeft', 'align-left', 'Izquierda'], ['justifyCenter', 'align-center', 'Centrar'], ['justifyRight', 'align-right', 'Derecha']].map(([c, i, t]) => `<button class="icon-btn" data-cmd="${c}" title="${t}" aria-label="${t}">${ic(i)}</button>`).join('')}
-      <span class="sep"></span>
-      <button class="icon-btn" data-table title="Insertar tabla" aria-label="Insertar tabla">${ic('table')}</button>
-      <button class="icon-btn" data-cmd="removeFormat" title="Quitar formato" aria-label="Quitar formato">${ic('remove-formatting')}</button>
-      <span class="sep"></span>
-      <button class="icon-btn" data-cmd="undo" title="Deshacer" aria-label="Deshacer">${ic('undo-2')}</button>
-      <button class="icon-btn" data-cmd="redo" title="Rehacer" aria-label="Rehacer">${ic('redo-2')}</button>
-    </div>`;
-    const setMode = (on) => {
-      editing = on;
-      bEdit.classList.toggle('hidden', on); bSave.classList.toggle('hidden', !on); bCancel.classList.toggle('hidden', !on);
-      paper().contentEditable = on ? 'true' : 'false';
-      if (on) {
-        stage.insertAdjacentHTML('afterbegin', toolbarHtml); icons();
-        const tb = stage.querySelector('#etb');
-        tb.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
-        tb.querySelectorAll('[data-cmd]').forEach(b => b.addEventListener('click', () => { document.execCommand(b.dataset.cmd); paper().focus(); syncTb(); }));
-        tb.querySelector('[data-block]').addEventListener('change', (e) => { document.execCommand('formatBlock', false, e.target.value); paper().focus(); });
-        tb.querySelector('[data-table]').addEventListener('click', () => {
-          document.execCommand('insertHTML', false, '<table><tr><th>Columna 1</th><th>Columna 2</th><th>Columna 3</th></tr><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></table><p><br></p>');
-        });
-        paper().focus();
-      } else stage.querySelector('#etb')?.remove();
-    };
-    const syncTb = () => stage.querySelectorAll('#etb [data-cmd]').forEach(b => { try { b.classList.toggle('on', document.queryCommandState(b.dataset.cmd)); } catch { } });
-    document.addEventListener('selectionchange', () => editing && syncTb());
-    bEdit.addEventListener('click', () => setMode(true));
-    bCancel.addEventListener('click', () => { paper().innerHTML = original; setMode(false); });
-    bSave.addEventListener('click', () => {
-      const newHtml = paper().innerHTML;
-      if (newHtml === original) { setMode(false); return toast('Sin cambios que guardar', 'info'); }
-      const suggested = S.settings.autoVersion ? nextVersion(d.version) : d.version;
-      openModal({
-        title: 'Guardar cambios', sub: `${esc(d.nomenclatura)} · ${esc(d.nombre)}`,
-        body: `<div class="row"><div class="field"><label>Nueva versión</label>${intInput(`id="sv" value="${esc(suggested)}"`)}<div class="hint">Actual: ${esc(d.version)}</div></div>
-          <div class="field"><label>Fecha de actualización</label><input class="input" type="date" id="sf" value="${toLocalInput(now()).slice(0, 10)}"/></div></div>
-          <div class="field"><label>Descripción del cambio</label><input class="input" id="sn" placeholder="Ej. Se actualizó el alcance" maxlength="140"/></div>`,
-        foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>${ic('save')}Guardar versión</button>`,
-        onMount: (c) => c.$('[data-ok]').addEventListener('click', async () => {
-          if (!validInt(c.$('#sv').value)) return toast('La versión debe ser un número entero desde 1', 'err');
-          const v = intVersion(c.$('#sv').value);
-          const key = `hist:${d.id}:${d.history.length}`;
-          await Files.put(key, { html: original, orig: null, ext: d.ext, fileName: d.fileName });
-          d.history[d.history.length - 1].key = key;
-          await Files.put('html:' + d.id, newHtml);
-          d.history.push({ v, at: now(), by: me.id, note: c.$('#sn').value.trim() || 'Edición en línea', key: null });
-          Object.assign(d, { version: v, fechaActualizacion: c.$('#sf').value, updatedAt: now(), updatedBy: me.id, size: newHtml.length });
-          log('edición', `Editó en línea ${d.nomenclatura} → versión ${v}`); save();
-          original = newHtml; setMode(false); c.close(); ctx.close(); render();
-          toast(`Guardado como versión ${v}`);
-          setTimeout(() => openViewer(d), 300);
-        }),
-      });
-    });
-  }
-
-  /* ---------------- Descargas ---------------- */
-  function downloadMenu(anchor, d, lvl, historyEntry) {
-    const items = [{ icon: 'file-text', label: 'Descargar PDF', run: () => downloadDoc(d, 'pdf', historyEntry) }];
-    if (lvl === 'editar' || S.settings.downloadFormat === 'original') {
-      items.push({ icon: 'file', label: `Archivo original (.${d.ext})`, run: () => downloadDoc(d, 'original', historyEntry) });
-      if (d.editable) items.push({ icon: 'file-type', label: 'Word editable (.doc)', run: () => downloadDoc(d, 'word', historyEntry) });
+    if (canDl) {
+      m.querySelectorAll('[data-hist-dl]').forEach(b => b.addEventListener('click', async () => {
+        const h = d.history.find(x => x.key === b.dataset.histDl);
+        if (!h) return;
+        const pack = await Files.get(h.key);
+        if (pack?.orig) saveBlob(pack.orig, `${d.nomenclatura}_v${h.v}.${pack.ext || d.ext}`);
+        else toast('No hay archivo original de esa versión', 'err');
+      }));
+      m.querySelector('[data-dl]')?.addEventListener('click', () => downloadDoc(d, 'original', historyEntry));
     }
-    openMenu(anchor, items);
   }
+
+  /* ---------------- Descargas (solo formato original) ---------------- */
   const saveBlob = (blob, name) => { const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); };
-  const safeName = (d) => `${d.nomenclatura} ${d.nombre} ${d.version}`.replace(/[\\/:*?"<>|]+/g, '-');
-  const registeredName = (d, ext = d?.ext) => `${d.nomenclatura} ${d.nombre}`.trim().replace(/[\\/:*?"<>|]+/g, '-') + (ext ? '.' + ext : '');
+  const safeName = (d) => `${d.nomenclatura} ${d.nombre} ${d.version}`.replace(/[\/:*?"<>|]+/g, '-');
+  const registeredName = (d, ext = d?.ext) => `${d.nomenclatura} ${d.nombre}`.trim().replace(/[\/:*?"<>|]+/g, '-') + (ext ? '.' + ext : '');
 
   async function downloadDoc(d, format = 'original', historyEntry = null) {
-    const acc = areaAccess(d.areaId);
-    if (LV[acc.level] < 2) return toast('Tu permiso no incluye descargas', 'err');
-    if (format !== 'pdf' && format !== 'word' && format !== 'original') format = 'original';
-    let html, blob, ext = d.ext, fname = d.fileName;
+    if (!d) return;
+    const acc = docAccess(d);
+    if (acc.level !== 'descargar') return toast('Tu nivel de acceso es solo Ver; no incluye descargas', 'err');
+    let blob, ext = d.ext;
     if (historyEntry) {
       const h = await Files.get(historyEntry.key);
-      html = h?.html; blob = h?.orig; ext = h?.ext || ext;
-      if (h?.fileName) fname = h.fileName;
-    } else if (format === 'original') {
-      if (typeof fetchDocBlob === 'function') {
-        const got = await fetchDocBlob(d);
-        if (got?.blob) {
-          log('descarga', `Descargó ${d.nomenclatura} (ORIGINAL)`); save();
-          return saveBlob(got.blob, registeredName(d, d.ext));
-        }
-        return toast('No se encontró el archivo original para descargar', 'err');
+      blob = h?.orig; ext = h?.ext || ext;
+      if (blob instanceof Blob || blob instanceof File) {
+        log('descarga', `Descargó ${d.nomenclatura} v${historyEntry.v} (ORIGINAL)`); save();
+        return saveBlob(blob, registeredName(d, ext));
       }
-      blob = await Files.get('orig:' + d.id);
-      html = d.editable ? await Files.get('html:' + d.id) : null;
-    } else {
-      html = d.editable ? await Files.get('html:' + d.id) : null;
-      blob = await Files.get('orig:' + d.id);
+      return toast('No se encontró el archivo original de esa versión', 'err');
     }
-    const name = safeName(d);
-    log('descarga', `Descargó ${d.nomenclatura} (${String(format).toUpperCase()})`); save();
-
-    if (format === 'original') {
-      if (blob instanceof Blob || blob instanceof File) return saveBlob(blob, registeredName(d, ext));
+    if (typeof fetchDocBlob === 'function') {
+      const got = await fetchDocBlob(d);
+      if (got?.blob) {
+        log('descarga', `Descargó ${d.nomenclatura} (ORIGINAL)`); save();
+        return saveBlob(got.blob, registeredName(d, d.ext));
+      }
       return toast('No se encontró el archivo original para descargar', 'err');
     }
-    if (format === 'word') {
-      const doc = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(d.nombre)}</title></head><body>${html || ''}</body></html>`;
-      return saveBlob(new Blob(['\ufeff', doc], { type: 'application/msword' }), name + '.doc');
+    blob = await Files.get('orig:' + d.id);
+    if (blob instanceof Blob || blob instanceof File) {
+      log('descarga', `Descargó ${d.nomenclatura} (ORIGINAL)`); save();
+      return saveBlob(blob, registeredName(d, ext));
     }
-    // PDF
-    if (!html && blob && ext === 'pdf') return saveBlob(blob, name + '.pdf');
-    let content = html;
-    if (!content && blob && ['png', 'jpg', 'jpeg', 'webp'].includes(ext)) {
-      const dataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
-      content = `<img src="${dataUrl}" style="max-width:100%"/>`;
-    }
-    if (!content) return toast(`No es posible convertir .${ext} a PDF en el navegador`, 'err');
-    if (!window.html2pdf) return toast('El generador de PDF no está disponible', 'err');
-    toast('Generando PDF…', 'info');
-    const exp = acc.grant?.type === 'temporal' ? acc.grant.expiresAt : null;
-    const footer = `${d.nomenclatura} · Versión ${historyEntry ? historyEntry.v : d.version} · Descargado por ${me.email} el ${fmtDateTime(now())}${exp ? ' · Vigencia del acceso: ' + fmtDateTime(exp) : ''}`;
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'font-family:Georgia,serif;font-size:11.5pt;line-height:1.55;color:#111;padding:0 2mm';
-    wrap.innerHTML = `<style>table{border-collapse:collapse;width:100%;margin:8px 0;font-family:Helvetica,Arial,sans-serif;font-size:9.5pt}td,th{border:1px solid #bbb;padding:4px 6px;vertical-align:top}th{background:#f2f2f2}h1{font-family:Helvetica,Arial,sans-serif;font-size:20pt;margin:10px 0 6px}h2{font-family:Helvetica,Arial,sans-serif;font-size:14pt;margin:14px 0 4px}h3{font-family:Helvetica,Arial,sans-serif}p{margin:0 0 8px}ul,ol{margin:0 0 8px;padding-left:24px}li{margin-bottom:3px}img{max-width:100%}tr,img{page-break-inside:avoid}</style>${content}`;
-    const wmText = S.settings.watermark && acc.level !== 'editar' ? me.email : null;
-    await html2pdf().set({
-      margin: [16, 14, 18, 14], filename: name + '.pdf', image: { type: 'jpeg', quality: 0.96 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'] },
-    }).from(wrap).toPdf().get('pdf').then(pdf => {
-      const n = pdf.internal.getNumberOfPages();
-      const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight();
-      for (let i = 1; i <= n; i++) {
-        pdf.setPage(i);
-        if (wmText) { pdf.setFontSize(30); pdf.setTextColor(225, 225, 230); pdf.text(wmText, W / 2 - 55, H / 2 + 30, { angle: 35 }); }
-        pdf.setFontSize(7.5); pdf.setTextColor(130); pdf.text(footer, 14, H - 8, { maxWidth: W - 40 }); pdf.text(`${i}/${n}`, W - 20, H - 8);
-      }
-      saveBlob(pdf.output('blob'), name + '.pdf');
-    });
+    return toast('No se encontró el archivo original para descargar', 'err');
   }
 
   /* ---------------- Descarga masiva (ZIP) ---------------- */
@@ -5988,8 +6269,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const list = (Array.isArray(docs) ? docs : [docs]).filter(Boolean);
     if (!list.length) return toast('No hay documentos para procesar', 'err');
     const movable = list.filter(d => {
-      const lv = areaAccess(d.areaId).level;
-      return lv === 'editar' && can('upload');
+      const lv = docAccess(d).level;
+      return !!lv && can('upload');
     });
     if (!movable.length) return toast('No tienes permiso para mover o copiar estos documentos', 'err');
 
@@ -6066,7 +6347,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           if (!folder) return toast('Carpeta no válida', 'err');
           const destAreaId = folder.areaId;
           const destAcc = areaAccess(destAreaId);
-          if (destAcc.level !== 'editar' || !can('upload')) {
+          if (!destAcc.level || !can('upload')) {
             return toast('No tienes permiso de edición en el destino', 'err');
           }
           const mode = modeOf();
@@ -6202,7 +6483,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const all = (docs || []).filter(Boolean);
     if (!all.length) return toast('No hay documentos en este alcance', 'err');
     const list = all.filter(d => {
-      const lv = areaAccess(d.areaId).level;
+      const lv = docAccess(d).level;
       return lv && LV[lv] >= 2;
     });
     if (!list.length) return toast('No hay documentos con permiso de descarga en este alcance', 'err');
@@ -6279,35 +6560,232 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     return chars.join('');
   }
 
+  function buildUserGrantsEmailLines(u) {
+    if (!u) return '';
+    const role = roleOf(u);
+    if (role?.caps?.allAreas) return '• Acceso total a todas las áreas y carpetas (Permanente)';
+    const gs = (S.grants || []).filter(g => g.userId === u.id && !g.revoked && grantStatus(g) === 'vigente');
+    if (!gs.length) return '• Sin carpetas asignadas';
+    const lines = [];
+    for (const g of gs) {
+      const unitObj = unitById(g.unitId) || unitById(areaById(g.areaId)?.unitId);
+      const areaObj = areaById(g.areaId);
+      if (!unitObj && !areaObj) continue;
+      const uName = unitObj ? `${unitObj.name}` : '';
+      const aName = areaObj ? `${areaObj.name}` : '';
+      const baseEffLvl = g.levelOverride ? g.level : roleDefaultLevel(role);
+      const fIds = Array.isArray(g.allowedFolders) ? g.allowedFolders : [];
+      if (fIds.length) {
+        for (const fid of fIds) {
+          const fl = folderById(fid);
+          if (!fl) continue;
+          const fLvl = effectiveGrantLevelForFolder(g, fid, u) || baseEffLvl;
+          const lvlTxt = LV_LABEL[fLvl] || 'Ver';
+          const fe = (g.folderExpiries && g.folderExpiries[fid]) || { type: g.type, expiresAt: g.expiresAt };
+          const vigTxt = fe.type === 'temporal' && fe.expiresAt
+            ? `Temporal (vence el ${fmtDateTime(fe.expiresAt)})`
+            : 'Permanente';
+          const path = [uName, aName, fl.name].filter(Boolean).join(' > ');
+          lines.push(`• ${path} — Nivel: ${lvlTxt} — Vigencia: ${vigTxt}`);
+        }
+      } else {
+        const lvlTxt = LV_LABEL[baseEffLvl] || 'Ver';
+        const vigTxt = g.type === 'temporal' && g.expiresAt
+          ? `Temporal (vence el ${fmtDateTime(g.expiresAt)})`
+          : 'Permanente';
+        const path = [uName, aName].filter(Boolean).join(' > ') || 'Acceso asignado';
+        lines.push(`• ${path} — Nivel: ${lvlTxt} — Vigencia: ${vigTxt}`);
+      }
+    }
+    return lines.join('\n');
+  }
+
+  function sendOneTimePinEmail(u, pin, summaryText = '') {
+    if (!u || !u.email) return;
+    const appName = (S?.settings?.appName) || 'Cyper';
+    const pageUrl = location.href.split('#')[0];
+    const foldersDetail = buildUserGrantsEmailLines(u);
+    const subject = encodeURIComponent(`${appName}: Acceso y PIN de un solo uso para ${u.email}`);
+    const body = encodeURIComponent(
+      `Hola ${u.name || u.email},\n\n` +
+      `Se ha configurado tu acceso en ${appName}.\n\n` +
+      `Usuario: ${u.email}\n` +
+      `PIN de un solo uso: ${pin}\n\n` +
+      (summaryText ? `Resumen: ${summaryText}\n\n` : '') +
+      `Carpetas con acceso y vigencia:\n${foldersDetail}\n\n` +
+      `Instrucciones:\n` +
+      `1. Entra a la aplicación: ${pageUrl}\n` +
+      `2. Escribe tu usuario (${u.email}) y tu PIN de un solo uso exacto sin espacios (${pin})\n` +
+      `3. Crea y confirma tu contraseña personal para activar tu sesión.\n\n` +
+      `Nota: Este PIN es de un solo uso y no debe llevar espacios antes, en medio ni después.\n`
+    );
+    window.location.href = `mailto:${encodeURIComponent(u.email)}?subject=${subject}&body=${body}`;
+  }
+
+  function askDestructivePassModal(title = 'Confirmar contraseña de acciones destructivas') {
+    if (!S.settings.adminActionPasswordHash) {
+      toast('Primero configura la contraseña de acciones destructivas en Seguridad y descargas', 'err');
+      return Promise.resolve(false);
+    }
+    return new Promise((resolve) => {
+      let done = false;
+      openModal({
+        title,
+        sub: 'Ingresa la contraseña de acciones destructivas para ver o modificar la contraseña del usuario.',
+        body: `<div class="field"><label>Contraseña de acciones destructivas</label>${passField('adminDestPass', 'autocomplete="off"')}</div>`,
+        foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Verificar</button>`,
+        onMount: (c) => {
+          bindPassToggles(c.el);
+          c.$('[data-ok]').addEventListener('click', async () => {
+            const ok = await Repo.verifyPassword(c.$('#adminDestPass').value, S.settings.adminActionPasswordHash);
+            if (!ok) return toast('Contraseña incorrecta', 'err');
+            done = true;
+            c.close();
+            resolve(true);
+          });
+        },
+        onClose: () => { if (!done) resolve(false); },
+      });
+    });
+  }
+
   function grantModal(user = null, preAreas = []) {
     if (!can('managePerms')) return toast('No tienes permiso para asignar accesos', 'err');
     const st = S.settings; const isNew = !user;
-    const curGrants = user ? S.grants.filter(g => g.userId === user.id && grantStatus(g) !== 'revocado') : [];
+    const rawUserGrants = user ? S.grants.filter(g => g.userId === user.id && grantStatus(g) !== 'revocado') : [];
+    const seenGrantKeys = new Set();
+    const curGrants = [];
+    for (const g of rawUserGrants) {
+      // Skip orphan/empty grants that have neither areaId nor unitId
+      if (!g.areaId && !g.unitId) continue;
+      const k = `${g.unitId || ''}|${g.areaId || ''}|${(g.allowedFolders || []).slice().sort().join(',')}`;
+      if (seenGrantKeys.has(k)) continue;
+      seenGrantKeys.add(k);
+      curGrants.push(g);
+    }
     const vigentes = curGrants.filter(g => grantStatus(g) === 'vigente');
     const defExp = now() + st.defaultTempHours * 3600e3;
-    // Precargar áreas, nivel y vigencia al editar
-    const seedAreaIds = new Set([
-      ...(preAreas || []),
-      ...vigentes.map(g => g.areaId),
-    ]);
+
+    const allUnits = (S.units || []).slice().sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    const allAreas = (S.areas || []).slice().sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    const allFolders = (S.folders || []).slice().sort((a, b) => a.name.localeCompare(b.name, 'es'));
+
+    const initUnitIds = new Set();
+    const initAreaIds = new Set(preAreas || []);
+    const initFolderIds = new Set();
+    const initFolderExpiries = {};
+    const initFolderLevels = {};
+    let initExpiryScope = 'all'; // 'all' | 'per_folder'
+    let initLevelScope = 'all'; // 'all' | 'per_folder'
+
+    vigentes.forEach(g => {
+      if (g.areaId) initAreaIds.add(g.areaId);
+      if (g.unitId) initUnitIds.add(g.unitId);
+      if (Array.isArray(g.allowedUnits)) g.allowedUnits.forEach(id => initUnitIds.add(id));
+      if (Array.isArray(g.allowedAreas)) g.allowedAreas.forEach(id => initAreaIds.add(id));
+      const areaObj = areaById(g.areaId);
+      if (areaObj?.unitId) initUnitIds.add(areaObj.unitId);
+      if (Array.isArray(g.allowedFolders)) {
+        g.allowedFolders.forEach(fid => initFolderIds.add(fid));
+      }
+      if (g.folderExpiries && typeof g.folderExpiries === 'object' && Object.keys(g.folderExpiries).length) {
+        initExpiryScope = 'per_folder';
+        Object.keys(g.folderExpiries).forEach(fid => {
+          initFolderExpiries[fid] = { ...g.folderExpiries[fid] };
+        });
+      }
+      if (g.folderLevels && typeof g.folderLevels === 'object' && Object.keys(g.folderLevels).length) {
+        initLevelScope = 'per_folder';
+        Object.keys(g.folderLevels).forEach(fid => {
+          initFolderLevels[fid] = { ...g.folderLevels[fid] };
+        });
+      }
+    });
+    initAreaIds.forEach(aid => {
+      const a = areaById(aid);
+      if (a?.unitId) initUnitIds.add(a.unitId);
+    });
+
     const overrideLevels = vigentes.filter(g => g.levelOverride).map(g => g.level);
     const seedLevel = overrideLevels.length
       ? (highestLevel(overrideLevels) || vigentes[0]?.level)
-      : null; // null = usar default del perfil (checkboxes vacíos)
+      : null;
     const seedLevels = seedLevel
-      ? (seedLevel === 'editar' ? ['ver', 'descargar', 'editar']
-        : seedLevel === 'descargar' ? ['ver', 'descargar']
-        : ['ver'])
+      ? ((seedLevel === 'descargar' || seedLevel === 'editar') ? ['ver', 'descargar'] : ['ver'])
       : [];
     const tempG = vigentes.find(g => g.type === 'temporal');
     const seedType = tempG ? 'temporal' : 'permanente';
     const seedExp = tempG?.expiresAt || defExp;
-    // Solo dominios configurados; al editar una cuenta existente se conserva su dominio aunque ya no esté en la lista
+
     const curDom = user ? user.email.split('@')[1] : st.domains[0];
     const doms = [...st.domains]; if (user && curDom && !doms.includes(curDom)) doms.push(curDom);
+
+    const renderCurGrantsOrdered = () => {
+      if (!curGrants.length) return '';
+      const items = [];
+      for (const g of curGrants) {
+        const a = areaById(g.areaId);
+        const uObj = unitById(g.unitId) || unitById(a?.unitId);
+        const gSt = grantStatus(g);
+        const effLvl = g.levelOverride ? g.level : roleDefaultLevel(roleOf(user));
+        const fIds = Array.isArray(g.allowedFolders) ? g.allowedFolders : [];
+        if (fIds.length) {
+          for (const fid of fIds) {
+            const fl = folderById(fid);
+            if (!fl) continue;
+            const fEffLvl = effectiveGrantLevelForFolder(g, fid, user) || effLvl;
+            const fe = (g.folderExpiries && g.folderExpiries[fid]) || { type: g.type, expiresAt: g.expiresAt };
+            const isExpired = gSt === 'expirado' || (fe.type === 'temporal' && fe.expiresAt && fe.expiresAt <= now());
+            const vigBadge = gSt === 'revocado'
+              ? `<span class="chip">${ic('ban')}Revocado</span>`
+              : isExpired
+                ? `<span class="chip danger">${ic('clock')}Expiró ${fmtDateTime(fe.expiresAt)}</span>`
+                : (fe.type === 'temporal'
+                    ? `<span class="chip ${fe.expiresAt - now() < 864e5 ? 'warn' : 'ok'}">${ic('timer')}Hasta ${fmtDateTime(fe.expiresAt)}</span>`
+                    : `<span class="chip ok">${ic('infinity')}Permanente</span>`);
+            items.push(`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:var(--bg-elev);border:1px solid var(--line);flex-wrap:wrap">
+              <div style="min-width:0;flex:1">
+                <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(fl.name)} <span class="tiny mono">(${esc(fl.code || '')})</span></div>
+                <div class="tiny">${esc([uObj?.name, a?.name].filter(Boolean).join(' · ') || '—')}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span class="chip">${ic(LV_ICON[fEffLvl])}${LV_LABEL[fEffLvl]}</span>
+                ${vigBadge}
+                ${gSt !== 'revocado' ? `<button type="button" class="x" data-revoke="${g.id}" title="Revocar acceso" aria-label="Revocar">${ic('x')}</button>` : ''}
+              </div>
+            </div>`);
+          }
+        } else {
+          if (!a && !uObj) continue;
+          const vigBadge = gSt === 'revocado'
+            ? `<span class="chip">${ic('ban')}Revocado</span>`
+            : gSt === 'expirado'
+              ? `<span class="chip danger">${ic('clock')}Expiró ${fmtDateTime(g.expiresAt)}</span>`
+              : (g.type === 'temporal'
+                  ? `<span class="chip ${g.expiresAt - now() < 864e5 ? 'warn' : 'ok'}">${ic('timer')}Hasta ${fmtDateTime(g.expiresAt)}</span>`
+                  : `<span class="chip ok">${ic('infinity')}Permanente</span>`);
+          items.push(`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:var(--bg-elev);border:1px solid var(--line);flex-wrap:wrap">
+            <div style="min-width:0;flex:1">
+              <div style="font-size:13px;font-weight:600;color:var(--text)">${esc([uObj?.name, a?.name].filter(Boolean).join(' · ') || '—')}</div>
+              <div class="tiny">Sin carpetas de nivel 3 asignadas</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <span class="chip">${ic(LV_ICON[effLvl])}${LV_LABEL[effLvl]}</span>
+              ${vigBadge}
+              ${gSt !== 'revocado' ? `<button type="button" class="x" data-revoke="${g.id}" title="Revocar acceso" aria-label="Revocar">${ic('x')}</button>` : ''}
+            </div>
+          </div>`);
+        }
+      }
+      if (!items.length) return '';
+      return `<div class="field"><span class="label">Accesos vigentes (referencia)</span>
+        <div style="display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--line)">${items.join('')}</div>
+        <div class="hint">Al guardar, la selección de niveles y carpetas sustituye estos permisos.</div></div>`;
+    };
+
     openModal({
       size: 'wide', icon: `<div class="file-badge" style="background:linear-gradient(135deg,#5e5ce6,#bf5af2);width:44px;height:44px;border-radius:13px">${ic('key-round')}</div>`,
-      title: isNew ? 'Asignar permisos' : 'Editar acceso', sub: isNew ? 'Crea o actualiza una cuenta y define a qué áreas puede acceder.' : esc(user.email),
+      title: isNew ? 'Asignar permisos' : 'Editar acceso', sub: isNew ? 'Define niveles, carpetas y vigencia; al guardar se enviará un correo con usuario y PIN de un solo uso.' : esc(user.email),
       body: `<form id="gf" novalidate autocomplete="off">
         <div class="row">
           <div class="field"><label for="gEmail">Usuario</label>
@@ -6317,42 +6795,440 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <div class="field"><label for="gName">Nombre completo</label><input class="input" id="gName" name="name" value="${esc(user?.name || '')}" placeholder="Ej. Ana López"/></div>
         </div>
         <div class="row">
-          <div class="field"><label for="gPass">Contraseña ${passTipHtml()}</label>
-            <div class="input-icon"><input class="input mono" id="gPass" name="pass" type="password" placeholder="${user ? 'Dejar vacío para conservar' : 'Mínimo ' + st.minPassword + ' caracteres'}" autocomplete="new-password"/>
-            <button type="button" class="icon-btn" data-eye aria-label="Mostrar">${ic('eye')}</button></div>
-            <div class="chips-quick"><button type="button" data-gen>${ic('sparkles')} Generar segura</button></div></div>
           <div class="field"><label for="gRole">Perfil</label><select class="select" id="gRole" name="role">${S.roles.map(r => `<option value="${r.id}" ${(user?.role || 'consulta') === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select>
             <div class="hint" id="roleHint"></div></div>
+          <div class="field"><label>Acceso y contraseña</label>
+            ${isNew
+              ? `<div class="hint" style="margin-top:8px">Al guardar se generará un <b>PIN de un solo uso</b> y se abrirá el correo con su usuario y PIN para que el usuario cree su contraseña.</div>`
+              : `<div id="adminPassBox" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btnViewUserPass">${ic('eye')}Ver contraseña</button>
+                  <button type="button" class="btn btn-danger btn-sm" id="btnResetUserPin">${ic('key-round')}Eliminar contraseña y enviar nuevo PIN</button>
+                </div>
+                <div class="hint" id="adminPassReveal" style="margin-top:6px">${user.oneTimePin ? `PIN pendiente de un solo uso: <b class="mono">${esc(user.oneTimePin)}</b>` : (user.pass ? ((user.passwordSetBy === 'admin' || user.passwordSetByUser === false) ? 'Contraseña restablecida por administrador.' : 'Contraseña configurada por el usuario.') : 'Sin contraseña configurada.')}</div>`
+            }
+          </div>
         </div>
         ${doms.length ? '' : `<div class="notice-warn">${ic('triangle-alert')}<div><strong>No hay dominios de correo configurados.</strong><br/>Agrega al menos uno en Configuración → General para poder crear usuarios.${can('settings') ? ' <button type="button" class="btn-ghost" data-go-domains>Ir a configurar</button>' : ''}</div></div>`}
-        ${curGrants.length ? `<div class="field"><span class="label">Accesos vigentes (referencia)</span><div class="grants" style="padding:12px;background:var(--bg);border-radius:12px">${curGrants.map(g => grantLine(g, true)).join('')}</div><div class="hint">Al guardar, las áreas marcadas abajo sustituyen estos permisos (no hace falta revocar antes).</div></div>` : ''}
-        <div class="field"><div style="display:flex;justify-content:space-between;align-items:center"><span class="label">${curGrants.length ? 'Áreas con acceso (editar y guardar)' : 'Tarjetas (áreas) con acceso'}</span><button type="button" class="btn-ghost btn btn-sm" data-all>Seleccionar todas</button></div>
-          <div class="area-picks">${S.areas.map(a => `<label class="area-pick" style="${cssVars(a.color)}"><input type="checkbox" name="areas" value="${a.id}" ${seedAreaIds.has(a.id) ? 'checked' : ''}/><span class="dot">${ic(a.icon)}</span>${esc(a.name)}<span class="chk">${ic('check')}</span></label>`).join('')}</div></div>
-        <div class="field"><span class="label">Nivel de acceso</span>
-          <p class="tiny" style="margin:0 0 8px">Puedes marcar uno, varios o todos. Si no marcas ninguno, se aplican los niveles por defecto del perfil (y prevalecen sobre ellos al marcarlos).</p>
-          <div class="option-cards">
-          ${['ver', 'descargar', 'editar'].map((l, i) => `<label class="opt"><input type="checkbox" name="levels" value="${l}" ${seedLevels.includes(l) ? 'checked' : ''}/><span class="t">${ic(LV_ICON[l])}${['Ver', 'Descargar', 'Editar'][i]}</span><span class="d">${['Consulta en pantalla, sin copiar ni imprimir.', `Ver y descargar en ${st.downloadFormat === 'pdf' ? 'PDF' : 'formato original'}.`, 'Ver, descargar y modificar el documento en línea.'][i]}</span></label>`).join('')}
+        ${renderCurGrantsOrdered()}
+
+        <div class="field" id="hierPickerBox" style="padding:14px 16px;border-radius:14px;background:var(--bg);border:1px solid var(--line)">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <span class="label" style="margin:0">niveles de acceso a carpetas (hasta nivel 3)</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button type="button" class="btn-ghost btn btn-sm" id="btnAllL1">Todas nivel 1</button>
+              <button type="button" class="btn-ghost btn btn-sm" id="btnAllL2">Todas nivel 2</button>
+              <button type="button" class="btn-ghost btn btn-sm" id="btnAllL3">Todas nivel 3</button>
+              <button type="button" class="btn-ghost btn btn-sm" id="btnClearAllLevels">Quitar todo</button>
+            </div>
           </div>
-          <div class="hint" id="levelHint">Sin selección: se usará el nivel por defecto del perfil elegido.</div>
+          <p class="tiny" style="margin:0 0 12px">Al elegir nivel 1 abre nivel 2 sin marcar ninguna por default, y al elegir nivel 2 abre nivel 3 sin marcar ninguna por default. En cada tarjeta de nivel 1 puedes seleccionar todas o quitar todas las de esa tarjeta.</p>
+
+          <div id="hierTreeContainer" style="display:flex;flex-direction:column;gap:12px;max-height:380px;overflow-y:auto;padding-right:4px"></div>
         </div>
-        <div class="field"><span class="label">Vigencia</span><div class="option-cards two">
-          <label class="opt"><input type="radio" name="type" value="permanente" ${seedType === 'permanente' ? 'checked' : ''}/><span class="t">${ic('infinity')}Permanente</span><span class="d">Sin fecha de fin. Revocable en cualquier momento.</span></label>
-          <label class="opt"><input type="radio" name="type" value="temporal" ${seedType === 'temporal' ? 'checked' : ''}/><span class="t">${ic('timer')}Temporal</span><span class="d">Expira automáticamente en la fecha indicada.</span></label></div>
-          <div class="reveal ${seedType === 'temporal' ? 'open' : ''}" id="tempBox"><div><div style="padding-top:14px">
-            <label class="label" for="gExp">Expira el</label><input class="input" type="datetime-local" id="gExp" name="exp" value="${toLocalInput(seedExp)}" min="${toLocalInput(now())}"/>
-            <div class="chips-quick">${[['1 h', 1], ['8 h', 8], ['24 h', 24], ['3 días', 72], ['7 días', 168], ['30 días', 720], ['90 días', 2160]].map(([t, h]) => `<button type="button" data-h="${h}">${t}</button>`).join('')}</div>
-            <div class="hint" id="expHint"></div>
-          </div></div></div></div>
+
+        <div class="field"><span class="label">Nivel de acceso</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <label class="chip" style="cursor:pointer;gap:6px"><input type="radio" name="lvlScope" value="all" ${initLevelScope === 'all' ? 'checked' : ''}/> <span>General para todas las carpetas elegidas</span></label>
+            <label class="chip" style="cursor:pointer;gap:6px"><input type="radio" name="lvlScope" value="per_folder" ${initLevelScope === 'per_folder' ? 'checked' : ''}/> <span>Individual por cada carpeta de nivel 3</span></label>
+          </div>
+          <div id="globalLevelBox" class="${initLevelScope === 'per_folder' ? 'hidden' : ''}">
+            <p class="tiny" style="margin:0 0 8px">Si no marcas ninguno, se aplica el nivel por defecto del perfil (y prevalece sobre él al marcarlo).</p>
+            <div class="option-cards two">
+            ${['ver', 'descargar'].map((l, i) => `<label class="opt"><input type="checkbox" name="levels" value="${l}" ${seedLevels.includes(l) ? 'checked' : ''}/><span class="t">${ic(LV_ICON[l])}${['Ver', 'Ver y Descargar'][i]}</span><span class="d">${['Consulta en pantalla, sin descargar ni abrir ventanas en el visor de Office.', 'Permite ver y descargar el documento en su formato original.'][i]}</span></label>`).join('')}
+            </div>
+            <div class="hint" id="levelHint">Sin selección: se usará el nivel por defecto del perfil elegido.</div>
+          </div>
+          <div id="perFolderLevelBox" class="${initLevelScope === 'per_folder' ? '' : 'hidden'}" style="padding:12px;border-radius:12px;background:var(--bg);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+
+        <div class="field"><span class="label">Vigencia</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <label class="chip" style="cursor:pointer;gap:6px"><input type="radio" name="expScope" value="all" ${initExpiryScope === 'all' ? 'checked' : ''}/> <span>General para todas las carpetas elegidas</span></label>
+            <label class="chip" style="cursor:pointer;gap:6px"><input type="radio" name="expScope" value="per_folder" ${initExpiryScope === 'per_folder' ? 'checked' : ''}/> <span>Individual por cada carpeta de nivel 3</span></label>
+          </div>
+          <div id="globalExpiryBox" class="${initExpiryScope === 'per_folder' ? 'hidden' : ''}">
+            <div class="option-cards two">
+              <label class="opt"><input type="radio" name="type" value="permanente" ${seedType === 'permanente' ? 'checked' : ''}/><span class="t">${ic('infinity')}Permanente</span><span class="d">Sin fecha de fin. Revocable en cualquier momento.</span></label>
+              <label class="opt"><input type="radio" name="type" value="temporal" ${seedType === 'temporal' ? 'checked' : ''}/><span class="t">${ic('timer')}Temporal</span><span class="d">Expira automáticamente en la fecha indicada.</span></label>
+            </div>
+            <div class="reveal ${seedType === 'temporal' ? 'open' : ''}" id="tempBox"><div><div style="padding-top:14px">
+              <label class="label" for="gExp">Expira el</label><input class="input" type="datetime-local" id="gExp" name="exp" value="${toLocalInput(seedExp)}" min="${toLocalInput(now())}"/>
+              <div class="chips-quick">${[['1 h', 1], ['8 h', 8], ['24 h', 24], ['3 días', 72], ['7 días', 168], ['30 días', 720], ['90 días', 2160]].map(([t, h]) => `<button type="button" data-h="${h}">${t}</button>`).join('')}</div>
+              <div class="hint" id="expHint"></div>
+            </div></div></div>
+          </div>
+          <div id="perFolderExpiryBox" class="${initExpiryScope === 'per_folder' ? '' : 'hidden'}" style="padding:12px;border-radius:12px;background:var(--bg);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px"></div>
+        </div>
         <div class="hint" id="summary" style="font-size:13px;padding:12px 14px;background:var(--accent-soft);color:var(--accent);border-radius:12px"></div>
       </form>`,
-      foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>${ic('check')}Guardar permisos</button>`,
+      foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-save>${ic('check')}${isNew ? 'Guardar y enviar PIN por correo' : 'Guardar permisos'}</button>`,
       onMount: (c) => {
         const f = c.$('#gf');
+        const selUnits = new Set(initUnitIds);
+        const selAreas = new Set(initAreaIds);
+        const selFolders = new Set(initFolderIds);
+        const folderExpMap = new Map();
+        Object.keys(initFolderExpiries).forEach(fid => {
+          folderExpMap.set(fid, {
+            type: initFolderExpiries[fid].type === 'temporal' ? 'temporal' : 'permanente',
+            expiresAt: initFolderExpiries[fid].expiresAt || defExp,
+          });
+        });
+
+        const folderLevelMap = new Map();
+        const roleObjInit = S.roles.find(x => x.id === (user?.role || 'consulta'));
+        const roleDefInit = roleDefaultLevel(roleObjInit);
+        const fallbackLvlInit = seedLevel || roleDefInit;
+        const fallbackExpInit = seedLevel ? true : false;
+        initFolderIds.forEach(fid => {
+          folderLevelMap.set(fid, {
+            level: (fallbackLvlInit === 'descargar' || fallbackLvlInit === 'editar') ? 'descargar' : 'ver',
+            explicit: fallbackExpInit,
+          });
+        });
+        Object.keys(initFolderLevels).forEach(fid => {
+          const flv = initFolderLevels[fid];
+          folderLevelMap.set(fid, {
+            level: (flv.level === 'descargar' || flv.level === 'editar') ? 'descargar' : 'ver',
+            explicit: flv.explicit !== false,
+          });
+        });
+
+        const ensureFolderExp = (fid) => {
+          if (!folderExpMap.has(fid)) {
+            folderExpMap.set(fid, { type: seedType, expiresAt: seedExp });
+          }
+          return folderExpMap.get(fid);
+        };
+
+        const ensureFolderLvl = (fid) => {
+          if (!folderLevelMap.has(fid)) {
+            const hi = highestLevel(selectedLevels());
+            folderLevelMap.set(fid, {
+              level: hi || roleDefaultLevel(S.roles.find(x => x.id === f.role.value)),
+              explicit: !!hi,
+            });
+          }
+          return folderLevelMap.get(fid);
+        };
+
+        const perFolderLvlBox = c.$('#perFolderLevelBox');
+        const renderPerFolderLevels = () => {
+          if (!perFolderLvlBox) return;
+          const lScope = c.$('input[name="lvlScope"]:checked')?.value || 'all';
+          if (lScope !== 'per_folder') {
+            c.$('#globalLevelBox')?.classList.remove('hidden');
+            perFolderLvlBox.classList.add('hidden');
+            return;
+          }
+          c.$('#globalLevelBox')?.classList.add('hidden');
+          perFolderLvlBox.classList.remove('hidden');
+          const chosenFolders = allFolders.filter(fl => selFolders.has(fl.id) && selAreas.has(fl.areaId));
+          if (!chosenFolders.length) {
+            perFolderLvlBox.innerHTML = `<span class="tiny">Selecciona al menos una carpeta de nivel 3 para configurar su nivel individual.</span>`;
+            return;
+          }
+          const defRoleLvl = roleDefaultLevel(S.roles.find(x => x.id === f.role.value));
+          perFolderLvlBox.innerHTML = chosenFolders.map(fl => {
+            const flv = ensureFolderLvl(fl.id);
+            const curChoice = flv.explicit ? flv.level : 'perfil';
+            return `<div data-flvl-row="${fl.id}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:10px;background:var(--bg-elev);border:1px solid var(--line);flex-wrap:wrap">
+              <span style="font-size:13px;font-weight:600">${esc(fl.name)} <span class="tiny mono">(${esc(fl.code || '')})</span></span>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <label class="tiny" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="flvl_choice_${fl.id}" value="ver" ${curChoice === 'ver' ? 'checked' : ''}/> Ver</label>
+                <label class="tiny" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="flvl_choice_${fl.id}" value="descargar" ${curChoice === 'descargar' ? 'checked' : ''}/> Ver y Descargar</label>
+                <label class="tiny" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="flvl_choice_${fl.id}" value="perfil" ${curChoice === 'perfil' ? 'checked' : ''}/> Perfil (${LV_LABEL[defRoleLvl]})</label>
+              </div>
+            </div>`;
+          }).join('');
+          perFolderLvlBox.querySelectorAll('[data-flvl-row]').forEach(row => {
+            const fid = row.dataset.flvlRow;
+            const cur = ensureFolderLvl(fid);
+            row.querySelectorAll(`input[name="flvl_choice_${fid}"]`).forEach(rad => {
+              rad.addEventListener('change', () => {
+                if (rad.value === 'perfil') {
+                  cur.explicit = false;
+                  cur.level = defRoleLvl;
+                } else {
+                  cur.explicit = true;
+                  cur.level = rad.value === 'descargar' ? 'descargar' : 'ver';
+                }
+                summary();
+              });
+            });
+          });
+        };
+
+        c.$$('input[name="lvlScope"]').forEach(r => r.addEventListener('change', () => {
+          renderPerFolderLevels();
+          summary();
+        }));
+
         const roleHint = () => { const r = S.roles.find(x => x.id === f.role.value); c.$('#roleHint').textContent = r?.desc || ''; };
         f.role.addEventListener('change', () => { roleHint(); summary(); }); roleHint();
-        c.$('[data-eye]').addEventListener('click', (e) => togglePass(e.currentTarget, f.pass));
-        c.$('[data-gen]').addEventListener('click', () => { f.pass.value = genPassword(); f.pass.type = 'text'; c.$('[data-eye]').innerHTML = ic('eye-off'); icons(); });
-        c.$('[data-all]').addEventListener('click', () => { const boxes = c.$$('[name=areas]'); const all = boxes.every(b => b.checked); boxes.forEach(b => b.checked = !all); summary(); });
+
+        if (!isNew) {
+          c.$('#btnViewUserPass')?.addEventListener('click', async () => {
+            const ok = await askDestructivePassModal('Verificar contraseña para ver contraseña del usuario');
+            if (!ok) return;
+            const plain = decodeUserSecret(user.userSecretEnc, user.id);
+            const rev = c.$('#adminPassReveal');
+            if (rev) {
+              const origen = (user.passwordSetBy === 'admin' || user.passwordSetByUser === false)
+                ? 'restablecida por administrador'
+                : 'configurada por el usuario';
+              rev.innerHTML = plain
+                ? `Contraseña vigente de <b>${esc(user.email)}</b> (${origen}): <span class="mono" style="user-select:all">${esc(plain)}</span>`
+                : (user.oneTimePin ? `Aún no ha creado contraseña. PIN activo: <b class="mono">${esc(user.oneTimePin)}</b>` : 'No hay contraseña guardada en texto recuperable.');
+            }
+          });
+          c.$('#btnResetUserPin')?.addEventListener('click', async () => {
+            const ok = await askDestructivePassModal('Eliminar contraseña y generar nuevo PIN');
+            if (!ok) return;
+            const newPin = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b % 32]).join('');
+            user.pass = null;
+            user.userSecretEnc = null;
+            user.passwordSetByUser = false;
+            user.oneTimePin = newPin;
+            user.pinCreatedAt = now();
+            log('usuario', `Eliminó contraseña y generó nuevo PIN de un solo uso para ${user.email}`);
+            save();
+            const rev = c.$('#adminPassReveal');
+            if (rev) rev.innerHTML = `Contraseña eliminada. Nuevo PIN de un solo uso: <b class="mono">${esc(newPin)}</b>`;
+            sendOneTimePinEmail(user, newPin);
+            toast(`Nuevo PIN generado para ${user.email}`);
+          });
+        }
+
+        const treeBox = c.$('#hierTreeContainer');
+        const perFolderBox = c.$('#perFolderExpiryBox');
+
+        const getUnitAreaIds = (uid) => allAreas.filter(a => a.unitId === uid).map(a => a.id);
+        const getUnitFolderIds = (uid) => {
+          const aids = new Set(getUnitAreaIds(uid));
+          return allFolders.filter(fl => aids.has(fl.areaId)).map(fl => fl.id);
+        };
+
+        const renderPerFolderExpiries = () => {
+          if (!perFolderBox) return;
+          const scope = c.$('input[name="expScope"]:checked')?.value || 'all';
+          if (scope !== 'per_folder') {
+            c.$('#globalExpiryBox')?.classList.remove('hidden');
+            perFolderBox.classList.add('hidden');
+            return;
+          }
+          c.$('#globalExpiryBox')?.classList.add('hidden');
+          perFolderBox.classList.remove('hidden');
+          const chosenFolders = allFolders.filter(fl => selFolders.has(fl.id) && selAreas.has(fl.areaId));
+          if (!chosenFolders.length) {
+            perFolderBox.innerHTML = `<span class="tiny">Selecciona al menos una carpeta de nivel 3 para configurar su vigencia individual.</span>`;
+            return;
+          }
+          perFolderBox.innerHTML = chosenFolders.map(fl => {
+            const fe = ensureFolderExp(fl.id);
+            const isTemp = fe.type === 'temporal';
+            return `<div data-fexp-row="${fl.id}" style="display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:10px;background:var(--bg-elev);border:1px solid var(--line)">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+                <span style="font-size:13px;font-weight:600">${esc(fl.name)} <span class="tiny mono">(${esc(fl.code || '')})</span></span>
+                <div style="display:flex;gap:10px;align-items:center">
+                  <label class="tiny" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="fexp_type_${fl.id}" value="permanente" ${!isTemp ? 'checked' : ''}/> Permanente</label>
+                  <label class="tiny" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="fexp_type_${fl.id}" value="temporal" ${isTemp ? 'checked' : ''}/> Temporal</label>
+                </div>
+              </div>
+              <div data-fexp-dt-wrap="${fl.id}" class="${isTemp ? '' : 'hidden'}" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span class="tiny">Expira:</span>
+                <input class="input" type="datetime-local" data-fexp-dt="${fl.id}" value="${toLocalInput(fe.expiresAt || defExp)}" min="${toLocalInput(now())}" style="height:34px;font-size:13px;max-width:240px"/>
+              </div>
+            </div>`;
+          }).join('');
+
+          perFolderBox.querySelectorAll('[data-fexp-row]').forEach(row => {
+            const fid = row.dataset.fexpRow;
+            const cur = ensureFolderExp(fid);
+            row.querySelectorAll(`input[name="fexp_type_${fid}"]`).forEach(rad => {
+              rad.addEventListener('change', () => {
+                cur.type = rad.value === 'temporal' ? 'temporal' : 'permanente';
+                row.querySelector(`[data-fexp-dt-wrap="${fid}"]`)?.classList.toggle('hidden', cur.type !== 'temporal');
+                summary();
+              });
+            });
+            const dtInp = row.querySelector(`[data-fexp-dt="${fid}"]`);
+            dtInp?.addEventListener('change', () => {
+              cur.expiresAt = new Date(dtInp.value).getTime() || defExp;
+              summary();
+            });
+          });
+        };
+
+        const renderTree = () => {
+          if (!allUnits.length) {
+            treeBox.innerHTML = `<div class="tiny">No hay elementos de nivel 1 creados todavía.</div>`;
+            renderPerFolderExpiries();
+            return;
+          }
+          treeBox.innerHTML = allUnits.map(u => {
+            const uChecked = selUnits.has(u.id);
+            const uAreas = allAreas.filter(a => a.unitId === u.id);
+            const uFolderIds = getUnitFolderIds(u.id);
+            const allInUnitSelected = (uAreas.map(a => a.id).every(id => selAreas.has(id))) &&
+              (!uFolderIds.length || uFolderIds.every(id => selFolders.has(id)));
+            return `<div class="hier-unit-card" data-u-card="${u.id}" style="background:var(--bg-elev);border:1px solid var(--line-2);border-radius:12px;padding:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+                <label style="display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;cursor:pointer">
+                  <input type="checkbox" class="ck" data-u-chk="${u.id}" ${uChecked ? 'checked' : ''}/>
+                  <span>Nivel 1 · ${esc(u.name)}</span>
+                  <span class="tiny mono">(${esc(u.code || '')})</span>
+                </label>
+                <div style="display:flex;gap:6px">
+                  <button type="button" class="btn btn-secondary btn-sm" data-u-sel-all="${u.id}" ${allInUnitSelected ? 'disabled' : ''}>Seleccionar todas</button>
+                  <button type="button" class="btn btn-danger btn-sm" data-u-clr-all="${u.id}">Quitar todas</button>
+                </div>
+              </div>
+              ${uChecked ? `
+                <div style="margin-top:10px;padding-left:20px;border-left:2px solid var(--line-2);display:flex;flex-direction:column;gap:8px">
+                  ${uAreas.length ? uAreas.map(a => {
+                    const aChecked = selAreas.has(a.id);
+                    const aFolders = allFolders.filter(fl => fl.areaId === a.id);
+                    return `<div style="background:var(--bg);border-radius:10px;padding:8px 10px">
+                      <label style="display:inline-flex;align-items:center;gap:8px;font-weight:500;font-size:13.5px;cursor:pointer">
+                        <input type="checkbox" class="ck" data-a-chk="${a.id}" data-u-parent="${u.id}" ${aChecked ? 'checked' : ''}/>
+                        <span>Nivel 2 · ${esc(a.name)}</span>
+                        <span class="tiny mono">(${esc(a.code || '')})</span>
+                      </label>
+                      ${aChecked ? `
+                        <div style="margin-top:8px;padding-left:20px;display:flex;flex-direction:column;gap:5px">
+                          ${aFolders.length ? aFolders.map(fl => {
+                            const fChecked = selFolders.has(fl.id);
+                            return `<label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                              <input type="checkbox" class="ck" data-f-chk="${fl.id}" data-a-parent="${a.id}" ${fChecked ? 'checked' : ''}/>
+                              <span>Nivel 3 · ${esc(fl.name)}</span>
+                              <span class="tiny mono">(${esc(fl.code || '')})</span>
+                            </label>`;
+                          }).join('') : `<span class="tiny">Sin carpetas de nivel 3 en este nivel 2</span>`}
+                        </div>
+                      ` : ''}
+                    </div>`;
+                  }).join('') : `<span class="tiny">Sin elementos de nivel 2 en este nivel 1</span>`}
+                </div>
+              ` : ''}
+            </div>`;
+          }).join('');
+
+          treeBox.querySelectorAll('[data-u-chk]').forEach(el => {
+            el.addEventListener('change', () => {
+              const uid = el.dataset.uChk;
+              if (el.checked) {
+                selUnits.add(uid);
+              } else {
+                selUnits.delete(uid);
+                getUnitAreaIds(uid).forEach(aid => selAreas.delete(aid));
+                getUnitFolderIds(uid).forEach(fid => selFolders.delete(fid));
+              }
+              renderTree();
+              summary();
+            });
+          });
+
+          treeBox.querySelectorAll('[data-a-chk]').forEach(el => {
+            el.addEventListener('change', () => {
+              const aid = el.dataset.aChk;
+              const uid = el.dataset.uParent;
+              if (el.checked) {
+                if (uid) selUnits.add(uid);
+                selAreas.add(aid);
+              } else {
+                selAreas.delete(aid);
+                allFolders.filter(fl => fl.areaId === aid).forEach(fl => selFolders.delete(fl.id));
+              }
+              renderTree();
+              summary();
+            });
+          });
+
+          treeBox.querySelectorAll('[data-f-chk]').forEach(el => {
+            el.addEventListener('change', () => {
+              const fid = el.dataset.fChk;
+              const aid = el.dataset.aParent;
+              if (el.checked) {
+                if (aid) {
+                  selAreas.add(aid);
+                  const aObj = areaById(aid);
+                  if (aObj?.unitId) selUnits.add(aObj.unitId);
+                }
+                selFolders.add(fid);
+                ensureFolderExp(fid);
+              } else {
+                selFolders.delete(fid);
+              }
+              renderPerFolderExpiries();
+              renderPerFolderLevels();
+              summary();
+            });
+          });
+
+          treeBox.querySelectorAll('[data-u-sel-all]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const uid = btn.dataset.uSelAll;
+              selUnits.add(uid);
+              getUnitAreaIds(uid).forEach(aid => selAreas.add(aid));
+              getUnitFolderIds(uid).forEach(fid => { selFolders.add(fid); ensureFolderExp(fid); });
+              renderTree();
+              summary();
+            });
+          });
+
+          treeBox.querySelectorAll('[data-u-clr-all]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const uid = btn.dataset.uClrAll;
+              selUnits.delete(uid);
+              getUnitAreaIds(uid).forEach(aid => selAreas.delete(aid));
+              getUnitFolderIds(uid).forEach(fid => selFolders.delete(fid));
+              renderTree();
+              summary();
+            });
+          });
+
+          renderPerFolderExpiries();
+        };
+
+        c.$$('input[name="expScope"]').forEach(r => r.addEventListener('change', () => {
+          renderPerFolderExpiries();
+          summary();
+        }));
+
+        c.$('#btnAllL1')?.addEventListener('click', () => {
+          allUnits.forEach(u => selUnits.add(u.id));
+          renderTree();
+          renderPerFolderLevels();
+          summary();
+        });
+        c.$('#btnAllL2')?.addEventListener('click', () => {
+          allUnits.forEach(u => selUnits.add(u.id));
+          allAreas.forEach(a => selAreas.add(a.id));
+          renderTree();
+          renderPerFolderLevels();
+          summary();
+        });
+        c.$('#btnAllL3')?.addEventListener('click', () => {
+          allUnits.forEach(u => selUnits.add(u.id));
+          allAreas.forEach(a => selAreas.add(a.id));
+          allFolders.forEach(fl => { selFolders.add(fl.id); ensureFolderExp(fl.id); });
+          renderTree();
+          renderPerFolderLevels();
+          summary();
+        });
+        c.$('#btnClearAllLevels')?.addEventListener('click', () => {
+          selUnits.clear();
+          selAreas.clear();
+          selFolders.clear();
+          renderTree();
+          renderPerFolderLevels();
+          summary();
+        });
+
+        renderTree();
+        renderPerFolderLevels();
+
         f.email.addEventListener('input', () => {
           let v = f.email.value;
           if (v.includes('@')) {
@@ -6376,29 +7252,37 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         c.$$('[name=type]').forEach(r => r.addEventListener('change', () => { tempBox.classList.toggle('open', f.type.value === 'temporal'); summary(); }));
         c.$$('[data-h]').forEach(b => b.addEventListener('click', () => { f.exp.value = toLocalInput(now() + (+b.dataset.h) * 3600e3); c.$$('[data-h]').forEach(x => x.classList.toggle('on', x === b)); summary(); }));
         f.exp.addEventListener('change', summary);
-        c.$$('[name=areas],[name=levels]').forEach(x => x.addEventListener('change', summary));
-        c.$$('[data-revoke]').forEach(b => b.addEventListener('click', () => { revokeGrant(b.dataset.revoke); b.closest('.grant').style.opacity = .35; b.remove(); }));
+        c.$$('[name=levels]').forEach(x => x.addEventListener('change', () => { renderPerFolderLevels(); summary(); }));
+        c.$$('[data-revoke]').forEach(b => b.addEventListener('click', () => { revokeGrant(b.dataset.revoke); b.closest('.grant')?.remove(); }));
         function selectedLevels() { return c.$$('[name=levels]:checked').map(x => x.value); }
         function effectiveLevel(role) {
           const hi = highestLevel(selectedLevels());
           return hi || roleDefaultLevel(role);
         }
         function summary() {
-          const areas = c.$$('[name=areas]:checked').map(x => areaById(x.value).name);
           const r = S.roles.find(x => x.id === f.role.value);
           const lv = effectiveLevel(r);
           const explicit = selectedLevels().length > 0;
+          const scope = c.$('input[name="expScope"]:checked')?.value || 'all';
           const tp = f.type.value;
           const exp = new Date(f.exp.value).getTime();
           c.$('#expHint').textContent = tp === 'temporal' && exp > now() ? `Expira en ${fmtLeft(exp - now())}. Después no podrá abrir los documentos.` : '';
           const lh = c.$('#levelHint');
           if (lh) lh.textContent = explicit
             ? `Nivel especial asignado: ${LV_LABEL[lv]} (prevalece sobre el perfil).`
-            : `Sin selección: se usará el del perfil (${LV_LABEL[roleDefaultLevel(r)]} · ${r?.name || ''}).`;
+            : `Sin selección: se usará el nivel por defecto del perfil (${LV_LABEL[roleDefaultLevel(r)]} · ${r?.name || ''}).`;
           const who = f.email.value && doms.length ? `${f.email.value}@${f.domain.value}` : 'El usuario';
-          c.$('#summary').innerHTML = r?.caps.allAreas ? `${ic('shield-check')} <b>${esc(who)}</b> tendrá acceso total por su perfil ${esc(r.name)}.`
-            : areas.length ? `<b>${esc(who)}</b> podrá <b>${LV_LABEL[lv].toLowerCase()}</b>${explicit ? ' (especial)' : ' (perfil)'} en ${areas.map(esc).join(', ')} — ${tp === 'temporal' ? `hasta el ${fmtDateTime(exp)}` : 'de forma permanente (revocable)'}`
-              : curGrants.length ? 'Selecciona áreas para agregar o actualizar accesos, o guarda para conservar los actuales.' : 'Selecciona al menos un área.';
+          const uCount = selUnits.size;
+          const aCount = selAreas.size;
+          const fCount = selFolders.size;
+          const expDesc = scope === 'per_folder' ? 'vigencia individual por carpeta' : (tp === 'temporal' ? `hasta el ${fmtDateTime(exp)}` : 'permanente (revocable)');
+          c.$('#summary').innerHTML = r?.caps.allAreas
+            ? `${ic('shield-check')} <b>${esc(who)}</b> tendrá acceso total por su perfil ${esc(r.name)}.`
+            : (uCount || aCount || fCount)
+              ? `<b>${esc(who)}</b> podrá <b>${LV_LABEL[lv]}</b> hasta <b>Nivel 3</b> (${uCount} niv.1, ${aCount} niv.2, ${fCount} niv.3) — ${expDesc}`
+              : curGrants.length
+                ? 'Selecciona niveles/carpetas para agregar o actualizar accesos, o guarda para conservar los actuales.'
+                : 'Selecciona al menos un nivel o carpeta.';
           icons();
         }
         summary();
@@ -6411,21 +7295,48 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           if (!local || !/^[a-z0-9._-]+$/.test(local)) { f.email.classList.add('invalid'); return toast('Escribe un nombre de usuario válido', 'err'); }
           let u = user || S.users.find(x => x.email === email);
           if (user && email !== user.email && S.users.some(x => x.email === email)) { f.email.classList.add('invalid'); return toast('Ya existe otra cuenta con ese correo', 'err'); }
-          const pass = f.pass.value;
-          if (!u) { const e = passPolicyError(pass, st.minPassword); if (e) { f.pass.classList.add('invalid'); return toast(e, 'err'); } }
-          if (u && pass) { const e = passPolicyError(pass, st.minPassword); if (e) { f.pass.classList.add('invalid'); return toast(e, 'err'); } }
-          const areas = c.$$('[name=areas]:checked').map(x => x.value);
           const role = S.roles.find(x => x.id === f.role.value);
           if (!role) return toast('Selecciona un perfil', 'err');
-          if (!areas.length && !role.caps.allAreas && !curGrants.length && !u) return toast('Selecciona al menos un área', 'err');
+
+          const activeAreas = [...selAreas].filter(aid => areaById(aid));
+          const activeUnitIds = new Set([...selUnits].filter(uid => unitById(uid)));
+          activeAreas.forEach(aid => {
+            const aObj = areaById(aid);
+            if (aObj?.unitId) activeUnitIds.add(aObj.unitId);
+          });
+          const activeUnits = [...activeUnitIds].map(uid => unitById(uid)).filter(Boolean);
+
+          if (!activeAreas.length && !activeUnits.length && !role.caps.allAreas && !curGrants.length && !u) {
+            return toast('Selecciona al menos un nivel o carpeta', 'err');
+          }
+          const scope = c.$('input[name="expScope"]:checked')?.value || 'all';
           const type = f.type.value; const expiresAt = type === 'temporal' ? new Date(f.exp.value).getTime() : null;
-          if (type === 'temporal' && (!expiresAt || expiresAt <= now())) { f.exp.classList.add('invalid'); return toast('La fecha de expiración debe ser futura', 'err'); }
+          if (scope === 'all' && type === 'temporal' && (!expiresAt || expiresAt <= now())) {
+            f.exp.classList.add('invalid'); return toast('La fecha de expiración debe ser futura', 'err');
+          }
+          if (scope === 'per_folder') {
+            for (const fid of selFolders) {
+              const fe = folderExpMap.get(fid);
+              if (fe && fe.type === 'temporal' && (!fe.expiresAt || fe.expiresAt <= now())) {
+                return toast(`La fecha de expiración de la carpeta "${folderById(fid)?.name || fid}" debe ser futura`, 'err');
+              }
+            }
+          }
+
           if (u && !keepsAdmin(S.users.map(x => x.id === u.id ? { ...x, role: role.id } : x))) return toast(ADMIN_MSG, 'err');
-          const name = f.name.value.trim() || local.replace(/[._-]+/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
+          const name = f.name.value.trim() || local.replace(/[._-]+/g, ' ').replace(/\w/g, m => m.toUpperCase());
+          let generatedPin = null;
+
           if (!u) {
-            u = { id: Repo.uid('u_'), email, name, role: role.id, pass: await Repo.hashPassword(pass), active: true, createdAt: now(), createdBy: me.id, roleHistory: [] };
+            generatedPin = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b % 32]).join('');
+            u = {
+              id: Repo.uid('u_'), email, name, role: role.id,
+              pass: null, userSecretEnc: null, passwordSetByUser: false,
+              oneTimePin: generatedPin, pinCreatedAt: now(),
+              active: true, createdAt: now(), createdBy: me.id, roleHistory: []
+            };
             S.users.push(u);
-            log('usuario', `Creó la cuenta ${email}`);
+            log('usuario', `Creó la cuenta ${email} con PIN de un solo uso`);
           } else {
             const oldEmail = u.email;
             const oldRole = u.role;
@@ -6437,40 +7348,135 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
               log('usuario', `Cambió el perfil de ${email}: ${S.roles.find(r => r.id === oldRole)?.name || oldRole} → ${role.name}`);
             }
             u.role = role.id;
-            if (pass) u.pass = await Repo.hashPassword(pass);
-            log('usuario', `Actualizó la cuenta ${email}${oldEmail !== email ? ` (antes ${oldEmail})` : ''}${pass ? ' y su contraseña' : ''}`);
+            log('usuario', `Actualizó la cuenta ${email}${oldEmail !== email ? ` (antes ${oldEmail})` : ''}`);
           }
           const lvl = effectiveLevel(role);
           const explicit = selectedLevels().length > 0;
-          // Sustituye permisos de las áreas marcadas (sin exigir revocar antes)
-          if (areas.length) {
-            for (const aid of areas) {
-              S.grants.filter(g => g.userId === u.id && g.areaId === aid && !g.revoked).forEach(g => {
-                g.revoked = true; g.revokedAt = now(); g.revokedBy = me.id; g.replaced = true;
-              });
-              S.grants.push({
-                id: Repo.uid('g_'), userId: u.id, areaId: aid, level: lvl, levelOverride: explicit,
-                type, expiresAt, revoked: false, createdAt: now(), createdBy: me.id,
-              });
-            }
-            // Áreas que tenía y se desmarcaron: se revocan (cambio de permisos)
-            const kept = new Set(areas);
-            S.grants.filter(g => g.userId === u.id && !g.revoked && !kept.has(g.areaId)).forEach(g => {
+
+          if (activeAreas.length || activeUnits.length) {
+            S.grants.filter(g => g.userId === u.id && !g.revoked).forEach(g => {
               g.revoked = true; g.revokedAt = now(); g.revokedBy = me.id; g.replaced = true;
             });
-            log('permiso', `Actualizó accesos de ${email}: ${LV_LABEL[lvl].toLowerCase()}${explicit ? ' (especial)' : ' (perfil)'} · ${type} · ${areas.map(x => areaById(x)?.name).join(', ')}`);
+            for (const aid of activeAreas) {
+              const aObj = areaById(aid);
+              const fList = allFolders.filter(fl => fl.areaId === aid && selFolders.has(fl.id)).map(fl => fl.id);
+              const fExps = {};
+              const fLvls = {};
+              const lvlScope = c.$('input[name="lvlScope"]:checked')?.value || 'all';
+              let effGrantType = type;
+              let effGrantExp = expiresAt;
+              fList.forEach(fid => {
+                const fe = ensureFolderExp(fid);
+                fExps[fid] = scope === 'per_folder'
+                  ? { type: fe.type, expiresAt: fe.type === 'temporal' ? fe.expiresAt : null }
+                  : { type, expiresAt };
+                if (lvlScope === 'per_folder') {
+                  const flv = ensureFolderLvl(fid);
+                  fLvls[fid] = {
+                    level: flv.explicit ? (flv.level === 'descargar' ? 'descargar' : 'ver') : roleDefaultLevel(role),
+                    explicit: !!flv.explicit,
+                  };
+                } else {
+                  fLvls[fid] = { level: lvl, explicit };
+                }
+              });
+              if (scope === 'per_folder' && fList.length) {
+                const vals = Object.values(fExps);
+                const allTemp = vals.every(v => v.type === 'temporal' && v.expiresAt);
+                if (allTemp) {
+                  effGrantType = 'temporal';
+                  effGrantExp = Math.max(...vals.map(v => v.expiresAt));
+                } else {
+                  effGrantType = 'permanente';
+                  effGrantExp = null;
+                }
+              }
+              let effGrantLvl = lvl;
+              let effGrantExplicit = explicit;
+              if (lvlScope === 'per_folder' && fList.length) {
+                const lVals = Object.values(fLvls);
+                const hiF = highestLevel(lVals.map(x => x.level));
+                if (hiF) effGrantLvl = hiF;
+                effGrantExplicit = lVals.some(x => x.explicit);
+              }
+              S.grants.push({
+                id: Repo.uid('g_'), userId: u.id, areaId: aid, unitId: aObj?.unitId || null,
+                maxLevel: 3, allowedFolders: fList, folderExpiries: fExps, folderLevels: fLvls,
+                level: effGrantLvl, levelOverride: effGrantExplicit,
+                type: effGrantType, expiresAt: effGrantExp, revoked: false, createdAt: now(), createdBy: me.id,
+              });
+            }
+            for (const uObj of activeUnits) {
+              if (!uObj || !uObj.id) continue;
+              const hasAreaInUnit = activeAreas.some(aid => areaById(aid)?.unitId === uObj.id);
+              if (!hasAreaInUnit) {
+                S.grants.push({
+                  id: Repo.uid('g_'), userId: u.id, areaId: null, unitId: uObj.id,
+                  maxLevel: 3, allowedFolders: [], folderExpiries: {},
+                  level: lvl, levelOverride: explicit,
+                  type, expiresAt, revoked: false, createdAt: now(), createdBy: me.id,
+                });
+              }
+            }
+            log('permiso', `Actualizó niveles/carpetas de ${email} hasta nivel 3: ${LV_LABEL[lvl]} · ${scope}`);
           }
-          save(); c.close(); render(); toast(isNew ? 'Permisos guardados' : 'Cuenta y accesos actualizados');
-        })
+          save();
+          if (generatedPin) {
+            sendOneTimePinEmail(u, generatedPin, `Perfil: ${role.name} · Nivel: ${LV_LABEL[lvl]} · Hasta Nivel 3`);
+            toast(`Cuenta creada y PIN (${generatedPin}) enviado por correo`);
+          } else {
+            toast('Cuenta y accesos actualizados');
+          }
+          c.close(); render();
+        });
       },
     });
   }
 
   function grantLine(g, inModal = false) {
-    const a = areaById(g.areaId); const st = grantStatus(g);
-    const stChip = st === 'vigente' ? (g.type === 'temporal' ? `<span class="chip ${g.expiresAt - now() < 864e5 ? 'warn' : 'ok'}">${ic('timer')}${fmtLeft(g.expiresAt - now())}</span>` : `<span class="chip ok">${ic('infinity')}Permanente</span>`)
-      : st === 'expirado' ? `<span class="chip danger">${ic('clock')}Expiró ${fmtRel(g.expiresAt)}</span>` : `<span class="chip">${ic('ban')}Revocado</span>`;
-    return `<div class="grant"><span class="name">${esc(a?.name || '—')}</span><span class="chip">${ic(LV_ICON[g.level])}${LV_LABEL[g.level]}</span>${stChip}
+    const a = areaById(g.areaId);
+    const uObj = unitById(g.unitId) || unitById(a?.unitId);
+    const uRef = userById(g.userId);
+    const st = grantStatus(g);
+    const effLvl = g.levelOverride ? g.level : roleDefaultLevel(roleOf(uRef));
+    const fIds = Array.isArray(g.allowedFolders) ? g.allowedFolders.filter(fid => !!folderById(fid)) : [];
+    const hasPerFolderExp = g.folderExpiries && typeof g.folderExpiries === 'object' && Object.keys(g.folderExpiries).length > 0;
+    const hasPerFolderLvl = g.folderLevels && typeof g.folderLevels === 'object' && Object.keys(g.folderLevels).length > 0;
+
+    if (fIds.length && (hasPerFolderLvl || hasPerFolderExp)) {
+      const base = [uObj?.name, a?.name].filter(Boolean).join(' · ') || '—';
+      const rowsHtml = fIds.map(fid => {
+        const fl = folderById(fid);
+        const fLvl = effectiveGrantLevelForFolder(g, fid, uRef) || effLvl;
+        const fe = (g.folderExpiries && g.folderExpiries[fid]) || { type: g.type, expiresAt: g.expiresAt };
+        const isExp = st === 'expirado' || (fe.type === 'temporal' && fe.expiresAt && fe.expiresAt <= now());
+        const vigChip = st === 'revocado'
+          ? `<span class="chip">${ic('ban')}Revocado</span>`
+          : isExp
+            ? `<span class="chip danger">${ic('clock')}Expiró</span>`
+            : (fe.type === 'temporal'
+                ? `<span class="chip ${fe.expiresAt - now() < 864e5 ? 'warn' : 'ok'}">${ic('timer')}${fmtLeft(fe.expiresAt - now())}</span>`
+                : `<span class="chip ok">${ic('infinity')}Permanente</span>`);
+        return `<div class="grant" style="padding-left:8px"><span class="name" title="${esc(base + ' · ' + fl.name)}">${esc(fl.name)}</span><span class="chip">${ic(LV_ICON[fLvl])}${LV_LABEL[fLvl]}</span>${vigChip}</div>`;
+      }).join('');
+      return `<div class="grants" style="gap:4px">
+        <div class="grant"><span class="name" style="font-weight:600">${esc(base)}</span><span class="tiny">Por carpeta (${fIds.length})</span>
+          ${st !== 'revocado' ? `<button type="button" class="x" ${inModal ? `data-revoke="${g.id}"` : `data-act-revoke="${g.id}"`} title="Revocar acceso" aria-label="Revocar">${ic('x')}</button>` : ''}
+        </div>${rowsHtml}</div>`;
+    }
+
+    const fNames = fIds.map(fid => folderById(fid)?.name).filter(Boolean);
+    const label = [uObj?.name, a?.name, fNames.length ? fNames.join(', ') : null].filter(Boolean).join(' · ') || '—';
+    const stChip = st === 'vigente'
+      ? (hasPerFolderExp
+          ? `<span class="chip ok">${ic('calendar-clock')}Vigencia por carpeta</span>`
+          : (g.type === 'temporal'
+              ? `<span class="chip ${g.expiresAt - now() < 864e5 ? 'warn' : 'ok'}">${ic('timer')}${fmtLeft(g.expiresAt - now())}</span>`
+              : `<span class="chip ok">${ic('infinity')}Permanente</span>`))
+      : st === 'expirado'
+        ? `<span class="chip danger">${ic('clock')}Expiró ${fmtRel(g.expiresAt)}</span>`
+        : `<span class="chip">${ic('ban')}Revocado</span>`;
+    return `<div class="grant"><span class="name" title="${esc(label)}">${esc(label)}</span><span class="chip">${ic(LV_ICON[effLvl])}${LV_LABEL[effLvl]}</span>${stChip}
       ${st !== 'revocado' ? `<button type="button" class="x" ${inModal ? `data-revoke="${g.id}"` : `data-act-revoke="${g.id}"`} title="Revocar acceso" aria-label="Revocar">${ic('x')}</button>` : ''}</div>`;
   }
   function revokeGrant(id) {
@@ -6502,7 +7508,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         const polErr = passPolicyError(c.$('#p1').value, S.settings.minPassword);
         if (polErr) return toast(polErr, 'err');
         if (c.$('#p1').value !== c.$('#p2').value) return toast('Las contraseñas no coinciden', 'err');
-        me.pass = await Repo.hashPassword(c.$('#p1').value); log('usuario', 'Cambió su contraseña'); save(); c.close(); toast('Contraseña actualizada');
+        await applyAccountPassword(me, c.$('#p1').value, { setBy: 'user' }); log('usuario', 'Cambió su contraseña'); save(); c.close(); toast('Contraseña actualizada');
       });
       },
     });
@@ -6647,9 +7653,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     if (tab === 'security') return `<div class="panel"><h3>Sesión</h3><p class="muted">Cierre automático por inactividad. El contador se muestra en el encabezado entre el buscador y los permisos.</p>
       ${srow('Minutos de inactividad', 'Tras este tiempo sin actividad se cierra la sesión. Usa 0 para desactivar el cierre automático.', `<input class="input" type="number" min="0" max="480" step="1" data-set="sessionTimeoutMinutes" value="${st.sessionTimeoutMinutes ?? 15}" style="width:100px"/>`)}
       </div>
-      <div class="panel"><h3>Descargas</h3><p class="muted">Qué reciben los usuarios con permiso de descarga.</p>
-      ${srow('Formato para el nivel “Descargar”', 'Los editores siempre pueden obtener el original', `<select class="select" data-set="downloadFormat"><option value="pdf" ${st.downloadFormat === 'pdf' ? 'selected' : ''}>Solo PDF</option><option value="original" ${st.downloadFormat === 'original' ? 'selected' : ''}>PDF u original</option></select>`)}
-      ${srow('Marca de agua', 'Correo y fecha del usuario en vista y PDF (excepto editores)', sw('watermark', st.watermark))}
+      <div class="panel"><h3>Descargas y visualización</h3><p class="muted">Los usuarios con permiso “Ver y Descargar” obtienen siempre el archivo en su formato original.</p>
+      ${srow('Marca de agua', 'Correo y fecha del usuario en vista (en modo solo Ver)', sw('watermark', st.watermark))}
       ${srow('Bloquear impresión y copiado', 'Para usuarios con nivel “Ver”', sw('blockPrint', st.blockPrint))}
       </div>
       <div class="panel"><h3>Accesos temporales</h3><p class="muted">Comportamiento al vencer un permiso.</p>
@@ -6675,7 +7680,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           <button class="btn btn-danger btn-sm" data-bulk="delete">${ic('trash-2')}Eliminar</button></div>
         <div class="table-wrap" style="margin-top:18px"><table class="tbl"><thead><tr><th style="width:44px"><input type="checkbox" class="ck" id="ckAll" aria-label="Seleccionar todos"/></th><th>Usuario</th><th>Perfil</th><th>Accesos por área</th><th>Estado</th><th></th></tr></thead><tbody>
         ${users.map(u => {
-          const gs = S.grants.filter(g => g.userId === u.id && !(g.revoked && g.replaced)).sort((a, b) => grantStatus(a).localeCompare(grantStatus(b)) * -1);
+          const rawGs = S.grants.filter(g => g.userId === u.id && !(g.revoked && g.replaced) && (areaById(g.areaId) || unitById(g.unitId))).sort((a, b) => grantStatus(a).localeCompare(grantStatus(b)) * -1);
+          const seenG = new Set();
+          const gs = rawGs.filter(g => {
+            const k = `${g.unitId || ''}|${g.areaId || ''}|${(g.allowedFolders || []).join(',')}|${grantStatus(g)}`;
+            if (seenG.has(k)) return false;
+            seenG.add(k);
+            return true;
+          });
           return `<tr><td><input type="checkbox" class="ck" data-ck="${u.id}" aria-label="Seleccionar ${esc(u.email)}"/></td><td><div class="u"><span class="avatar">${initials(u.name)}</span><div><strong>${esc(u.name)}</strong><span class="tiny">${esc(u.email)}${u.id === me.id ? ' · tú' : ''}</span></div></div></td>
             <td><span class="chip ${roleOf(u).caps.allAreas ? 'accent' : ''}">${esc(roleOf(u).name)}</span>${(u.roleHistory && u.roleHistory.length) ? `<div class="tiny" style="margin-top:4px" title="Historial de perfiles">${u.roleHistory.slice(-4).map(h => esc((S.roles.find(r => r.id === h.role) || {}).name || h.role)).join(' → ')} → ${esc(roleOf(u).name)}</div>` : ''}</td>
             <td><div class="grants">${roleOf(u).caps.allAreas ? '<span class="tiny">Acceso total por perfil</span>' : gs.length ? gs.map(g => grantLine(g)).join('') : '<span class="tiny">Sin accesos</span>'}</div></td>
@@ -7225,13 +8237,21 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   function resetPass(u) {
     openModal({
       title: 'Restablecer contraseña', sub: esc(u.email),
-      body: `<div class="field"><label>Nueva contraseña ${passTipHtml()}</label><div class="input-icon"><input class="input mono" id="np" type="text" value="${genPassword()}" autocomplete="off"/><button type="button" class="icon-btn" data-copy aria-label="Copiar">${ic('copy')}</button></div><div class="hint">Compártela de forma segura con el usuario.</div></div>`,
+      body: `<div class="field"><label>Nueva contraseña ${passTipHtml()}</label><div class="input-icon"><input class="input mono" id="np" type="text" value="${genPassword()}" autocomplete="off"/><button type="button" class="icon-btn" data-copy aria-label="Copiar">${ic('copy')}</button></div><div class="hint">Al guardar se actualizará la contraseña vigente y se mostrará en "Ver contraseña" (salvo que el usuario la cambie después con un PIN).</div></div>`,
       foot: `<button class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary" data-ok>Guardar</button>`,
       onMount: (c) => {
         c.$('[data-copy]').addEventListener('click', () => { navigator.clipboard?.writeText(c.$('#np').value); toast('Copiada al portapapeles'); });
         c.$('[data-ok]').addEventListener('click', async () => {
           const v = c.$('#np').value; const polErr = passPolicyError(v, S.settings.minPassword); if (polErr) return toast(polErr, 'err');
-          u.pass = await Repo.hashPassword(v); log('usuario', `Restableció la contraseña de ${u.email}`); save(); c.close(); toast('Contraseña restablecida');
+          await applyAccountPassword(u, v, { setBy: 'admin' });
+          log('usuario', `Restableció la contraseña de ${u.email}`);
+          save();
+          const rev = document.querySelector('#adminPassReveal');
+          if (rev) {
+            rev.innerHTML = `Contraseña vigente de <b>${esc(u.email)}</b> (restablecida por administrador): <span class="mono" style="user-select:all">${esc(v)}</span>`;
+          }
+          c.close();
+          toast('Contraseña restablecida y sincronizada');
         });
       },
     });
@@ -7858,7 +8878,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
   /* ---------------- Arranque ---------------- */
 
   const sid = SessionStore.getItem(SESSION);
-  if (sid && S) { const u = userById(sid); if (u && u.active) me = u; }
+  if (sid && S) { const u = userById(sid); if (u && u.active) { me = u; startSessionWatch(); } }
   // Si la ruta guardada apunta a algo inexistente, volver a home
   if (me && S) {
     if (route.view === 'unit' && !unitById(route.unitId)) { route.view = 'home'; route.unitId = null; }
