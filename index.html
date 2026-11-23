@@ -5624,7 +5624,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
           }).join('')}</select><div class="hint">Se calcula automáticamente según versión y antigüedad; puedes forzar uno.</div></div>
         </div>
         <div class="field"><label for="uUrl">URL / liga de hospedaje</label><input class="input" id="uUrl" name="url" value="${esc(Q.replaceDoc?.url || ('local://docs/pending'))}" readonly/><div class="hint">Se asigna automáticamente al publicar (local mientras no haya Supabase).</div></div>
-        <div class="field"><label for="uNota">Nota de la versión <span class="tiny">(opcional)</span></label><input class="input" id="uNota" name="nota" placeholder="Ej. Actualización de responsables" maxlength="140"/></div>
+        <div class="field"><label for="uNota">Nota de la versión <span class="tiny">(opcional)</span></label><input class="input" id="uNota" name="nota" placeholder="Nota/Comentario" maxlength="140"/></div>
         ${total > 1 && pendingLeft > 1 ? `<label class="set-row" style="border:0;padding:4px 0;cursor:pointer"><span class="txt"><strong>Aplicar versión, fecha, tipo, rector y clasificación a los demás pendientes</strong><span>La nomenclatura y el nombre se siguen extrayendo de cada archivo</span></span><span class="switch"><input type="checkbox" name="applyAll" ${Q.shared ? 'checked' : ''}/><span></span></span></label>` : ''}
         </form>`,
       foot: `<button class="btn btn-ghost left" data-cancel>Cancelar ${total > 1 ? 'todo' : ''}</button>
@@ -6792,7 +6792,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
             <div class="email-split"><input class="input" id="gEmail" name="email" value="${esc(user ? user.email.split('@')[0] : '')}" placeholder="nombre.apellido" autocomplete="off" ${doms.length ? '' : 'disabled'}/>
               <select class="select" name="domain" aria-label="Dominio" ${doms.length ? '' : 'disabled'}>${doms.length ? doms.map(d => `<option value="${esc(d)}" ${d === curDom ? 'selected' : ''}>@${esc(d)}${st.domains.includes(d) ? '' : ' (no configurado)'}</option>`).join('') : '<option>Sin dominios</option>'}</select></div>
             <div class="hint" id="gEmailHint">${doms.length ? 'Solo se muestran los dominios configurados' : ''}</div></div>
-          <div class="field"><label for="gName">Nombre completo</label><input class="input" id="gName" name="name" value="${esc(user?.name || '')}" placeholder="Ej. Ana López"/></div>
+          <div class="field"><label for="gName">Nombre completo</label><input class="input" id="gName" name="name" value="${esc(user?.name || '')}" placeholder="Nombre"/></div>
         </div>
         <div class="row">
           <div class="field"><label for="gRole">Perfil</label><select class="select" id="gRole" name="role">${S.roles.map(r => `<option value="${r.id}" ${(user?.role || 'consulta') === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select>
@@ -7540,13 +7540,13 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
     const st = S.settings;
     if (tab === 'general') return `<div class="panel"><h3>Identidad</h3><p class="muted">Nombre de la herramienta y de la organización.</p>
       ${srow('Nombre de la herramienta', 'Se muestra en la barra superior y el acceso', `<input class="input" data-set="appName" value="${esc(st.appName)}"/>`)}
-      ${srow('Organización', 'Nombre de la empresa; se muestra junto al logo', `<input class="input" data-set="orgName" value="${esc(st.orgName)}" placeholder="Ej. Control Interno"/>`)}
+      ${srow('Organización', 'Nombre de la empresa; se muestra junto al logo', `<input class="input" data-set="orgName" value="${esc(st.orgName)}" placeholder="Organización"/>`)}
       ${srow('Apariencia', 'Automático: claro de día (6:00–18:00) y oscuro de noche', `<select class="select" data-set="theme"><option value="auto" ${st.theme === 'auto' ? 'selected' : ''}>Automático (día/noche)</option><option value="light" ${st.theme === 'light' ? 'selected' : ''}>Claro</option><option value="dark" ${st.theme === 'dark' ? 'selected' : ''}>Oscuro</option></select>`)}
       </div>
       <div class="panel"><h3>Asistente IA (gratuito)</h3>
-        <p class="muted">La búsqueda y el OCR funcionan sin API. Opcional: pega una API key de <b>Google Gemini</b> (capa gratuita en AI Studio) para respuestas en lenguaje natural.</p>
+        <p class="muted">La búsqueda y el OCR funcionan sin API. Opcional: pega una API key de <b>Google Gemini</b> para respuestas en lenguaje natural.</p>
         ${srow('API key Gemini', 'Se guarda en este navegador / estado de la app. Déjala vacía para solo búsqueda local.', `<input class="input mono" data-set="geminiApiKey" type="password" value="${esc(st.geminiApiKey || '')}" placeholder="AIza… (opcional)" autocomplete="off"/>`)}
-        ${srow('Modelo Gemini', 'Ej. gemini-3.5-flash-lite (recomendado free) o gemini-3.5-flash', `<input class="input mono" data-set="geminiModel" value="${esc(st.geminiModel || 'gemini-3.5-flash-lite')}"/>`)}
+        ${srow('Modelo Gemini', 'Ej. gemini-3.5-flash-lite o gemini-3.5-flash', `<input class="input mono" data-set="geminiModel" value="${esc(st.geminiModel || 'gemini-3.5-flash-lite')}"/>`)}
       </div>
       <div class="panel"><h3>Logo y tipografía del encabezado</h3><p class="muted">Puedes subir un logo para modo claro y otro para modo oscuro. Si solo hay uno, se usa en ambos. El encabezado crece con el tamaño del logo.</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:16px">
@@ -7577,8 +7577,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         </div>
         <div class="hint" style="margin-bottom:12px">PNG, JPG o WebP. Se ajusta a 256×256 px manteniendo proporción.</div>
         ${srow('Tamaño del logo', 'Ancho y alto en la barra (16–128 px). El encabezado se agranda con el logo', `<div style="display:flex;align-items:center;gap:10px;width:100%"><input type="range" min="16" max="128" step="1" data-set="logoSize" value="${st.logoSize || 28}" style="flex:1"/><span class="mono tiny" id="logoSizeVal">${st.logoSize || 28} px</span></div>`)}
-        ${srow('Tamaño del nombre', 'Texto de la herramienta (p. ej. Cyper)', `<div style="display:flex;align-items:center;gap:10px;width:100%"><input type="range" min="12" max="48" step="1" data-set="titleSize" value="${st.titleSize || 17}" style="flex:1"/><span class="mono tiny" id="titleSizeVal">${st.titleSize || 17} px</span></div>`)}
-        ${srow('Tamaño de la organización', 'Texto secundario (p. ej. CSW)', `<div style="display:flex;align-items:center;gap:10px;width:100%"><input type="range" min="10" max="32" step="1" data-set="orgSize" value="${st.orgSize || 13}" style="flex:1"/><span class="mono tiny" id="orgSizeVal">${st.orgSize || 13} px</span></div>`)}
+        ${srow('Tamaño del nombre', 'Texto de la herramienta', `<div style="display:flex;align-items:center;gap:10px;width:100%"><input type="range" min="12" max="48" step="1" data-set="titleSize" value="${st.titleSize || 17}" style="flex:1"/><span class="mono tiny" id="titleSizeVal">${st.titleSize || 17} px</span></div>`)}
+        ${srow('Tamaño de la organización', 'Texto secundario', `<div style="display:flex;align-items:center;gap:10px;width:100%"><input type="range" min="10" max="32" step="1" data-set="orgSize" value="${st.orgSize || 13}" style="flex:1"/><span class="mono tiny" id="orgSizeVal">${st.orgSize || 13} px</span></div>`)}
       </div>
       <div class="panel" id="domainsPanel"><h3>Dominios de correo permitidos</h3><p class="muted">Solo con estos dominios se pueden crear usuarios y asignar contraseñas; son los únicos que aparecen en el modal de permisos.</p>
         <div class="cat-chips" style="margin-bottom:12px">${st.domains.map(d => { const n = S.users.filter(u => u.email.endsWith('@' + d)).length; return `<span class="chip">@${esc(d)} <span class="tiny">(${n} ${n === 1 ? 'usuario' : 'usuarios'})</span><button class="x" data-dom-del="${esc(d)}" aria-label="Quitar ${esc(d)}">${ic('x')}</button></span>`; }).join('') || '<span class="tiny" style="color:var(--warn)">Aún no hay dominios. Agrega uno para poder crear usuarios.</span>'}</div>
@@ -7630,7 +7630,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 
         </tr>`).join('')}
         </tbody></table></div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-          <input class="input" id="estNewId" placeholder="id (ej. archivado)" style="height:38px;width:140px"/>
+          <input class="input" id="estNewId" placeholder="ID Estatus" style="height:38px;width:140px"/>
           <input class="input" id="estNewName" placeholder="Nombre visible" style="height:38px;flex:1;min-width:140px"/>
           <button class="btn btn-secondary btn-sm" style="height:38px" id="estAddBtn">${ic('plus')}Agregar estado</button>
         </div>
